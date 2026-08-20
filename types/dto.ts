@@ -50,6 +50,16 @@ export type CartViewDTO = {
   itemCount: number;
 };
 
+export type AdminProductRowDTO = {
+  id: string;
+  title: string;
+  slug: string;
+  status: 'draft' | 'published';
+  imagePublicId: string;
+  variantCount: number;
+  totalStock: number;
+};
+
 export type SettingsDTO = {
   storeEmail: string;
   announcement: string;

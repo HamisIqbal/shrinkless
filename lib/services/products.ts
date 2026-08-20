@@ -3,7 +3,7 @@ import { connectToDatabase } from '@/lib/db/connection';
 import { Product, type ProductDoc } from '@/lib/db/models/product';
 import { Variant, type VariantDoc } from '@/lib/db/models/variant';
 import type { ProductFilter } from '@/lib/validation/catalogue';
-import type { ProductDTO, VariantDTO } from '@/types/dto';
+import type { AdminProductRowDTO, ProductDTO, VariantDTO } from '@/types/dto';
 
 type WithId<T> = T & { _id: Types.ObjectId };
 
@@ -98,6 +98,39 @@ export async function getPublishedProductBySlug(slug: string): Promise<ProductDT
   await connectToDatabase();
 
   const product = (await Product.findOne({ slug, status: 'published' }).lean()) as WithId<ProductDoc> | null;
+  if (!product) return null;
+
+  const variants = (await Variant.find({ productId: product._id }).lean()) as WithId<VariantDoc>[];
+  return toProductDTO(product, variants);
+}
+
+export async function listProductsForAdmin(): Promise<AdminProductRowDTO[]> {
+  await connectToDatabase();
+
+  const products = (await Product.find({}).sort({ createdAt: -1 }).lean()) as WithId<ProductDoc>[];
+  const grouped = await loadVariantsByProduct(products.map((p) => p._id));
+
+  return products.map((product) => {
+    const variants = grouped.get(String(product._id)) ?? [];
+
+    return {
+      id: String(product._id),
+      title: product.title,
+      slug: product.slug,
+      status: product.status as 'draft' | 'published',
+      imagePublicId: product.images[0]?.publicId ?? '',
+      variantCount: variants.length,
+      totalStock: variants.reduce((sum, variant) => sum + variant.stock, 0),
+    };
+  });
+}
+
+export async function getProductForAdmin(id: string): Promise<ProductDTO | null> {
+  if (!Types.ObjectId.isValid(id)) return null;
+
+  await connectToDatabase();
+
+  const product = (await Product.findById(id).lean()) as WithId<ProductDoc> | null;
   if (!product) return null;
 
   const variants = (await Variant.find({ productId: product._id }).lean()) as WithId<VariantDoc>[];
