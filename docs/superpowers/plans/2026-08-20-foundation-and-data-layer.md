@@ -413,6 +413,11 @@ export function withTestDatabase(): void {
   beforeAll(async () => {
     server = await MongoMemoryServer.create();
     await connectToDatabase(server.getUri());
+
+    // Mongoose builds indexes asynchronously. Without waiting, a test that
+    // expects a duplicate-key error can run before the unique index exists
+    // and see the insert succeed instead.
+    await Promise.all(Object.values(mongoose.models).map((m) => m.init()));
   });
 
   afterEach(async () => {
@@ -694,8 +699,6 @@ Price and stock live here, never on the product — this is what makes per-size 
 
 Run: `npm test -- catalogue`
 Expected: 6 passed.
-
-If the duplicate-key tests fail intermittently, it is because Mongoose builds indexes asynchronously. Add `await Product.init(); await Variant.init();` inside the test's `beforeAll`.
 
 - [ ] **Step 6: Commit**
 
