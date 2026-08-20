@@ -61,9 +61,13 @@ app/ ──▶ lib/services/ ──▶ lib/db/
 
 ### 3.2 Authorization
 
-`middleware.ts` rejects non-admins at `/admin/*`. **Middleware is a convenience, not the
+`proxy.ts` rejects non-admins at `/admin/*`. (Next 16 renamed the `middleware`
+convention to `proxy`; the file is `proxy.ts` at the project root exporting a `proxy`
+function, and it runs on the Node runtime only.) **The proxy is a convenience, not the
 security boundary** — every admin Server Action independently re-reads the session and
-re-checks `role === 'admin'` before touching data. Admins are never self-registered; the
+re-checks `role === 'admin'` before touching data. Next's own docs are explicit that
+proxy "should not be used as a full session management or authorization solution",
+which is exactly why the real check lives in the actions. Admins are never self-registered; the
 first admin comes from `scripts/seed-admin.ts`, and further admins are promoted by an
 existing admin.
 
@@ -375,7 +379,7 @@ shrinkless/
 ├─ scripts/  seed-admin.ts, seed-products.ts
 ├─ tests/    unit/ (Vitest) · e2e/ (Playwright)
 ├─ types/
-└─ middleware.ts
+└─ proxy.ts
 ```
 
 ---

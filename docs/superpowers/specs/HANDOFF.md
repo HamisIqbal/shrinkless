@@ -24,7 +24,7 @@ Shipping & tax rules — US-based store, user will decide later. Designed as a p
 1. **Architecture & data model — APPROVED 2026-08-20.**
    - One Next.js app, route groups `(shop)` / `(account)` / `(admin)`.
    - Components never touch Mongoose; all data access via `lib/services/*` returning serializable DTOs. Server Actions/Route Handlers stay thin (Zod validate -> service -> result).
-   - `middleware.ts` gates `/admin/*` by role AND every admin action re-checks role server-side.
+   - `proxy.ts` (Next 16 renamed `middleware` -> `proxy`) gates `/admin/*` by role AND every admin action re-checks role server-side.
    - 7 collections: `users`, `products`, `variants`, `carts`, `orders`, `payments`, `settings`.
    - Order items are denormalized snapshots; all money stored as integer cents.
 2. **Storefront UX + vintage design system — APPROVED 2026-08-20.** Mini-cart drawer is the primary add-to-cart surface; filters live in a horizontal bar above the grid, held in searchParams.
@@ -43,9 +43,16 @@ settings services, plus seed scripts.
 USER ACTION REQUIRED before the Vercel deploy renders:
 set MONGODB_URI and AUTH_SECRET in the Vercel project env vars.
 
-Next: write plan 2 for Phase 2 (storefront skeleton, UNSTYLED). Before writing any
-App Router code, read node_modules/next/dist/docs/ — Next 16 has breaking changes
-from the Next 15 patterns in the training data.
+Plan 2 written: docs/superpowers/plans/2026-08-20-storefront-skeleton.md (Phase 2,
+7 tasks). Grounded in the bundled Next 16 docs. Awaiting user approval to execute.
+
+Next 16 facts that changed the design:
+- `middleware.ts` is now `proxy.ts` exporting `proxy()`, Node runtime only. Spec updated.
+- params/searchParams/cookies()/headers() are Promises; synchronous access removed.
+- Use generated PageProps<'/route'> / LayoutProps<'/route'> helpers (npx next typegen).
+- Cookies can only be SET in a Server Action or Route Handler, never during Server
+  Component render — so the cart cookie is created lazily on first add-to-cart.
+- Turbopack is the default for dev and build.
 
 Deviations accepted during execution:
 - Next 16.3.1 instead of 15 (user decision); spec and plan updated.
