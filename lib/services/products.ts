@@ -1,9 +1,10 @@
+import { Types } from 'mongoose';
 import { Product, type ProductDoc } from '@/lib/db/models/product';
 import { Variant, type VariantDoc } from '@/lib/db/models/variant';
 import type { ProductFilter } from '@/lib/validation/catalogue';
 import type { ProductDTO, VariantDTO } from '@/types/dto';
 
-type WithId<T> = T & { _id: unknown };
+type WithId<T> = T & { _id: Types.ObjectId };
 
 function toVariantDTO(variant: WithId<VariantDoc>): VariantDTO {
   return {
@@ -35,14 +36,14 @@ function toProductDTO(product: WithId<ProductDoc>, variants: WithId<VariantDoc>[
       height: image.height,
       alt: image.alt,
     })),
-    sizes: product.optionSets.sizes,
-    colors: product.optionSets.colors,
+    sizes: product.optionSets?.sizes ?? [],
+    colors: product.optionSets?.colors ?? [],
     variants: variantDTOs,
     minPriceCents: sellable.length ? Math.min(...sellable.map((v) => v.priceCents)) : 0,
   };
 }
 
-async function loadVariantsByProduct(productIds: unknown[]) {
+async function loadVariantsByProduct(productIds: Types.ObjectId[]) {
   const variants = (await Variant.find({ productId: { $in: productIds } }).lean()) as WithId<VariantDoc>[];
   const grouped = new Map<string, WithId<VariantDoc>[]>();
 

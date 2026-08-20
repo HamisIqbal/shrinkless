@@ -28,6 +28,7 @@ describe('Product model', () => {
 
   it('rejects an unknown status', async () => {
     await expect(
+      // @ts-expect-error deliberately invalid status, proving the enum is enforced
       Product.create({ title: 'X', slug: 'x', category: 'shirts', status: 'archived' }),
     ).rejects.toThrowError(/validation failed/i);
   });

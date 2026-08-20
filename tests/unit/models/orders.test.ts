@@ -55,7 +55,7 @@ describe('Order model', () => {
 describe('Payment model', () => {
   it('rejects a duplicate provider event id', async () => {
     const base = {
-      orderId: new Types.ObjectId(), provider: 'stripe',
+      orderId: new Types.ObjectId(), provider: 'stripe' as const,
       providerPaymentId: 'pi_1', providerEventId: 'evt_1',
       amountCents: 10243, status: 'succeeded',
     };

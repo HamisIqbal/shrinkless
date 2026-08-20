@@ -95,7 +95,10 @@ export async function updateCartItemQuantity(
   if (!cart) throw new Error(`Cart not found: ${cartId}`);
 
   if (quantity <= 0) {
-    cart.items = cart.items.filter((item) => String(item.variantId) !== variantId);
+    // Splice in place: a Mongoose DocumentArray cannot be replaced with a
+    // plain filtered array.
+    const index = cart.items.findIndex((item) => String(item.variantId) === variantId);
+    if (index !== -1) cart.items.splice(index, 1);
   } else {
     const variant = await requireVariant(variantId);
     if (quantity > variant.stock) {
