@@ -33,30 +33,30 @@ Shipping & tax rules — US-based store, user will decide later. Designed as a p
 5. **Roadmap, phases & directory structure — APPROVED 2026-08-20.**
 
 ## Next step
-Phases 0-1 are DONE and merged to main (54 tests, tsc/lint/build clean).
+Phases 0-2 are DONE and merged to main. 64 tests, tsc/lint/build clean.
 
-Plan 1 executed: docs/superpowers/plans/2026-08-20-foundation-and-data-layer.md
-Built: Next.js 16 scaffold, Vitest harness, lib/env, lib/db/connection, lib/money,
-all 7 models, types/dto.ts, lib/validation/catalogue, and the products, cart and
-settings services, plus seed scripts.
+Phase 2 shipped: shop layout, home, /shop grid with URL-driven filters,
+/product/[slug] with variant picker, /cart with quantity editing. All unstyled
+by design. Verified at runtime against live Atlas: all routes 200, seeded
+products render, filters change results, cart cookie round-trips, unknown slug 404s.
 
-USER ACTION REQUIRED before the Vercel deploy renders:
-set MONGODB_URI and AUTH_SECRET in the Vercel project env vars.
+Bugs found and fixed during Phase 2:
+- No service ever called connectToDatabase(). Tests connected via the harness so
+  it was invisible; with bufferCommands:false every page would have thrown.
+- Size/colour filters matched sold-out variants, sending shoppers to dead ends.
+  A variant must now be enabled AND in stock to satisfy a filter.
 
-Plan 2 written: docs/superpowers/plans/2026-08-20-storefront-skeleton.md (Phase 2,
-7 tasks). Grounded in the bundled Next 16 docs. Awaiting user approval to execute.
+Scope moved out of Phase 2 (user-approved):
+- Mini-cart drawer -> Phase 6 (it is a design artifact; building it unstyled means
+  building it twice).
+- Guest->account cart merge -> Phase 3 (needs login to trigger).
 
-Next 16 facts that changed the design:
-- `middleware.ts` is now `proxy.ts` exporting `proxy()`, Node runtime only. Spec updated.
-- params/searchParams/cookies()/headers() are Promises; synchronous access removed.
-- Use generated PageProps<'/route'> / LayoutProps<'/route'> helpers (npx next typegen).
-- Cookies can only be SET in a Server Action or Route Handler, never during Server
-  Component render — so the cart cookie is created lazily on first add-to-cart.
-- Turbopack is the default for dev and build.
+Known state:
+- Every route is dynamic because the shop layout reads the cart cookie. If static
+  rendering or PPR matters later, move the cart count into a client island.
+- /checkout 404s until Phase 5. /about is linked in the nav but does not exist yet.
+- The add-to-cart Server Action's cookie WRITE was never verified in a real browser;
+  everything else was verified by script.
 
-Deviations accepted during execution:
-- Next 16.3.1 instead of 15 (user decision); spec and plan updated.
-- Mongoose 9: findOneAndUpdate uses returnDocument:'after', not new:true.
-- Test harness awaits model.init() so duplicate-key assertions are deterministic.
-- Vitest 4 resolves tsconfig paths natively; vite-tsconfig-paths dropped.
-- Services for users/orders/payments deferred to Phases 3 and 5.
+Next: Phase 3 (auth) or Phase 4 (admin). Write the plan before touching code, and
+read node_modules/next/dist/docs/ for anything App Router.
