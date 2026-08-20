@@ -51,3 +51,7 @@ next-env.d.ts
 *.msi
 *.exe
 *.zip
+
+# local dev server logs
+dev-out.log
+dev-err.log
