@@ -33,30 +33,30 @@ Shipping & tax rules — US-based store, user will decide later. Designed as a p
 5. **Roadmap, phases & directory structure — APPROVED 2026-08-20.**
 
 ## Next step
-Phases 0-2 are DONE and merged to main. 64 tests, tsc/lint/build clean.
+Phases 0-3 are DONE and merged to main. 82 tests, tsc/lint/build clean.
 
-Phase 2 shipped: shop layout, home, /shop grid with URL-driven filters,
-/product/[slug] with variant picker, /cart with quantity editing. All unstyled
-by design. Verified at runtime against live Atlas: all routes 200, seeded
-products render, filters change results, cart cookie round-trips, unknown slug 404s.
+Phase 3 shipped: Auth.js v5 beta.32 credentials + argon2, JWT session carrying
+id and role, /login, /register, /account (protected), logout, session-aware header,
+and guest->account cart merge wired into the login action.
 
-Bugs found and fixed during Phase 2:
-- No service ever called connectToDatabase(). Tests connected via the harness so
-  it was invisible; with bufferCommands:false every page would have thrown.
-- Size/colour filters matched sold-out variants, sending shoppers to dead ends.
-  A variant must now be enabled AND in stock to satisfy a filter.
+Verified at runtime against live Atlas by driving Auth.js's real HTTP endpoints
+(GET /api/auth/csrf then POST /api/auth/callback/credentials):
+- /api/auth/session returns the user with id and role=customer -> jwt+session callbacks work
+- wrong password -> session null
+- /account renders for a session, redirects (307) anonymous visitors to /login
+- /login returns 307 for an already-signed-in user
+- createUser cannot mint an admin even when role is smuggled into the payload
 
-Scope moved out of Phase 2 (user-approved):
-- Mini-cart drawer -> Phase 6 (it is a design artifact; building it unstyled means
-  building it twice).
-- Guest->account cart merge -> Phase 3 (needs login to trigger).
+NOT runtime-verified: the guest->account cart merge. It lives in loginAction, and the
+scripted HTTP login bypasses Server Actions entirely. mergeGuestCartIntoUserCart itself
+is unit-tested; only the wiring is unproven. Confirm in a browser.
 
-Known state:
-- Every route is dynamic because the shop layout reads the cart cookie. If static
-  rendering or PPR matters later, move the cart count into a client island.
-- /checkout 404s until Phase 5. /about is linked in the nav but does not exist yet.
-- The add-to-cart Server Action's cookie WRITE was never verified in a real browser;
-  everything else was verified by script.
+Gotchas discovered:
+- next-auth/jwt is only `export * from "@auth/core/jwt"`, so `declare module 'next-auth/jwt'`
+  silently declares a NEW module. Augment '@auth/core/jwt' instead.
+- `handlers` is an object: `export const { GET, POST } = handlers`, not a re-export.
+- Route-group layouts type as LayoutProps<'/'>, not the child path.
 
-Next: Phase 3 (auth) or Phase 4 (admin). Write the plan before touching code, and
-read node_modules/next/dist/docs/ for anything App Router.
+Next: Phase 4 (admin panel). It needs proxy.ts gating /admin/* (Next 16 renamed
+middleware -> proxy) plus a server-side role re-check in every admin action.
+Write the plan first; read node_modules/next/dist/docs/ for App Router specifics.
