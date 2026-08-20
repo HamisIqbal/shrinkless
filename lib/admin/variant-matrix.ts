@@ -84,3 +84,31 @@ export function buildVariantMatrix(input: {
 
   return rows;
 }
+
+/**
+ * Layers per-row edits back onto a freshly generated matrix, by key. A row
+ * with no edit passes through untouched; an edited row is used verbatim.
+ */
+export function applyRowEdits(
+  generated: MatrixRow[],
+  edited: Record<string, MatrixRow>,
+): MatrixRow[] {
+  return generated.map((row) => edited[row.key] ?? row);
+}
+
+/**
+ * Drops edits whose key is no longer in the generated set, so a combination
+ * that is removed and later re-added regenerates a clean row instead of
+ * reviving stale sku/price/stock from before it left the option sets.
+ * Returns the same object when nothing needs dropping.
+ */
+export function pruneEditedRows(
+  edited: Record<string, MatrixRow>,
+  generated: MatrixRow[],
+): Record<string, MatrixRow> {
+  const liveKeys = new Set(generated.map((row) => row.key));
+  const entries = Object.entries(edited).filter(([key]) => liveKeys.has(key));
+
+  if (entries.length === Object.keys(edited).length) return edited;
+  return Object.fromEntries(entries);
+}

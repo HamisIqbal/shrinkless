@@ -4,14 +4,10 @@ import type { MatrixRow } from '@/lib/admin/variant-matrix';
 
 type Props = {
   rows: MatrixRow[];
-  onChange: (rows: MatrixRow[]) => void;
+  onRowChange: (key: string, patch: Partial<MatrixRow>) => void;
 };
 
-export function VariantMatrix({ rows, onChange }: Props) {
-  function update(key: string, patch: Partial<MatrixRow>) {
-    onChange(rows.map((row) => (row.key === key ? { ...row, ...patch } : row)));
-  }
-
+export function VariantMatrix({ rows, onRowChange }: Props) {
   if (!rows.length) {
     return <p>Add at least one size and one colour to generate variants.</p>;
   }
@@ -38,7 +34,7 @@ export function VariantMatrix({ rows, onChange }: Props) {
               <input
                 aria-label={`SKU for ${row.size} ${row.color}`}
                 value={row.sku}
-                onChange={(event) => update(row.key, { sku: event.target.value })}
+                onChange={(event) => onRowChange(row.key, { sku: event.target.value })}
               />
             </td>
             <td>
@@ -46,7 +42,7 @@ export function VariantMatrix({ rows, onChange }: Props) {
                 type="number" min={0} step={1}
                 aria-label={`Price for ${row.size} ${row.color}`}
                 value={row.priceCents}
-                onChange={(event) => update(row.key, { priceCents: Number(event.target.value) })}
+                onChange={(event) => onRowChange(row.key, { priceCents: Number(event.target.value) })}
               />
             </td>
             <td>
@@ -54,7 +50,7 @@ export function VariantMatrix({ rows, onChange }: Props) {
                 type="number" min={0} step={1}
                 aria-label={`Stock for ${row.size} ${row.color}`}
                 value={row.stock}
-                onChange={(event) => update(row.key, { stock: Number(event.target.value) })}
+                onChange={(event) => onRowChange(row.key, { stock: Number(event.target.value) })}
               />
             </td>
             <td>
@@ -62,7 +58,7 @@ export function VariantMatrix({ rows, onChange }: Props) {
                 type="checkbox"
                 aria-label={`Enable ${row.size} ${row.color}`}
                 checked={row.enabled}
-                onChange={(event) => update(row.key, { enabled: event.target.checked })}
+                onChange={(event) => onRowChange(row.key, { enabled: event.target.checked })}
               />
             </td>
           </tr>
