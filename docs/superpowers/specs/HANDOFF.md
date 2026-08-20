@@ -29,11 +29,11 @@ Shipping & tax rules — US-based store, user will decide later. Designed as a p
    - Order items are denormalized snapshots; all money stored as integer cents.
 2. **Storefront UX + vintage design system — APPROVED 2026-08-20.** Mini-cart drawer is the primary add-to-cart surface; filters live in a horizontal bar above the grid, held in searchParams.
 3. **Admin panel — APPROVED 2026-08-20.** Own dense layout sharing storefront tokens (no texture/motion); auto-generated variant matrix in the product editor; signed direct-to-Cloudinary uploads; refunds link out to Stripe/PayPal; stock decrements on webhook confirmation, no cart reservations; `/admin` dashboard kept.
-4. **Checkout & payment flow — PRESENTED, awaiting approval.**
-5. Roadmap, phases & project directory structure — NOT YET PRESENTED
+4. **Checkout & payment flow — APPROVED 2026-08-20.** Single-page `/checkout` with progressive sections; `lib/pricing` pure function is the only amount source; webhook-confirmed orders for both providers; event-ID unique index for idempotency; `/checkout/processing` polls rather than trusting the redirect. Apple Pay / Google Pay enabled via Payment Element; checkout uses a focused shell (no full header/footer).
+5. **Roadmap, phases & directory structure — PRESENTED, awaiting approval.**
 
 ## Next step
-Sections 1-3 approved. Section 4 presented — await approval, then present Section 5 (roadmap, phases & directory structure), then write the spec.
+Sections 1-4 approved. Section 5 presented — on approval, write the full design spec to docs/superpowers/specs/2026-08-20-shrinkless-design.md, then invoke writing-plans.
 
 ## Repo
 Remote: https://github.com/HamisIqbal/shrinkless (main). Proprietary LICENSE. Vercel is connected and watching main; it 404s until the first real Next.js commit lands. No app code yet, by instruction.
