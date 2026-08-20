@@ -1841,10 +1841,10 @@ export async function getStoreSettings(): Promise<SettingsDTO> {
   const settings = await Settings.findOneAndUpdate(
     { key: 'store' },
     { $setOnInsert: { key: 'store', storeEmail: DEFAULT_STORE_EMAIL } },
-    { upsert: true, new: true, setDefaultsOnInsert: true },
+    { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true },
   ).lean();
 
-  // `upsert: true` with `new: true` always returns a document, but the
+  // `upsert: true` with `returnDocument: 'after'` always returns a document, but the
   // Mongoose types cannot express that, so narrow it explicitly.
   if (!settings) throw new Error('Failed to load store settings');
 
@@ -1993,7 +1993,7 @@ async function main() {
   await User.findOneAndUpdate(
     { email: email.toLowerCase() },
     { $set: { passwordHash, role: 'admin' }, $setOnInsert: { email: email.toLowerCase() } },
-    { upsert: true, new: true },
+    { upsert: true, returnDocument: 'after' },
   );
 
   console.log(`admin ready: ${email}`);
