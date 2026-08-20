@@ -32,6 +32,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+*.env
+*credentials*
 
 # vercel
 .vercel
@@ -43,3 +46,8 @@ next-env.d.ts
 # local tool config (machine-specific)
 .claude/settings.local.json
 .impeccable/
+
+# stray installers/downloads (project lives under Downloads/)
+*.msi
+*.exe
+*.zip
