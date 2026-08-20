@@ -1,4 +1,5 @@
 import { Types } from 'mongoose';
+import { connectToDatabase } from '@/lib/db/connection';
 import { Product, type ProductDoc } from '@/lib/db/models/product';
 import { Variant, type VariantDoc } from '@/lib/db/models/variant';
 import type { ProductFilter } from '@/lib/validation/catalogue';
@@ -59,6 +60,8 @@ export async function listPublishedProducts(
   filter: ProductFilter,
   category?: string,
 ): Promise<ProductDTO[]> {
+  await connectToDatabase();
+
   const query: Record<string, unknown> = { status: 'published' };
   if (category) query.category = category;
 
@@ -69,11 +72,16 @@ export async function listPublishedProducts(
     toProductDTO(product, grouped.get(String(product._id)) ?? []),
   );
 
+  // A size or colour filter means "show me what I can actually buy in this",
+  // so a variant only counts if it is enabled AND in stock. Matching on
+  // existence alone would send shoppers to products that are sold out in the
+  // very size they filtered for.
   const matching = dtos.filter((product) => {
-    const sizeOk =
-      !filter.sizes.length || product.variants.some((v) => v.enabled && filter.sizes.includes(v.size));
-    const colorOk =
-      !filter.colors.length || product.variants.some((v) => v.enabled && filter.colors.includes(v.color));
+    const buyable = product.variants.filter((v) => v.enabled && v.inStock);
+
+    const sizeOk = !filter.sizes.length || buyable.some((v) => filter.sizes.includes(v.size));
+    const colorOk = !filter.colors.length || buyable.some((v) => filter.colors.includes(v.color));
+
     return sizeOk && colorOk;
   });
 
@@ -87,6 +95,8 @@ export async function listPublishedProducts(
 }
 
 export async function getPublishedProductBySlug(slug: string): Promise<ProductDTO | null> {
+  await connectToDatabase();
+
   const product = (await Product.findOne({ slug, status: 'published' }).lean()) as WithId<ProductDoc> | null;
   if (!product) return null;
 

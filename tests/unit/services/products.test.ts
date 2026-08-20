@@ -44,6 +44,17 @@ describe('listPublishedProducts', () => {
     expect(await listPublishedProducts({ ...noFilter, sizes: ['s'] })).toHaveLength(1);
   });
 
+  it('excludes a product whose only variant in that size is sold out', async () => {
+    // 'm' exists on Field Shirt but has stock 0, so filtering by it must not
+    // send the shopper to a product they cannot buy in that size.
+    expect(await listPublishedProducts({ ...noFilter, sizes: ['m'] })).toHaveLength(0);
+  });
+
+  it('excludes a product whose only variant in that colour is sold out', async () => {
+    await Variant.updateMany({ sku: 'FS-S' }, { stock: 0 });
+    expect(await listPublishedProducts({ ...noFilter, colors: ['sand'] })).toHaveLength(0);
+  });
+
   it('filters by category', async () => {
     expect(await listPublishedProducts(noFilter, 'hats')).toHaveLength(0);
     expect(await listPublishedProducts(noFilter, 'shirts')).toHaveLength(1);

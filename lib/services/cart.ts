@@ -1,4 +1,5 @@
 import { Types } from 'mongoose';
+import { connectToDatabase } from '@/lib/db/connection';
 import { Cart } from '@/lib/db/models/cart';
 import { Product } from '@/lib/db/models/product';
 import { Variant } from '@/lib/db/models/variant';
@@ -10,11 +11,15 @@ function toObjectId(id: string): Types.ObjectId {
 }
 
 export async function createCart(userId: string | null = null): Promise<string> {
+  await connectToDatabase();
+
   const cart = await Cart.create({ userId: userId ? toObjectId(userId) : null });
   return String(cart._id);
 }
 
 export async function getCartView(cartId: string): Promise<CartViewDTO | null> {
+  await connectToDatabase();
+
   const cart = await Cart.findById(toObjectId(cartId)).lean();
   if (!cart) return null;
 
@@ -65,6 +70,8 @@ export async function addItemToCart(
   variantId: string,
   quantity: number,
 ): Promise<CartViewDTO> {
+  await connectToDatabase();
+
   const variant = await requireVariant(variantId);
   const cart = await Cart.findById(toObjectId(cartId));
   if (!cart) throw new Error(`Cart not found: ${cartId}`);
@@ -91,6 +98,8 @@ export async function updateCartItemQuantity(
   variantId: string,
   quantity: number,
 ): Promise<CartViewDTO> {
+  await connectToDatabase();
+
   const cart = await Cart.findById(toObjectId(cartId));
   if (!cart) throw new Error(`Cart not found: ${cartId}`);
 
@@ -117,6 +126,8 @@ export async function mergeGuestCartIntoUserCart(
   guestCartId: string,
   userId: string,
 ): Promise<string> {
+  await connectToDatabase();
+
   const guestCart = await Cart.findById(toObjectId(guestCartId));
   if (!guestCart) throw new Error(`Cart not found: ${guestCartId}`);
 
