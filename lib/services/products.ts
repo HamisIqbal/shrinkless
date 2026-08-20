@@ -1,4 +1,5 @@
 import { Types } from 'mongoose';
+import { connectToDatabase } from '@/lib/db/connection';
 import { Product, type ProductDoc } from '@/lib/db/models/product';
 import { Variant, type VariantDoc } from '@/lib/db/models/variant';
 import type { ProductFilter } from '@/lib/validation/catalogue';
@@ -59,6 +60,8 @@ export async function listPublishedProducts(
   filter: ProductFilter,
   category?: string,
 ): Promise<ProductDTO[]> {
+  await connectToDatabase();
+
   const query: Record<string, unknown> = { status: 'published' };
   if (category) query.category = category;
 
@@ -87,6 +90,8 @@ export async function listPublishedProducts(
 }
 
 export async function getPublishedProductBySlug(slug: string): Promise<ProductDTO | null> {
+  await connectToDatabase();
+
   const product = (await Product.findOne({ slug, status: 'published' }).lean()) as WithId<ProductDoc> | null;
   if (!product) return null;
 

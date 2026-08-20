@@ -1,9 +1,12 @@
+import { connectToDatabase } from '@/lib/db/connection';
 import { Settings } from '@/lib/db/models/settings';
 import type { SettingsDTO } from '@/types/dto';
 
 const DEFAULT_STORE_EMAIL = 'orders@shrinkless.com';
 
 export async function getStoreSettings(): Promise<SettingsDTO> {
+  await connectToDatabase();
+
   const settings = await Settings.findOneAndUpdate(
     { key: 'store' },
     { $setOnInsert: { key: 'store', storeEmail: DEFAULT_STORE_EMAIL } },
