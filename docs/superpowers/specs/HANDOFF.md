@@ -27,10 +27,13 @@ Shipping & tax rules — US-based store, user will decide later. Designed as a p
    - `middleware.ts` gates `/admin/*` by role AND every admin action re-checks role server-side.
    - 7 collections: `users`, `products`, `variants`, `carts`, `orders`, `payments`, `settings`.
    - Order items are denormalized snapshots; all money stored as integer cents.
-2. **Storefront UX + vintage design system — PRESENTED, awaiting approval.**
-3. Admin panel — NOT YET PRESENTED
+2. **Storefront UX + vintage design system — APPROVED 2026-08-20.** Mini-cart drawer is the primary add-to-cart surface; filters live in a horizontal bar above the grid, held in searchParams.
+3. **Admin panel — PRESENTED, awaiting approval.**
 4. Checkout & payment flow — NOT YET PRESENTED
 5. Roadmap, phases & project directory structure — NOT YET PRESENTED
 
 ## Next step
-Section 1 approved. Section 2 presented — await approval, then present Section 3 (admin panel).
+Sections 1-2 approved. Section 3 presented — await approval, then present Section 4 (checkout & payment flow).
+
+## Repo
+Remote: https://github.com/HamisIqbal/shrinkless (main). Proprietary LICENSE. Vercel is connected and watching main; it 404s until the first real Next.js commit lands. No app code yet, by instruction.
