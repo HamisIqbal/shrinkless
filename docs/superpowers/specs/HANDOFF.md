@@ -33,13 +33,23 @@ Shipping & tax rules — US-based store, user will decide later. Designed as a p
 5. **Roadmap, phases & directory structure — APPROVED 2026-08-20.**
 
 ## Next step
-All 5 sections approved. Spec at docs/superpowers/specs/2026-08-20-shrinkless-design.md is approved.
+Phases 0-1 are DONE and merged to main (54 tests, tsc/lint/build clean).
 
-Implementation plan 1 of N written: docs/superpowers/plans/2026-08-20-foundation-and-data-layer.md (Phases 0-1, 14 tasks). Awaiting the user's choice of execution mode (subagent-driven vs inline). Later plans cover Phase 2 (storefront skeleton), Phase 3 (auth), Phase 4 (admin), Phase 5 (checkout), Phase 6 (design pass), Phase 7 (hardening).
+Plan 1 executed: docs/superpowers/plans/2026-08-20-foundation-and-data-layer.md
+Built: Next.js 16 scaffold, Vitest harness, lib/env, lib/db/connection, lib/money,
+all 7 models, types/dto.ts, lib/validation/catalogue, and the products, cart and
+settings services, plus seed scripts.
 
-Deliberate deviation from spec Phase 1, flagged and accepted: models for all 7 collections, but services only for products/cart/settings. Users service defers to Phase 3; orders and payments services defer to Phase 5.
+USER ACTION REQUIRED before the Vercel deploy renders:
+set MONGODB_URI and AUTH_SECRET in the Vercel project env vars.
 
-Still no app code written.
+Next: write plan 2 for Phase 2 (storefront skeleton, UNSTYLED). Before writing any
+App Router code, read node_modules/next/dist/docs/ — Next 16 has breaking changes
+from the Next 15 patterns in the training data.
 
-## Repo
-Remote: https://github.com/HamisIqbal/shrinkless (main). Proprietary LICENSE. Vercel is connected and watching main; it 404s until the first real Next.js commit lands. No app code yet, by instruction.
+Deviations accepted during execution:
+- Next 16.3.1 instead of 15 (user decision); spec and plan updated.
+- Mongoose 9: findOneAndUpdate uses returnDocument:'after', not new:true.
+- Test harness awaits model.init() so duplicate-key assertions are deterministic.
+- Vitest 4 resolves tsconfig paths natively; vite-tsconfig-paths dropped.
+- Services for users/orders/payments deferred to Phases 3 and 5.
