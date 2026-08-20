@@ -4,15 +4,15 @@
 
 **Goal:** Scaffold the Next.js application and build the complete data layer — seven Mongoose models, Zod schemas, and the products, cart, and settings services — so the app deploys successfully and has a seeded database behind a green test suite.
 
-**Architecture:** One Next.js 15 App Router application. Dependencies flow one way: `app/ → lib/services/ → lib/db/`. Mongoose documents never escape `lib/services`; services return plain serializable DTOs. All money is integer cents. Tests run against `mongodb-memory-server`, so no live Atlas connection is required.
+**Architecture:** One Next.js 16 App Router application. Dependencies flow one way: `app/ → lib/services/ → lib/db/`. Mongoose documents never escape `lib/services`; services return plain serializable DTOs. All money is integer cents. Tests run against `mongodb-memory-server`, so no live Atlas connection is required.
 
-**Tech Stack:** Next.js 15, TypeScript, Tailwind v4, Mongoose, Zod, Vitest, mongodb-memory-server.
+**Tech Stack:** Next.js 16, TypeScript, Tailwind v4, Mongoose, Zod, Vitest, mongodb-memory-server.
 
 **Spec:** `docs/superpowers/specs/2026-08-20-shrinkless-design.md`
 
 ## Global Constraints
 
-- **Next.js 15, App Router only.** No `pages/` directory, no `src/` directory.
+- **Next.js 16, App Router only.** No `pages/` directory, no `src/` directory.
 - **TypeScript strict mode.** No `any` in committed code.
 - **Tailwind v4.** Design tokens live in `@theme` inside `app/globals.css`. There is no `tailwind.config.js`.
 - **All money is integer cents.** No floats anywhere in the money path. Currency formatting happens only at render time.
@@ -50,7 +50,7 @@
 
 **Interfaces:**
 - Consumes: nothing
-- Produces: a buildable Next.js 15 app with the `@/` import alias
+- Produces: a buildable Next.js 16 app with the `@/` import alias
 
 > **Important:** `create-next-app` refuses to run in a directory containing files it doesn't recognise. It tolerates `LICENSE`, `docs/`, and `.gitignore`, but **not** `skills-lock.json`. It also overwrites `.gitignore`, which would drop our custom entries. Steps 1 and 4 handle both.
 
@@ -115,7 +115,7 @@ Expected: build completes with no errors, and `/` is listed as a static route.
 
 ```bash
 git add -A
-git commit -m "feat: scaffold Next.js 15 app with TypeScript and Tailwind v4"
+git commit -m "feat: scaffold Next.js 16 app with TypeScript and Tailwind v4"
 ```
 
 ---
@@ -123,7 +123,7 @@ git commit -m "feat: scaffold Next.js 15 app with TypeScript and Tailwind v4"
 ## Task 2: Test harness
 
 **Files:**
-- Create: `vitest.config.ts`, `tests/unit/smoke.test.ts`
+- Create: `vitest.config.mts`, `tests/unit/smoke.test.ts`
 - Modify: `package.json`
 
 **Interfaces:**
@@ -133,19 +133,21 @@ git commit -m "feat: scaffold Next.js 15 app with TypeScript and Tailwind v4"
 - [ ] **Step 1: Install the test dependencies**
 
 ```bash
-npm install -D vitest vite-tsconfig-paths mongodb-memory-server
+npm install -D vitest mongodb-memory-server
 ```
 
 - [ ] **Step 2: Write the config**
 
-Create `vitest.config.ts`:
+Create `vitest.config.mts` (the `.mts` extension matters — Vitest 4 loads a plain
+`.ts` config as CommonJS and warns about the ESM syntax):
 
 ```ts
 import { defineConfig } from 'vitest/config';
-import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
-  plugins: [tsconfigPaths()],
+  resolve: {
+    tsconfigPaths: true,
+  },
   test: {
     environment: 'node',
     include: ['tests/**/*.test.ts'],
@@ -188,7 +190,7 @@ Expected: 1 passed.
 
 ```bash
 git add -A
-git commit -m "test: add Vitest harness with tsconfig path resolution"
+git commit -m "test: add Vitest harness with native tsconfig path resolution"
 ```
 
 ---
@@ -411,6 +413,11 @@ export function withTestDatabase(): void {
   beforeAll(async () => {
     server = await MongoMemoryServer.create();
     await connectToDatabase(server.getUri());
+
+    // Mongoose builds indexes asynchronously. Without waiting, a test that
+    // expects a duplicate-key error can run before the unique index exists
+    // and see the insert succeed instead.
+    await Promise.all(Object.values(mongoose.models).map((m) => m.init()));
   });
 
   afterEach(async () => {
@@ -692,8 +699,6 @@ Price and stock live here, never on the product — this is what makes per-size 
 
 Run: `npm test -- catalogue`
 Expected: 6 passed.
-
-If the duplicate-key tests fail intermittently, it is because Mongoose builds indexes asynchronously. Add `await Product.init(); await Variant.init();` inside the test's `beforeAll`.
 
 - [ ] **Step 6: Commit**
 
@@ -1836,10 +1841,10 @@ export async function getStoreSettings(): Promise<SettingsDTO> {
   const settings = await Settings.findOneAndUpdate(
     { key: 'store' },
     { $setOnInsert: { key: 'store', storeEmail: DEFAULT_STORE_EMAIL } },
-    { upsert: true, new: true, setDefaultsOnInsert: true },
+    { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true },
   ).lean();
 
-  // `upsert: true` with `new: true` always returns a document, but the
+  // `upsert: true` with `returnDocument: 'after'` always returns a document, but the
   // Mongoose types cannot express that, so narrow it explicitly.
   if (!settings) throw new Error('Failed to load store settings');
 
@@ -1988,7 +1993,7 @@ async function main() {
   await User.findOneAndUpdate(
     { email: email.toLowerCase() },
     { $set: { passwordHash, role: 'admin' }, $setOnInsert: { email: email.toLowerCase() } },
-    { upsert: true, new: true },
+    { upsert: true, returnDocument: 'after' },
   );
 
   console.log(`admin ready: ${email}`);

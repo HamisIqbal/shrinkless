@@ -1,0 +1,29 @@
+import { Settings } from '@/lib/db/models/settings';
+import type { SettingsDTO } from '@/types/dto';
+
+const DEFAULT_STORE_EMAIL = 'orders@shrinkless.com';
+
+export async function getStoreSettings(): Promise<SettingsDTO> {
+  const settings = await Settings.findOneAndUpdate(
+    { key: 'store' },
+    { $setOnInsert: { key: 'store', storeEmail: DEFAULT_STORE_EMAIL } },
+    { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true },
+  ).lean();
+
+  // `upsert: true` with `returnDocument: 'after'` always returns a document, but the
+  // Mongoose types cannot express that, so narrow it explicitly.
+  if (!settings) throw new Error('Failed to load store settings');
+
+  return {
+    storeEmail: settings.storeEmail,
+    announcement: settings.announcement,
+    shippingZones: settings.shippingZones.map((zone) => ({
+      name: zone.name,
+      states: zone.states,
+      rateCents: zone.rateCents,
+    })),
+    freeShippingThresholdCents: settings.freeShippingThresholdCents ?? null,
+    taxMode: settings.taxMode as 'none' | 'flat' | 'stripe',
+    flatTaxRateBasisPoints: settings.flatTaxRateBasisPoints,
+  };
+}

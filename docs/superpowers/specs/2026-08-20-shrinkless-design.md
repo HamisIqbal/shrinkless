@@ -29,7 +29,7 @@ default, and Stripe Tax documented as the swap-in. This does not block any phase
 
 | Concern | Choice |
 |---|---|
-| Framework | Next.js 15, App Router, TypeScript |
+| Framework | Next.js 16, App Router, TypeScript |
 | Styling | Tailwind v4 with custom design tokens under `@theme` |
 | Database | MongoDB Atlas via Mongoose |
 | Validation | Zod, shared between client and server |
@@ -384,7 +384,7 @@ shrinkless/
 
 | Phase | Content | Deliverable |
 |---|---|---|
-| 0 | Next.js 15, TypeScript, Tailwind v4, lint/format, Atlas connection, env scaffolding | The Vercel deploy stops 404-ing |
+| 0 | Next.js 16, TypeScript, Tailwind v4, lint/format, Atlas connection, env scaffolding | The Vercel deploy stops 404-ing |
 | 1 | All seven models, Zod schemas, services returning DTOs, seed scripts, unit tests. No UI. | Seeded database, green test suite |
 | 2 | Storefront skeleton: home, grid, filters, PDP, variant picker, cart drawer, cart merge. **Unstyled** — semantic HTML and layout only. | Browse and fill a cart |
 | 3 | Auth.js credentials, argon2, admin seed, account pages, route protection | Sign in and see order history |
