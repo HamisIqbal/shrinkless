@@ -8,9 +8,12 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "seed:products": "tsx --env-file-if-exists=.env.local scripts/seed-products.ts",
+    "seed:admin": "tsx --env-file-if-exists=.env.local scripts/seed-admin.ts"
   },
   "dependencies": {
+    "@node-rs/argon2": "^2.1.0",
     "mongoose": "^9.9.3",
     "next": "16.3.1",
     "react": "19.2.8",
@@ -26,6 +29,7 @@
     "eslint-config-next": "16.3.1",
     "mongodb-memory-server": "^11.2.0",
     "tailwindcss": "^4",
+    "tsx": "^4.23.12",
     "typescript": "^5",
     "vitest": "^4.1.11"
   }
