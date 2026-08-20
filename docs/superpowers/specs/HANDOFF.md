@@ -33,7 +33,13 @@ Shipping & tax rules — US-based store, user will decide later. Designed as a p
 5. **Roadmap, phases & directory structure — APPROVED 2026-08-20.**
 
 ## Next step
-All 5 sections approved. Full spec written to docs/superpowers/specs/2026-08-20-shrinkless-design.md and awaiting user review. On approval, invoke the writing-plans skill to produce the implementation plan. Still no app code, by instruction.
+All 5 sections approved. Spec at docs/superpowers/specs/2026-08-20-shrinkless-design.md is approved.
+
+Implementation plan 1 of N written: docs/superpowers/plans/2026-08-20-foundation-and-data-layer.md (Phases 0-1, 14 tasks). Awaiting the user's choice of execution mode (subagent-driven vs inline). Later plans cover Phase 2 (storefront skeleton), Phase 3 (auth), Phase 4 (admin), Phase 5 (checkout), Phase 6 (design pass), Phase 7 (hardening).
+
+Deliberate deviation from spec Phase 1, flagged and accepted: models for all 7 collections, but services only for products/cart/settings. Users service defers to Phase 3; orders and payments services defer to Phase 5.
+
+Still no app code written.
 
 ## Repo
 Remote: https://github.com/HamisIqbal/shrinkless (main). Proprietary LICENSE. Vercel is connected and watching main; it 404s until the first real Next.js commit lands. No app code yet, by instruction.
