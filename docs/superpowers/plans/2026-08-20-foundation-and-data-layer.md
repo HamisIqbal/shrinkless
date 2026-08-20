@@ -4,15 +4,15 @@
 
 **Goal:** Scaffold the Next.js application and build the complete data layer — seven Mongoose models, Zod schemas, and the products, cart, and settings services — so the app deploys successfully and has a seeded database behind a green test suite.
 
-**Architecture:** One Next.js 15 App Router application. Dependencies flow one way: `app/ → lib/services/ → lib/db/`. Mongoose documents never escape `lib/services`; services return plain serializable DTOs. All money is integer cents. Tests run against `mongodb-memory-server`, so no live Atlas connection is required.
+**Architecture:** One Next.js 16 App Router application. Dependencies flow one way: `app/ → lib/services/ → lib/db/`. Mongoose documents never escape `lib/services`; services return plain serializable DTOs. All money is integer cents. Tests run against `mongodb-memory-server`, so no live Atlas connection is required.
 
-**Tech Stack:** Next.js 15, TypeScript, Tailwind v4, Mongoose, Zod, Vitest, mongodb-memory-server.
+**Tech Stack:** Next.js 16, TypeScript, Tailwind v4, Mongoose, Zod, Vitest, mongodb-memory-server.
 
 **Spec:** `docs/superpowers/specs/2026-08-20-shrinkless-design.md`
 
 ## Global Constraints
 
-- **Next.js 15, App Router only.** No `pages/` directory, no `src/` directory.
+- **Next.js 16, App Router only.** No `pages/` directory, no `src/` directory.
 - **TypeScript strict mode.** No `any` in committed code.
 - **Tailwind v4.** Design tokens live in `@theme` inside `app/globals.css`. There is no `tailwind.config.js`.
 - **All money is integer cents.** No floats anywhere in the money path. Currency formatting happens only at render time.
@@ -50,7 +50,7 @@
 
 **Interfaces:**
 - Consumes: nothing
-- Produces: a buildable Next.js 15 app with the `@/` import alias
+- Produces: a buildable Next.js 16 app with the `@/` import alias
 
 > **Important:** `create-next-app` refuses to run in a directory containing files it doesn't recognise. It tolerates `LICENSE`, `docs/`, and `.gitignore`, but **not** `skills-lock.json`. It also overwrites `.gitignore`, which would drop our custom entries. Steps 1 and 4 handle both.
 
@@ -115,7 +115,7 @@ Expected: build completes with no errors, and `/` is listed as a static route.
 
 ```bash
 git add -A
-git commit -m "feat: scaffold Next.js 15 app with TypeScript and Tailwind v4"
+git commit -m "feat: scaffold Next.js 16 app with TypeScript and Tailwind v4"
 ```
 
 ---
