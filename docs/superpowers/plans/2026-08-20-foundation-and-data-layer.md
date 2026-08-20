@@ -123,7 +123,7 @@ git commit -m "feat: scaffold Next.js 16 app with TypeScript and Tailwind v4"
 ## Task 2: Test harness
 
 **Files:**
-- Create: `vitest.config.ts`, `tests/unit/smoke.test.ts`
+- Create: `vitest.config.mts`, `tests/unit/smoke.test.ts`
 - Modify: `package.json`
 
 **Interfaces:**
@@ -133,19 +133,21 @@ git commit -m "feat: scaffold Next.js 16 app with TypeScript and Tailwind v4"
 - [ ] **Step 1: Install the test dependencies**
 
 ```bash
-npm install -D vitest vite-tsconfig-paths mongodb-memory-server
+npm install -D vitest mongodb-memory-server
 ```
 
 - [ ] **Step 2: Write the config**
 
-Create `vitest.config.ts`:
+Create `vitest.config.mts` (the `.mts` extension matters — Vitest 4 loads a plain
+`.ts` config as CommonJS and warns about the ESM syntax):
 
 ```ts
 import { defineConfig } from 'vitest/config';
-import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
-  plugins: [tsconfigPaths()],
+  resolve: {
+    tsconfigPaths: true,
+  },
   test: {
     environment: 'node',
     include: ['tests/**/*.test.ts'],
@@ -188,7 +190,7 @@ Expected: 1 passed.
 
 ```bash
 git add -A
-git commit -m "test: add Vitest harness with tsconfig path resolution"
+git commit -m "test: add Vitest harness with native tsconfig path resolution"
 ```
 
 ---
