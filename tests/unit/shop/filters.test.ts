@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildFilterQuery, toggleValue } from '@/lib/shop/filters';
 
-const empty = { sizes: [], colors: [], sort: 'newest' as const };
+const empty = { sizes: [], colors: [], sort: 'newest' as const, q: '' };
 
 describe('toggleValue', () => {
   it('adds a value that is absent', () => {
@@ -35,7 +35,19 @@ describe('buildFilterQuery', () => {
   });
 
   it('combines every dimension', () => {
-    const q = buildFilterQuery({ sizes: ['m'], colors: ['sand'], sort: 'price-desc' }, {});
+    const q = buildFilterQuery({ sizes: ['m'], colors: ['sand'], sort: 'price-desc', q: '' }, {});
     expect(q).toBe('size=m&color=sand&sort=price-desc');
+  });
+});
+
+describe('buildFilterQuery with a search term', () => {
+  it('keeps the query when a filter changes, so searching then filtering works', () => {
+    expect(buildFilterQuery({ ...empty, q: 'charcoal' }, { sizes: ['l'] })).toBe(
+      'q=charcoal&size=l',
+    );
+  });
+
+  it('drops an empty query', () => {
+    expect(buildFilterQuery({ ...empty, q: '' }, {})).toBe('');
   });
 });

@@ -77,13 +77,23 @@ export async function listPublishedProducts(
   // so a variant only counts if it is enabled AND in stock. Matching on
   // existence alone would send shoppers to products that are sold out in the
   // very size they filtered for.
+  const needle = filter.q.toLowerCase();
+
   const matching = dtos.filter((product) => {
     const buyable = product.variants.filter((v) => v.enabled && v.inStock);
 
     const sizeOk = !filter.sizes.length || buyable.some((v) => filter.sizes.includes(v.size));
     const colorOk = !filter.colors.length || buyable.some((v) => filter.colors.includes(v.color));
 
-    return sizeOk && colorOk;
+    // Search covers what a shopper can see on the tile: the name, the copy,
+    // and the colourways — someone searching "charcoal" means a colour.
+    const textOk =
+      !needle ||
+      product.title.toLowerCase().includes(needle) ||
+      product.description.toLowerCase().includes(needle) ||
+      product.colors.some((color) => color.toLowerCase().includes(needle));
+
+    return sizeOk && colorOk && textOk;
   });
 
   if (filter.sort === 'price-asc') {

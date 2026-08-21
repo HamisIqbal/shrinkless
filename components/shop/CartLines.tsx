@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { updateQuantityAction } from '@/app/actions/cart';
-import { cloudinaryUrl } from '@/lib/cloudinary/url';
+import { imageUrl } from '@/lib/images';
 import { formatCents } from '@/lib/money';
 import type { CartLineDTO } from '@/types/dto';
 
@@ -24,51 +24,61 @@ export function CartLines({ lines }: { lines: CartLineDTO[] }) {
       <ul>
         {lines.map((line) => (
           <li key={line.variantId} className="cartline">
-            <div className="cartline__plate">
-              {line.imagePublicId ? (
-                <Image
-                  src={cloudinaryUrl(line.imagePublicId, 'c_fill,w_240,h_300,q_auto,f_auto')}
-                  alt={line.productTitle}
-                  width={240}
-                  height={300}
-                  className="cartline__image"
-                />
-              ) : (
-                <span className="cartline__unset" aria-hidden="true">{line.color}</span>
-              )}
-            </div>
+            <Link href={`/product/${line.productSlug}`} className="cartline__plate">
+              <div className="frame frame--45">
+                {line.imagePublicId ? (
+                  <Image
+                    src={imageUrl(line.imagePublicId, 'c_fill,w_400,h_500,q_auto,f_auto')}
+                    alt={line.productTitle}
+                    fill
+                    sizes="160px"
+                  />
+                ) : null}
+              </div>
+            </Link>
 
             <div className="cartline__body">
               <h2 className="cartline__title">
                 <Link href={`/product/${line.productSlug}`}>{line.productTitle}</Link>
               </h2>
-              <p className="meta">{line.size.toUpperCase()} / {line.color}</p>
+              <p className="meta">{line.color} / {line.size.toUpperCase()}</p>
               <p className="meta tnum">{formatCents(line.unitPriceCents)} each</p>
+
+              <div className="stepper" role="group" aria-label={`Quantity for ${line.productTitle}`}>
+                <button
+                  type="button"
+                  className="stepper__button"
+                  disabled={pending}
+                  aria-label="Decrease quantity"
+                  onClick={() => change(line.variantId, line.quantity - 1)}
+                >
+                  &minus;
+                </button>
+
+                <span className="stepper__value tnum" aria-live="polite">{line.quantity}</span>
+
+                <button
+                  type="button"
+                  className="stepper__button"
+                  disabled={pending || line.quantity >= line.availableStock}
+                  aria-label="Increase quantity"
+                  onClick={() => change(line.variantId, line.quantity + 1)}
+                >
+                  +
+                </button>
+
+                <button
+                  type="button"
+                  className="ulink cartline__remove"
+                  disabled={pending}
+                  onClick={() => change(line.variantId, 0)}
+                >
+                  Remove
+                </button>
+              </div>
             </div>
 
-            <label className="field cartline__qty">
-              Qty
-              <input
-                type="number"
-                min={1}
-                max={line.availableStock}
-                defaultValue={line.quantity}
-                disabled={pending}
-                onChange={(event) => change(line.variantId, Number(event.target.value))}
-              />
-            </label>
-
-            <div className="cartline__total">
-              <p className="price tnum">{formatCents(line.lineTotalCents)}</p>
-              <button
-                type="button"
-                className="btn btn--quiet"
-                disabled={pending}
-                onClick={() => change(line.variantId, 0)}
-              >
-                Remove
-              </button>
-            </div>
+            <p className="cartline__total tnum">{formatCents(line.lineTotalCents)}</p>
           </li>
         ))}
       </ul>

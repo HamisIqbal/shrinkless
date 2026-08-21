@@ -17,7 +17,7 @@ export default async function AccountPage() {
     <div>
       <header className="pagehead">
         <p className="eyebrow">Account</p>
-        <h1 className="display">{session.user.name || 'Your account'}</h1>
+        <h1 className="head">{session.user.name || 'Your account'}</h1>
       </header>
 
       <dl className="deflist">

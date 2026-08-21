@@ -6,7 +6,7 @@ import { getPublishedProductBySlug, listPublishedProducts } from '@/lib/services
 
 withTestDatabase();
 
-const noFilter = { sizes: [], colors: [], sort: 'newest' as const };
+const noFilter = { sizes: [], colors: [], sort: 'newest' as const, q: '' };
 
 async function seedCatalogue() {
   const shirt = await Product.create({
@@ -76,5 +76,23 @@ describe('getPublishedProductBySlug', () => {
 
   it('returns null for an unknown slug', async () => {
     expect(await getPublishedProductBySlug('nope')).toBeNull();
+  });
+});
+
+describe('listPublishedProducts search', () => {
+  it('matches the product title, case-insensitively', async () => {
+    expect(await listPublishedProducts({ ...noFilter, q: 'FIELD' })).toHaveLength(1);
+  });
+
+  it('matches a colourway, because "charcoal" is a search a shopper makes', async () => {
+    expect(await listPublishedProducts({ ...noFilter, q: 'sand' })).toHaveLength(1);
+  });
+
+  it('returns nothing for a term that appears nowhere', async () => {
+    expect(await listPublishedProducts({ ...noFilter, q: 'balaclava' })).toHaveLength(0);
+  });
+
+  it('treats an empty query as no query', async () => {
+    expect(await listPublishedProducts({ ...noFilter, q: '' })).toHaveLength(1);
   });
 });

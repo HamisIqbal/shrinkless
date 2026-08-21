@@ -13,7 +13,7 @@ export default async function RegisterPage() {
   return (
     <div className="pagehead">
       <p className="eyebrow">Account</p>
-      <h1 className="display">Create an account</h1>
+      <h1 className="head">Create an account</h1>
 
       <AuthForm action={registerAction} submitLabel="Create account" includeName />
 

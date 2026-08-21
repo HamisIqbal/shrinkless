@@ -10,7 +10,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "seed:products": "tsx --env-file-if-exists=.env.local scripts/seed-products.ts",
+    "seed:shrinkless": "tsx --env-file-if-exists=.env.local scripts/seed-shrinkless.ts",
     "seed:admin": "tsx --env-file-if-exists=.env.local scripts/seed-admin.ts",
     "seed:orders": "tsx --env-file-if-exists=.env.local scripts/seed-orders.ts"
   },

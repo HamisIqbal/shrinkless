@@ -1,26 +1,32 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { addToCartAction } from '@/app/actions/cart';
 import { formatCents } from '@/lib/money';
+import { sizeOrder } from '@/lib/shop/colorways';
 import type { VariantDTO } from '@/types/dto';
 
 type Props = {
   sizes: string[];
   colors: string[];
   variants: VariantDTO[];
+  /** From `?color=` on the collection tiles, so the tile you clicked is selected. */
+  initialColor?: string;
 };
 
-export function VariantPicker({ sizes, colors, variants }: Props) {
-  const [size, setSize] = useState(sizes[0] ?? '');
-  const [color, setColor] = useState(colors[0] ?? '');
+export function VariantPicker({ sizes, colors, variants, initialColor }: Props) {
+  const router = useRouter();
+
+  const [color, setColor] = useState(
+    initialColor && colors.includes(initialColor) ? initialColor : (colors[0] ?? ''),
+  );
+  const [size, setSize] = useState('');
   const [message, setMessage] = useState('');
   const [failed, setFailed] = useState(false);
   const [pending, startTransition] = useTransition();
 
-  const selected = variants.find(
-    (variant) => variant.size === size && variant.color === color && variant.enabled,
-  );
+  const ordered = [...sizes].sort((a, b) => sizeOrder(a) - sizeOrder(b));
 
   function findVariant(nextSize: string, nextColor: string) {
     return variants.find(
@@ -28,90 +34,115 @@ export function VariantPicker({ sizes, colors, variants }: Props) {
     );
   }
 
-  function add() {
-    if (!selected) return;
+  const selected = size ? findVariant(size, color) : undefined;
+  const priced = selected ?? findVariant(ordered[0] ?? '', color);
+
+  function add(then?: () => void) {
+    if (!selected) {
+      setFailed(true);
+      setMessage('Choose a size first');
+      return;
+    }
 
     startTransition(async () => {
       const result = await addToCartAction(selected.id, 1);
       setFailed(!result.ok);
       setMessage(result.ok ? 'Added to cart' : result.error);
+
+      if (result.ok) {
+        router.refresh();
+        then?.();
+      }
     });
   }
 
   return (
-    <div className="picker stack-lg">
-      <fieldset>
+    <div className="picker">
+      <p className="picker__price tnum">
+        {priced ? formatCents(priced.priceCents) : 'Unavailable'}
+      </p>
+
+      <ul className="picker__spec">
+        <li>Garment Dyed Organic Cotton</li>
+        <li>Made in USA</li>
+        <li>Doesn&rsquo;t Shrink</li>
+      </ul>
+
+      <fieldset className="picker__group">
+        <legend className="meta picker__legend">Color</legend>
+        <div className="swatchrow">
+          {colors.map((option) => (
+            <label key={option} className={`swatch${color === option ? ' swatch--on' : ''}`}>
+              <input
+                type="radio"
+                name="color"
+                value={option}
+                className="visually-hidden"
+                checked={color === option}
+                onChange={() => setColor(option)}
+              />
+              <span className={`swatch__dot swatch__dot--${option}`} aria-hidden="true" />
+              <span className="swatch__name">{option}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      <fieldset className="picker__group">
         <legend className="meta picker__legend">Size</legend>
-        <div className="chip-row">
-          {sizes.map((option) => {
+        <div className="chiprow">
+          {ordered.map((option) => {
             const variant = findVariant(option, color);
-            const unavailable = !variant || !variant.inStock;
+            const soldOut = !variant || !variant.inStock;
 
             return (
-              <label key={option} className="chip">
+              <label
+                key={option}
+                className={`chip${size === option ? ' chip--on' : ''}${soldOut ? ' chip--sold' : ''}`}
+              >
                 <input
                   type="radio"
                   name="size"
                   value={option}
+                  className="visually-hidden"
                   checked={size === option}
-                  disabled={unavailable}
+                  disabled={soldOut}
                   onChange={() => setSize(option)}
                 />
                 {option.toUpperCase()}
-                {variant && !variant.inStock ? (
-                  <span className="sr-only"> (sold out)</span>
-                ) : null}
+                {soldOut ? <span className="visually-hidden"> (sold out)</span> : null}
               </label>
             );
           })}
         </div>
       </fieldset>
 
-      <fieldset>
-        <legend className="meta picker__legend">Colour</legend>
-        <div className="chip-row">
-          {colors.map((option) => (
-            <label key={option} className="chip">
-              <input
-                type="radio"
-                name="color"
-                value={option}
-                checked={color === option}
-                onChange={() => setColor(option)}
-              />
-              {option}
-            </label>
-          ))}
-        </div>
-      </fieldset>
-
-      <div className="picker__buy">
-        <p className="price price--lg tnum">
-          {selected ? formatCents(selected.priceCents) : 'Unavailable'}
-        </p>
-
+      <div className="picker__actions">
         <button
           type="button"
-          className="btn btn--spot"
-          onClick={add}
-          disabled={!selected || !selected.inStock || pending}
+          className="btn btn--block"
+          onClick={() => add()}
+          disabled={pending}
         >
-          {pending ? 'Adding…' : 'Add to cart'}
+          {pending ? 'Adding' : 'Add to cart'}
+        </button>
+
+        {/* /checkout does not exist until Phase 5, so Buy now adds and goes to
+            the cart rather than pretending to be an express checkout. */}
+        <button
+          type="button"
+          className="btn btn--outline btn--block"
+          onClick={() => add(() => router.push('/cart'))}
+          disabled={pending}
+        >
+          Buy now
         </button>
       </div>
-
-      {selected ? (
-        <p className="meta tnum">
-          {selected.sku} — {selected.inStock ? `${selected.stock} in stock` : 'Sold out'}
-        </p>
-      ) : (
-        <p className="meta">That combination is not made.</p>
-      )}
 
       <p
         role="status"
         aria-live="polite"
-        className={message ? `notice ${failed ? 'notice--error' : 'notice--ok'}` : undefined}
+        className={message ? `notice ${failed ? 'notice--error' : 'notice--ok'} picker__status` : 'picker__status'}
       >
         {message}
       </p>

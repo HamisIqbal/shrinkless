@@ -13,7 +13,7 @@ export default async function LoginPage() {
   return (
     <div className="pagehead">
       <p className="eyebrow">Account</p>
-      <h1 className="display">Sign in</h1>
+      <h1 className="head">Sign in</h1>
 
       <AuthForm action={loginAction} submitLabel="Sign in" />
 

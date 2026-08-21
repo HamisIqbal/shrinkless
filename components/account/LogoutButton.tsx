@@ -9,7 +9,7 @@ export function LogoutButton() {
   return (
     <button
       type="button"
-      className="btn btn--quiet"
+      className="btn btn--outline"
       disabled={pending}
       onClick={() => startTransition(logoutAction)}
     >

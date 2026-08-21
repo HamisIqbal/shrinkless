@@ -4,7 +4,7 @@ import { productFilterSchema } from '@/lib/validation/catalogue';
 describe('productFilterSchema', () => {
   it('applies defaults to an empty query', () => {
     const parsed = productFilterSchema.parse({});
-    expect(parsed).toEqual({ sizes: [], colors: [], sort: 'newest' });
+    expect(parsed).toEqual({ sizes: [], colors: [], sort: 'newest', q: '' });
   });
 
   it('splits a comma-separated size list and lowercases it', () => {

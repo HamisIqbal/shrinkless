@@ -1,64 +1,99 @@
 import Link from 'next/link';
 import { listPublishedProducts } from '@/lib/services/products';
-import { ProductCard } from '@/components/shop/ProductCard';
-import { Reveal } from '@/components/ui/Reveal';
+import { productFilterSchema } from '@/lib/validation/catalogue';
+import { toColorways } from '@/lib/shop/colorways';
+import { BRAND_IMAGES } from '@/lib/brand/images';
+import { Hero } from '@/components/editorial/Hero';
+import { StatementBlock } from '@/components/editorial/StatementBlock';
+import { SplitFeature } from '@/components/editorial/SplitFeature';
+import { FullBleedType } from '@/components/editorial/FullBleedType';
+import { ImageBand } from '@/components/editorial/ImageBand';
+import { NumberedPoints, type Point } from '@/components/editorial/NumberedPoints';
+import { EditorialGrid } from '@/components/editorial/EditorialGrid';
+import { QuoteRow, type Quote } from '@/components/editorial/QuoteRow';
+import { CollectionTile } from '@/components/shop/CollectionTile';
 
-/* The spec strip is the brand's signature device: every shirt is described the
-   way a workwear tag describes it, in four fixed fields. Same four, every
-   time — the repetition is the point. */
-const SPEC = [
-  { field: 'Fabric', value: '100% cotton' },
-  { field: 'Weight', value: '8.4 oz' },
-  { field: 'Cut', value: 'Boxy, straight hem' },
-  { field: 'Run', value: 'Limited' },
+const WHY: Point[] = [
+  {
+    number: '01',
+    title: 'Organic Cotton',
+    body: 'Premium organic cotton, selected for everyday wear.',
+  },
+  {
+    number: '02',
+    title: 'Garment Dyed',
+    body: 'The finished garment is dyed for its distinctive character and feel.',
+  },
+  {
+    number: '03',
+    title: "Doesn't Shrink",
+    body: 'Built to maintain its fit and proportions wash after wash.',
+  },
+  {
+    number: '04',
+    title: 'Made in USA',
+    body: 'Proudly made in the USA.',
+  },
+];
+
+// Placeholder copy until real reviews exist — spec §11.3. Replace verbatim.
+const QUOTES: Quote[] = [
+  {
+    text: 'Finally found a tee that still fits the way I want it to after washing.',
+    name: 'Placeholder review',
+  },
+  {
+    text: 'The colour has settled into something better than it started. It looks worn in, not worn out.',
+    name: 'Placeholder review',
+  },
+  {
+    text: 'I bought one to try it. I now own four.',
+    name: 'Placeholder review',
+  },
 ];
 
 export default async function HomePage() {
-  const products = await listPublishedProducts({ sizes: [], colors: [], sort: 'newest' });
-  const featured = products.slice(0, 3);
+  const products = await listPublishedProducts(productFilterSchema.parse({}));
+  const tee = products[0];
+  const colorways = tee ? toColorways(tee) : [];
 
   return (
-    <div>
-      <Reveal className="broadside">
-        <section aria-labelledby="hero-heading">
-          <p className="eyebrow">Catalogue No. 01 — Everyday shirts</p>
+    <>
+      <Hero
+        image={BRAND_IMAGES.hero}
+        eyebrow="Shrinkless"
+        headline={['Organic tees', "that don't shrink."]}
+        lede="Garment dyed organic tees. Made in USA."
+        primary={{ href: '/shop', label: 'Shop tees' }}
+        secondary={{ href: '/why-shrinkless', label: 'Why Shrinkless' }}
+      />
 
-          <h1 id="hero-heading" className="display broadside__head">
-            Shirts, cut for
-            <br />
-            everyday wear.
-          </h1>
+      <StatementBlock
+        lines={['The tee', 'that stays', 'the same.']}
+        support="Garment dyed organic cotton tees engineered to hold their shape, wash after wash."
+      />
 
-          <p className="lede broadside__lede">
-            Heavyweight cotton. Made to be worn, washed, and worn again.
-          </p>
+      <section className="band band--white collection" aria-labelledby="collection-heading">
+        <div className="wrap">
+          <div className="collection__head">
+            <h2 id="collection-heading" className="head">The Collection</h2>
+            <Link href="/shop" className="ulink">Shop all</Link>
+          </div>
 
-          <Link href="/shop" className="btn btn--spot broadside__cta">Shop all</Link>
-
-          <dl className="specstrip">
-            {SPEC.map((row) => (
-              <div key={row.field} className="specstrip__cell">
-                <dt className="meta">{row.field}</dt>
-                <dd className="specstrip__value">{row.value}</dd>
-              </div>
-            ))}
-          </dl>
-        </section>
-      </Reveal>
-
-      <section aria-labelledby="featured-heading" className="spread">
-        <p className="spread__label" id="featured-heading">Featured</p>
-
-        <div className="spread__body">
-          {featured.length === 0 ? (
-            <p className="lede">Nothing in stock yet. The first run is on the press.</p>
+          {colorways.length === 0 ? (
+            <p className="lede">The first run is on the press.</p>
           ) : (
-            <ul className="grid12">
-              {featured.map((product, index) => (
-                <li key={product.id} className="cardslot">
-                  <Reveal index={index}>
-                    <ProductCard product={product} />
-                  </Reveal>
+            <ul className="collection__grid">
+              {colorways.map((colorway) => (
+                <li key={colorway.color}>
+                  <CollectionTile
+                    slug={tee.slug}
+                    title={tee.title}
+                    color={colorway.color}
+                    priceCents={colorway.priceCents}
+                    image={colorway.image}
+                    variants={colorway.variants}
+                  />
                 </li>
               ))}
             </ul>
@@ -66,22 +101,42 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section aria-labelledby="story-heading" className="spread">
-        <p className="spread__label" id="story-heading">The shop</p>
+      <NumberedPoints
+        eyebrow="The difference"
+        headline="Why Shrinkless?"
+        points={WHY}
+        images={[BRAND_IMAGES.why01, BRAND_IMAGES.why02]}
+      />
 
-        <div className="spread__body storycols">
-          <p>
-            Shrinkless started with one complaint: a good shirt should not come out of the
-            wash a size smaller. Ours are cut from pre-shrunk heavyweight cotton and sewn
-            with a straight hem, so the shirt you pull on in a year is the shirt you bought.
-          </p>
-          <p>
-            We print in small runs and stop when they are gone. No seasonal churn, no
-            restocks on a schedule — when a colourway sells through, it makes way for the
-            next one on the press.
-          </p>
-        </div>
-      </section>
-    </div>
+      <FullBleedType
+        lines={['Your tee', 'should fit', 'the same way', 'tomorrow.']}
+        support="We make tees designed for real life, real washing and real wear."
+        cta={{ href: '/shop', label: 'Shop Shrinkless' }}
+      />
+
+      <SplitFeature
+        image={BRAND_IMAGES.dyeStory}
+        eyebrow="Garment dyed"
+        headline="Made differently."
+        body="We garment dye our finished tees to create their character, feel and lasting fit."
+        cta={{ href: '/our-story', label: 'Our story' }}
+      />
+
+      <ImageBand
+        image={BRAND_IMAGES.madeInUsa}
+        eyebrow="Craft"
+        glyph="🇺🇸"
+        headline="Made in USA."
+        body="Cut and sewn in the United States, by people who do this for a living."
+      />
+
+      <EditorialGrid
+        eyebrow="Everyday"
+        headline="Worn everywhere."
+        follow={{ href: 'https://www.instagram.com/shrinkless/', label: 'Follow @shrinkless' }}
+      />
+
+      <QuoteRow eyebrow="Wearers" quotes={QUOTES} />
+    </>
   );
 }
