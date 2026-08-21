@@ -4,6 +4,7 @@ export type FilterChange = {
   sizes: string[];
   colors: string[];
   sort: ProductSort;
+  q: string;
 };
 
 export function toggleValue(list: string[], value: string): string[] {
@@ -17,6 +18,7 @@ export function buildFilterQuery(
   const next = { ...current, ...change };
   const params = new URLSearchParams();
 
+  if (next.q) params.set('q', next.q);
   if (next.sizes.length) params.set('size', next.sizes.join(','));
   if (next.colors.length) params.set('color', next.colors.join(','));
   if (next.sort !== 'newest') params.set('sort', next.sort);

@@ -1,31 +1,37 @@
 import type { Metadata } from "next";
-import { Oswald, Zilla_Slab } from "next/font/google";
+import { Inter_Tight, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
 
-// Spec §6: two families, no third. A condensed grotesque for headings and
-// navigation, a slab serif for body and product copy.
-const oswald = Oswald({
+// Neue Haas Grotesk is licensed and Helvetica Neue cannot be served as a
+// webfont, so Inter Tight is the shipped face. The stack in globals.css puts
+// Helvetica Neue ahead of it for machines that already have it locally.
+const interTight = Inter_Tight({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
-  variable: "--font-oswald",
+  variable: "--font-inter-tight",
   display: "swap",
 });
 
-const zillaSlab = Zilla_Slab({
+// An accent, used twice: the testimonial quotation marks and nothing else.
+const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-zilla",
+  weight: ["400"],
+  variable: "--font-cormorant",
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Shrinkless",
-  description: "Shirts, cut for everyday wear.",
+  title: {
+    default: "Shrinkless — Organic Tees That Don't Shrink",
+    template: "%s — Shrinkless",
+  },
+  description:
+    "Garment dyed organic cotton tees engineered to hold their shape, wash after wash. Made in USA.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${oswald.variable} ${zillaSlab.variable}`}>
+    <html lang="en" className={`${interTight.variable} ${cormorant.variable}`}>
       <body>{children}</body>
     </html>
   );

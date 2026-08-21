@@ -1,26 +1,25 @@
-import Link from 'next/link';
+import { getStoreSettings } from '@/lib/services/settings';
+import { readCartView } from '@/lib/cart-session';
+import { auth } from '@/auth';
+import { Header } from '@/components/site/Header';
+import { Footer } from '@/components/site/Footer';
 
-export default function AccountLayout({ children }: LayoutProps<'/'>) {
+export default async function AccountLayout({ children }: LayoutProps<'/'>) {
+  const [settings, cart, session] = await Promise.all([
+    getStoreSettings(),
+    readCartView(),
+    auth(),
+  ]);
+
   return (
     <div className="shell">
-      <header className="masthead">
-        <div className="sheet masthead__inner">
-          <Link href="/" className="wordmark">
-            Shrinkless
-            <span className="wordmark__rule" aria-hidden="true" />
-            <span className="wordmark__est">Est. MMXXVI</span>
-          </Link>
+      <a href="#main" className="skiplink">Skip to content</a>
 
-          <nav aria-label="Main" className="mainnav">
-            <ul>
-              <li><Link href="/shop">Shop</Link></li>
-              <li><Link href="/cart">Cart</Link></li>
-            </ul>
-          </nav>
-        </div>
-      </header>
+      <Header itemCount={cart?.itemCount ?? 0} signedIn={Boolean(session?.user)} />
 
-      <main className="sheet narrow">{children}</main>
+      <main id="main" className="band band--tight wrap narrow">{children}</main>
+
+      <Footer storeEmail={settings.storeEmail} />
     </div>
   );
 }

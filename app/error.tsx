@@ -23,7 +23,7 @@ export default function AppError({
     /mongo|ECONNREFUSED|EAI_AGAIN|server selection/i.test(error.message);
 
   return (
-    <div className="sheet narrow errorpage">
+    <div className="wrap narrow errorpage">
       <p className="eyebrow">Error</p>
       <h1 className="display">
         {isDatabase ? 'Cannot reach the database' : 'Something broke'}
@@ -42,7 +42,7 @@ export default function AppError({
         <pre className="errorpage__detail">{error.message}</pre>
       ) : null}
 
-      <button type="button" className="btn btn--spot" onClick={reset}>
+      <button type="button" className="btn" onClick={reset}>
         Try again
       </button>
     </div>

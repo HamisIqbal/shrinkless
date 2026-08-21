@@ -27,13 +27,13 @@ export function AuthForm({ action, submitLabel, includeName = false }: Props) {
       {includeName && (
         <label className="field">
           Name
-          <input type="text" name="name" autoComplete="name" />
+          <input type="text" name="name" autoComplete="name" className="input" />
         </label>
       )}
 
       <label className="field">
         Email
-        <input type="email" name="email" required autoComplete="email" />
+        <input type="email" name="email" required autoComplete="email" className="input" />
       </label>
 
       <label className="field">
@@ -42,11 +42,12 @@ export function AuthForm({ action, submitLabel, includeName = false }: Props) {
           type="password"
           name="password"
           required
+          className="input"
           autoComplete={includeName ? 'new-password' : 'current-password'}
         />
       </label>
 
-      <button type="submit" className="btn btn--spot authform__submit" disabled={pending}>
+      <button type="submit" className="btn btn--block authform__submit" disabled={pending}>
         {pending ? 'Working…' : submitLabel}
       </button>
 
