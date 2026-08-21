@@ -1,5 +1,6 @@
 import { connectToDatabase } from '@/lib/db/connection';
 import { Settings } from '@/lib/db/models/settings';
+import type { SettingsInput } from '@/lib/validation/settings';
 import type { SettingsDTO } from '@/types/dto';
 
 const DEFAULT_STORE_EMAIL = 'orders@shrinkless.com';
@@ -29,4 +30,26 @@ export async function getStoreSettings(): Promise<SettingsDTO> {
     taxMode: settings.taxMode as 'none' | 'flat' | 'stripe',
     flatTaxRateBasisPoints: settings.flatTaxRateBasisPoints,
   };
+}
+
+export async function updateStoreSettings(input: SettingsInput): Promise<SettingsDTO> {
+  await connectToDatabase();
+
+  await Settings.findOneAndUpdate(
+    { key: 'store' },
+    {
+      $set: {
+        storeEmail: input.storeEmail,
+        announcement: input.announcement,
+        shippingZones: input.shippingZones,
+        freeShippingThresholdCents: input.freeShippingThresholdCents,
+        taxMode: input.taxMode,
+        flatTaxRateBasisPoints: input.flatTaxRateBasisPoints,
+      },
+      $setOnInsert: { key: 'store' },
+    },
+    { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true },
+  );
+
+  return getStoreSettings();
 }
