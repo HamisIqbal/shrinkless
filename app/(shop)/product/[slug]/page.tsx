@@ -21,7 +21,7 @@ export default async function ProductPage(props: PageProps<'/product/[slug]'>) {
   if (!product) notFound();
 
   return (
-    <article className="pdp reveal">
+    <article className="pdp">
       <div className="pdp__gallery">
         {product.images.length ? (
           product.images.map((image) => (

@@ -11,7 +11,7 @@ export default async function RegisterPage() {
   if (session?.user) redirect('/account');
 
   return (
-    <div className="pagehead reveal">
+    <div className="pagehead">
       <p className="eyebrow">Account</p>
       <h1 className="display">Create an account</h1>
 

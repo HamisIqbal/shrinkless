@@ -2,6 +2,7 @@ import { listPublishedProducts } from '@/lib/services/products';
 import { productFilterSchema } from '@/lib/validation/catalogue';
 import { ProductCard } from '@/components/shop/ProductCard';
 import { FilterBar } from '@/components/shop/FilterBar';
+import { Reveal } from '@/components/ui/Reveal';
 
 export default async function ShopPage(props: PageProps<'/shop/[[...category]]'>) {
   const [{ category }, rawSearch] = await Promise.all([props.params, props.searchParams]);
@@ -15,7 +16,7 @@ export default async function ShopPage(props: PageProps<'/shop/[[...category]]'>
 
   return (
     <div>
-      <header className="pagehead reveal">
+      <header className="pagehead">
         <p className="eyebrow">Catalogue</p>
         <h1 className="display">{categorySlug ?? 'Shop all'}</h1>
       </header>
@@ -36,10 +37,12 @@ export default async function ShopPage(props: PageProps<'/shop/[[...category]]'>
           Nothing matches those filters. Clear one and try again.
         </p>
       ) : (
-        <ul className="grid12 reveal-list catalogue">
-          {products.map((product) => (
+        <ul className="grid12 catalogue">
+          {products.map((product, index) => (
             <li key={product.id} className="cardslot">
-              <ProductCard product={product} />
+              <Reveal index={index}>
+                <ProductCard product={product} />
+              </Reveal>
             </li>
           ))}
         </ul>

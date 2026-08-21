@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { getStoreSettings } from '@/lib/services/settings';
 import { readCartView } from '@/lib/cart-session';
 import { auth } from '@/auth';
+import { SmoothScroll } from '@/components/ui/SmoothScroll';
 
 export default async function ShopLayout({ children }: LayoutProps<'/'>) {
   const [settings, cart, session] = await Promise.all([
@@ -14,6 +15,7 @@ export default async function ShopLayout({ children }: LayoutProps<'/'>) {
 
   return (
     <div className="shell">
+      <SmoothScroll />
       {settings.announcement ? (
         <p role="status" className="announce">{settings.announcement}</p>
       ) : null}

@@ -445,3 +445,23 @@
   gap: 1rem;
   padding-block: 2rem 4rem;
 }
+
+/* --- Error and empty pages ------------------------------------------------ */
+
+.errorpage { padding-block: 5rem 6rem; }
+.errorpage .display { margin-top: 0.75rem; }
+.errorpage .lede { margin-top: 1.25rem; }
+.errorpage .btn { margin-top: 2rem; }
+
+.errorpage__detail {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border: var(--spacing-rule) solid var(--color-rule);
+  background: var(--color-stock-deep);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--text-step-1);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-x: auto;
+  color: var(--color-ink-soft);
+}

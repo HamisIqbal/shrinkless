@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { listPublishedProducts } from '@/lib/services/products';
 import { ProductCard } from '@/components/shop/ProductCard';
+import { Reveal } from '@/components/ui/Reveal';
 
 /* The spec strip is the brand's signature device: every shirt is described the
    way a workwear tag describes it, in four fixed fields. Same four, every
@@ -18,30 +19,32 @@ export default async function HomePage() {
 
   return (
     <div>
-      <section aria-labelledby="hero-heading" className="broadside reveal">
-        <p className="eyebrow">Catalogue No. 01 — Everyday shirts</p>
+      <Reveal className="broadside">
+        <section aria-labelledby="hero-heading">
+          <p className="eyebrow">Catalogue No. 01 — Everyday shirts</p>
 
-        <h1 id="hero-heading" className="display broadside__head">
-          Shirts, cut for
-          <br />
-          everyday wear.
-        </h1>
+          <h1 id="hero-heading" className="display broadside__head">
+            Shirts, cut for
+            <br />
+            everyday wear.
+          </h1>
 
-        <p className="lede broadside__lede">
-          Heavyweight cotton. Made to be worn, washed, and worn again.
-        </p>
+          <p className="lede broadside__lede">
+            Heavyweight cotton. Made to be worn, washed, and worn again.
+          </p>
 
-        <Link href="/shop" className="btn btn--spot broadside__cta">Shop all</Link>
+          <Link href="/shop" className="btn btn--spot broadside__cta">Shop all</Link>
 
-        <dl className="specstrip">
-          {SPEC.map((row) => (
-            <div key={row.field} className="specstrip__cell">
-              <dt className="meta">{row.field}</dt>
-              <dd className="specstrip__value">{row.value}</dd>
-            </div>
-          ))}
-        </dl>
-      </section>
+          <dl className="specstrip">
+            {SPEC.map((row) => (
+              <div key={row.field} className="specstrip__cell">
+                <dt className="meta">{row.field}</dt>
+                <dd className="specstrip__value">{row.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      </Reveal>
 
       <section aria-labelledby="featured-heading" className="spread">
         <p className="spread__label" id="featured-heading">Featured</p>
@@ -50,10 +53,12 @@ export default async function HomePage() {
           {featured.length === 0 ? (
             <p className="lede">Nothing in stock yet. The first run is on the press.</p>
           ) : (
-            <ul className="grid12 reveal-list">
-              {featured.map((product) => (
+            <ul className="grid12">
+              {featured.map((product, index) => (
                 <li key={product.id} className="cardslot">
-                  <ProductCard product={product} />
+                  <Reveal index={index}>
+                    <ProductCard product={product} />
+                  </Reveal>
                 </li>
               ))}
             </ul>

@@ -14,7 +14,7 @@ export default async function AccountPage() {
   const orders = await listOrdersForUser(session.user.id ?? '');
 
   return (
-    <div className="reveal">
+    <div>
       <header className="pagehead">
         <p className="eyebrow">Account</p>
         <h1 className="display">{session.user.name || 'Your account'}</h1>

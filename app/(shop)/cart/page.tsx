@@ -8,7 +8,7 @@ export default async function CartPage() {
 
   if (!cart || cart.lines.length === 0) {
     return (
-      <div className="pagehead reveal">
+      <div className="pagehead">
         <p className="eyebrow">Order</p>
         <h1 className="display">Your cart</h1>
         <p className="lede emptystate">Nothing in it yet. Start with the catalogue.</p>
@@ -18,7 +18,7 @@ export default async function CartPage() {
   }
 
   return (
-    <div className="reveal">
+    <div>
       <header className="pagehead">
         <p className="eyebrow">Order</p>
         <h1 className="display">Your cart</h1>

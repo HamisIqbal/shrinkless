@@ -369,23 +369,23 @@ input[type="number"] { font-variant-numeric: tabular-nums; }
    Short, once-only entrance reveals. Everything off under reduced motion.
    -------------------------------------------------------------------------- */
 
-@keyframes ink-rise {
-  from { opacity: 0; transform: translateY(0.6rem); }
-  to   { opacity: 1; transform: none; }
-}
-
-.reveal { animation: ink-rise 420ms cubic-bezier(0.16, 0.84, 0.44, 1) both; }
-
-.reveal-list > * { animation: ink-rise 420ms cubic-bezier(0.16, 0.84, 0.44, 1) both; }
-.reveal-list > *:nth-child(1) { animation-delay: 40ms; }
-.reveal-list > *:nth-child(2) { animation-delay: 80ms; }
-.reveal-list > *:nth-child(3) { animation-delay: 120ms; }
-.reveal-list > *:nth-child(4) { animation-delay: 160ms; }
-.reveal-list > *:nth-child(5) { animation-delay: 200ms; }
-.reveal-list > *:nth-child(n+6) { animation-delay: 240ms; }
-
 @media (prefers-reduced-motion: reduce) {
-  .reveal,
-  .reveal-list > * { animation: none; }
-  * { transition-duration: 0.01ms !important; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
+
+/* Lenis owns the scroll while it is mounted; these are the rules it needs to
+   coexist with native scrolling (its own stylesheet, inlined so no import
+   crosses into the admin bundle). Storefront only — SmoothScroll is mounted in
+   the (shop) layout. */
+html.lenis,
+html.lenis body { height: auto; }
+
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-stopped { overflow: clip; }
+.lenis.lenis-smooth iframe { pointer-events: none; }

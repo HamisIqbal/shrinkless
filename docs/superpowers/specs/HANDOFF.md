@@ -75,12 +75,21 @@ invent no colours of their own.
   shadows, no rounded corners.
 - Signature device: the **spec strip** — four fixed workwear-tag fields
   (Fabric / Weight / Cut / Run) printed hairline-ruled under the hero.
-- Entrance reveals are CSS-only and disabled under `prefers-reduced-motion`.
+- Entrance reveals run through `components/ui/Reveal.tsx` (Motion's
+  `whileInView`, `once: true`, capped 40ms stagger); `components/ui/SmoothScroll.tsx`
+  mounts Lenis in the `(shop)` layout only. Both bail out entirely under
+  `prefers-reduced-motion` rather than merely shortening.
 
-**Deviation from spec §6, flagged:** Motion and Lenis are *not* installed.
-Smooth scroll and the staggered library-driven reveals were done with plain CSS
-animation instead, to avoid adding two runtime dependencies during a design
-pass. If Lenis smooth-scroll is wanted, it is an additive change.
+Spec §6 is now met in full: `motion` and `lenis` are installed and the CSS-only
+`.reveal` / `.reveal-list` keyframes are gone. Lenis' own stylesheet rules are
+inlined at the foot of `app/globals.css` (no import, so nothing crosses into the
+admin bundle). The admin stays motion-free by construction — neither component
+is mounted under `(admin)`.
+
+Also added this pass: `app/error.tsx` (a global error boundary that names a
+failed database connection specifically, since that was surfacing as a blank
+screen) and `app/not-found.tsx`, both styled with `.errorpage` in
+`app/storefront.css`.
 
 ### Verified
 
