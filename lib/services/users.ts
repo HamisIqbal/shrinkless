@@ -1,8 +1,11 @@
 import { Types } from 'mongoose';
 import { hash, verify } from '@node-rs/argon2';
 import { connectToDatabase } from '@/lib/db/connection';
+import { Order } from '@/lib/db/models/order';
 import { User } from '@/lib/db/models/user';
+import { listOrdersForUser } from '@/lib/services/orders';
 import type { RegisterInput } from '@/lib/validation/auth';
+import type { CustomerRowDTO, OrderRowDTO } from '@/types/dto';
 
 export type UserDTO = {
   id: string;
@@ -100,4 +103,43 @@ export async function getUserById(id: string): Promise<UserDTO | null> {
   const user = await User.findById(id).lean();
 
   return user ? toUserDTO(user as unknown as UserShape) : null;
+}
+
+/** Cancelled and failed orders are not revenue. */
+const REVENUE_STATUSES = ['paid', 'shipped', 'delivered'];
+
+export async function listCustomers(): Promise<CustomerRowDTO[]> {
+  await connectToDatabase();
+
+  const users = await User.find({}).sort({ createdAt: -1 }).lean();
+  const orders = await Order.find({ userId: { $in: users.map((user) => user._id) } })
+    .select('userId status totalCents')
+    .lean();
+
+  return users.map((user) => {
+    const theirs = orders.filter((order) => String(order.userId) === String(user._id));
+
+    return {
+      id: String(user._id),
+      email: user.email,
+      name: user.name,
+      role: user.role === 'admin' ? 'admin' : 'customer',
+      createdAt: (user as { createdAt?: Date }).createdAt?.toISOString() ?? '',
+      orderCount: theirs.length,
+      lifetimeCents: theirs
+        .filter((order) => REVENUE_STATUSES.includes(order.status))
+        .reduce((sum, order) => sum + order.totalCents, 0),
+    };
+  });
+}
+
+export async function getCustomerDetail(
+  id: string,
+): Promise<{ customer: CustomerRowDTO; orders: OrderRowDTO[] } | null> {
+  if (!Types.ObjectId.isValid(id)) return null;
+
+  const customer = (await listCustomers()).find((row) => row.id === id);
+  if (!customer) return null;
+
+  return { customer, orders: await listOrdersForUser(id) };
 }
