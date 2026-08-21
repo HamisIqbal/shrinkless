@@ -102,12 +102,40 @@ screen) and `app/not-found.tsx`, both styled with `.errorpage` in
 
 ### NOT verified
 
-- **No runtime walkthrough.** MongoDB Atlas is unreachable from this sandbox
-  (`MongooseServerSelectionError` — the sandbox IP is not on the Atlas
-  allowlist), so no page was exercised against real data. The Phase 4 plan's
-  step-7 runtime checklist and step-8 proxy-bypass proof are both still owed.
+- **Runtime walkthrough is now partly done** (2026-08-21), against a *local*
+  database rather than Atlas — see "Running locally" below. Verified serving
+  real data: `/` 200 with hero, spec strip and three seeded products, `/shop`
+  200 with the same grid, `/product/field-shirt` 200, `/cart` 200, `/login`
+  200, an unknown path 404s into `app/not-found.tsx`, and `/admin` 307s to
+  `/login?from=%2Fadmin` for a signed-out visitor. Dev log clean.
+  Still owed: signed-in admin walkthrough of the 12 admin routes, the
+  step-8 proxy-bypass proof (a *customer*-role session hitting `/admin`), and
+  a real add-to-cart/checkout pass in a browser.
 - Guest -> account cart merge (carried over from Phase 3) is still unproven in
   a browser.
+
+### Running locally
+
+**Atlas is currently unreachable from this machine** and that is not a code
+bug: all three shards close the connection with `SSL alert number 80` during
+the TLS handshake, which is how Atlas rejects an IP that is not on its access
+list. Mongoose reports it as `MongooseServerSelectionError`, and `app/error.tsx`
+now surfaces it as "Cannot reach the database" instead of a blank page. Fix:
+Atlas -> Network Access -> Add IP Address (this machine was `119.73.19.40` on
+2026-08-21), then re-enable the Atlas `MONGODB_URI` line in `.env.local`.
+
+Until then, `.env.local` points at a local database:
+
+```
+npm run dev:db      # scripts/dev-db.mjs — mongod on :27017, data in .mongo-data/
+npm run seed:products
+npm run seed:admin -- <email> <password>
+npm run dev
+```
+
+`dev:db` reuses the MongoDB binary `mongodb-memory-server` caches for the tests,
+but with a persistent `dbPath`, so seeded data survives a restart. It is a
+standalone server, not a replica set — fine until something needs transactions.
 
 ### Gotchas found this phase
 
