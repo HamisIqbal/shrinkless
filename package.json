@@ -10,7 +10,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "seed:products": "tsx --env-file-if-exists=.env.local scripts/seed-products.ts",
-    "seed:admin": "tsx --env-file-if-exists=.env.local scripts/seed-admin.ts"
+    "seed:admin": "tsx --env-file-if-exists=.env.local scripts/seed-admin.ts",
+    "seed:orders": "tsx --env-file-if-exists=.env.local scripts/seed-orders.ts"
   },
   "dependencies": {
     "@node-rs/argon2": "^2.1.0",

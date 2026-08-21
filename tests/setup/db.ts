@@ -4,7 +4,7 @@ import mongoose from 'mongoose';
 import { connectToDatabase, disconnectFromDatabase } from '@/lib/db/connection';
 
 export function withTestDatabase(): void {
-  let server: MongoMemoryServer;
+  let server: MongoMemoryServer | undefined;
 
   beforeAll(async () => {
     server = await MongoMemoryServer.create();
@@ -23,6 +23,6 @@ export function withTestDatabase(): void {
 
   afterAll(async () => {
     await disconnectFromDatabase();
-    await server.stop();
+    await server?.stop();
   });
 }
