@@ -4,7 +4,6 @@ Session paused mid-brainstorm. Resume from "Next step" below.
 
 ## Path
 Architectural brainstorming (superpowers): questions -> approaches -> sectioned design -> written spec -> writing-plans -> implementation.
-**No code written yet, by user instruction.**
 
 ## Decisions locked (do not re-ask)
 | Topic | Decision |
@@ -33,30 +32,95 @@ Shipping & tax rules — US-based store, user will decide later. Designed as a p
 5. **Roadmap, phases & directory structure — APPROVED 2026-08-20.**
 
 ## Next step
-Phases 0-3 are DONE and merged to main. 82 tests, tsc/lint/build clean.
 
-Phase 3 shipped: Auth.js v5 beta.32 credentials + argon2, JWT session carrying
-id and role, /login, /register, /account (protected), logout, session-aware header,
-and guest->account cart merge wired into the login action.
+Phases 0–4 are DONE. The **Phase 6 design pass has also been pulled forward** and
+applied; Phase 5 (checkout and payments) is the only thing standing between this
+build and taking money.
 
-Verified at runtime against live Atlas by driving Auth.js's real HTTP endpoints
-(GET /api/auth/csrf then POST /api/auth/callback/credentials):
-- /api/auth/session returns the user with id and role=customer -> jwt+session callbacks work
-- wrong password -> session null
-- /account renders for a session, redirects (307) anonymous visitors to /login
-- /login returns 307 for an already-signed-in user
-- createUser cannot mint an admin even when role is smuggled into the payload
+### Phase 4 — admin panel (complete)
 
-NOT runtime-verified: the guest->account cart merge. It lives in loginAction, and the
-scripted HTTP login bypasses Server Actions entirely. mergeGuestCartIntoUserCart itself
-is unit-tested; only the wiring is unproven. Confirm in a browser.
+All 12 tasks landed on `phase-4-admin-panel`:
 
-Gotchas discovered:
-- next-auth/jwt is only `export * from "@auth/core/jwt"`, so `declare module 'next-auth/jwt'`
-  silently declares a NEW module. Augment '@auth/core/jwt' instead.
-- `handlers` is an object: `export const { GET, POST } = handlers`, not a re-export.
-- Route-group layouts type as LayoutProps<'/'>, not the child path.
+1–7 (previous session): role guards + `proxy.ts`, admin shell, admin product
+DTOs/read services, pure variant matrix, product write service with variant
+reconciliation, product list + editor UI, signed direct-to-Cloudinary uploads.
 
-Next: Phase 4 (admin panel). It needs proxy.ts gating /admin/* (Next 16 renamed
-middleware -> proxy) plus a server-side role re-check in every admin action.
-Write the plan first; read node_modules/next/dist/docs/ for App Router specifics.
+8. `lib/services/orders.ts` — `canTransition` (pure), `listOrders`,
+   `getOrderById`, `transitionOrder`, `listOrdersForUser`, `InvalidTransitionError`.
+   Spec §7.4 transition table; every move appends to `statusHistory` with the
+   actor. Plus `scripts/seed-orders.ts` and `npm run seed:orders`.
+9. Orders UI: `/admin/orders`, `/admin/orders/[id]`, `transitionOrderAction`,
+   `FulfillmentPanel`. Refunds deep-link to Stripe/PayPal, as specified.
+10. Customers (read-only): `listCustomers`, `getCustomerDetail`,
+    `/admin/customers`, `/admin/customers/[id]`. Lifetime value counts only
+    `paid | shipped | delivered`. No role control anywhere, by design.
+11. Store settings: `settingsInputSchema`, `updateStoreSettings`,
+    `saveSettingsAction`, `SettingsForm`, `/admin/settings`.
+12. Dashboard: `lib/services/stats.ts` (`getAdminStats`, injectable `now`),
+    rendered at `/admin`.
+
+### Design pass (Phase 6, applied early)
+
+Tokens live in `app/globals.css` under Tailwind v4 `@theme` and are the single
+source of truth; `app/storefront.css` and `app/admin.css` consume them and
+invent no colours of their own.
+
+- Oswald (condensed grotesque) for headings/nav, Zilla Slab for body, tabular
+  numerals everywhere money appears. Fixed six-step scale, no fluid clamps.
+- Warm kraft paper stock, warm near-black ink (never `#000`), one saturated
+  spot ink reserved for price, sale flags and the primary button.
+- Generated SVG paper grain over the storefront; the admin is explicitly
+  exempt (`body:has(.admin)::before { display: none }`) per spec §3.
+- 12-column grid collapsing to 4, catalogue label rails, hairline rules, no
+  shadows, no rounded corners.
+- Signature device: the **spec strip** — four fixed workwear-tag fields
+  (Fabric / Weight / Cut / Run) printed hairline-ruled under the hero.
+- Entrance reveals are CSS-only and disabled under `prefers-reduced-motion`.
+
+**Deviation from spec §6, flagged:** Motion and Lenis are *not* installed.
+Smooth scroll and the staggered library-driven reveals were done with plain CSS
+animation instead, to avoid adding two runtime dependencies during a design
+pass. If Lenis smooth-scroll is wanted, it is an additive change.
+
+### Verified
+
+- `npx tsc --noEmit` — clean.
+- `npm run lint` — clean.
+- `npm run build` — succeeds; all 12 admin routes and the storefront compile.
+  Compiled CSS carries every design class and token.
+
+### NOT verified
+
+- **The full test suite has not been run against Tasks 8–12.** The sandbox
+  could not start `mongodb-memory-server`: the MongoDB 8.2.6 binary download
+  was truncated at ~50% and `fastdl.mongodb.org` resolved intermittently
+  (`EAI_AGAIN`). Test *code* for orders, customers, settings-update and stats
+  is written and committed; it needs one green run on a machine with working
+  DNS. Run `npm run test`.
+- **No runtime walkthrough.** MongoDB Atlas is unreachable from this sandbox
+  (`MongooseServerSelectionError` — the sandbox IP is not on the Atlas
+  allowlist), so no page was exercised against real data. The Phase 4 plan's
+  step-7 runtime checklist and step-8 proxy-bypass proof are both still owed.
+- Guest -> account cart merge (carried over from Phase 3) is still unproven in
+  a browser.
+
+### Gotchas found this phase
+
+- Mongoose 9 types query filters against the schema literal union. A
+  `const X = ['paid', 'shipped']` widens to `string[]` and fails
+  `$in`; annotate as `OrderStatus[]`. Same for test seed helpers — typing a
+  `status` parameter as `string` will not compile.
+- `PageProps<'/admin/orders/[id]'>` does not exist until route types are
+  regenerated. Run `npx next typegen` after adding a dynamic route.
+- `tests/setup/db.ts` used to crash in `afterAll` with "Cannot read properties
+  of undefined (reading 'stop')" when `MongoMemoryServer.create()` failed,
+  masking the real error. `server` is now optional and stopped with `?.`.
+
+### Next: Phase 5 — checkout and payments
+
+`lib/pricing`, `/checkout`, Stripe Payment Element, PayPal Buttons, both
+webhooks, event-ID idempotency, `/checkout/processing` polling, order emails via
+Resend. Riskiest phase; give it its own branch.
+
+Note `/cart` already links to `/checkout`, which does not exist yet — that link
+404s until Phase 5 lands.

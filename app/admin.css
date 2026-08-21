@@ -310,3 +310,44 @@ body:has(.admin)::before { display: none; }
 .admin [role="status"] { color: var(--color-ink-soft); font-family: var(--font-display); letter-spacing: 0.1em; text-transform: uppercase; font-size: var(--text-step-1); }
 
 .admin a { text-underline-offset: 0.2em; }
+
+/* --- Variant matrix ------------------------------------------------------- */
+
+.admin caption {
+  text-align: left;
+  font-family: var(--font-display);
+  font-size: var(--text-step-1);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+  padding-bottom: 0.5rem;
+}
+
+/* An orphan row is a size/colour combination that was dropped from the option
+   sets. Variants are never deleted, so the row stays and has to read as
+   retired rather than active. */
+.admin tr[data-orphan] td { color: var(--color-ink-soft); }
+.admin tr[data-orphan] td:first-child { box-shadow: inset 2px 0 0 var(--color-spot); padding-left: 0.5rem; }
+
+/* --- Image uploader ------------------------------------------------------- */
+
+.admin img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border: var(--spacing-rule) solid var(--color-rule);
+}
+
+.admin input[type="file"] {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  max-width: none;
+  font-family: var(--font-display);
+  font-size: var(--text-step-1);
+}
+
+.admin textarea { min-height: 6rem; resize: vertical; }
+
+.admin form > table,
+.admin form > button { margin-top: 1.25rem; }
