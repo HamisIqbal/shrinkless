@@ -114,6 +114,27 @@ screen) and `app/not-found.tsx`, both styled with `.errorpage` in
 - Guest -> account cart merge (carried over from Phase 3) is still unproven in
   a browser.
 
+### Production (live 2026-08-21)
+
+`main` is deployed at **https://shrinkless.vercel.app** and serving real Atlas
+data — `/`, `/shop`, `/product/[slug]`, `/cart`, `/login`, `/register` and
+`/api/auth/*` all 200, `/admin` 307s a signed-out visitor to `/login`, unknown
+paths 404. Eight consecutive `/shop` requests, all 200.
+
+Getting there turned up three things worth keeping:
+
+- **A rejected `mongoose.connect()` used to stay in the module cache**, so one
+  failed cold start poisoned that serverless instance for its whole life. Fixed
+  in `lib/db/connection.ts`; regression test in `tests/unit/connection.test.ts`.
+- **`app/error.tsx` cannot catch a throw from `app/(shop)/layout.tsx`.** A
+  layout's errors bubble past the boundary beside it, so a database outage
+  reached the browser as a bare Next 500. `app/global-error.tsx` is the backstop
+  and deliberately inlines its styles.
+- **Vercel env vars were present but empty**, which read as
+  `Invalid or missing environment variables: MONGODB_URI, AUTH_SECRET` plus
+  Auth.js `MissingSecret`. Note Atlas was never the problem in production —
+  the app threw before opening a socket.
+
 ### Running locally
 
 **Atlas is currently unreachable from this machine** and that is not a code
@@ -156,6 +177,13 @@ standalone server, not a replica set — fine until something needs transactions
   `Model.updateOne({ $set: { createdAt } })` is dropped *silently* — the stats
   tests looked like service bugs when the seed data was simply never backdated.
   Backdate through `Model.collection.updateOne` (raw driver).
+- **Do not pipe a secret into `vercel env add` from Windows PowerShell.**
+  `Get-Content -Raw | npx vercel env add ...` corrupted the connection string —
+  the next deploy failed with `MongoParseError: Invalid scheme`. Use a shell
+  redirect so the bytes arrive untouched:
+  `cmd /c "npx vercel env add NAME production < value.txt"`, with the file
+  written BOM-less and without a trailing newline. Env changes need a
+  `vercel redeploy` before they take effect.
 - `tests/setup/db.ts` used to crash in `afterAll` with "Cannot read properties
   of undefined (reading 'stop')" when `MongoMemoryServer.create()` failed,
   masking the real error. `server` is now optional and stopped with `?.`.
