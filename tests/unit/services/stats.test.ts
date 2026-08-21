@@ -23,8 +23,9 @@ async function seedOrder(
     subtotalCents: totalCents, shippingCents: 0, taxCents: 0, totalCents, status,
   });
 
-  // timestamps:true stamps createdAt on insert, so backdate it afterwards.
-  await Order.updateOne({ _id: order._id }, { $set: { createdAt } });
+  // timestamps:true stamps createdAt on insert and marks it immutable, so a
+  // Mongoose $set is dropped silently — backdate through the raw driver.
+  await Order.collection.updateOne({ _id: order._id }, { $set: { createdAt } });
   return order;
 }
 

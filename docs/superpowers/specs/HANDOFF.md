@@ -97,15 +97,11 @@ screen) and `app/not-found.tsx`, both styled with `.errorpage` in
 - `npm run lint` — clean.
 - `npm run build` — succeeds; all 12 admin routes and the storefront compile.
   Compiled CSS carries every design class and token.
+- `npm run test` — **24 files, 158 tests, all green** (2026-08-21), including
+  Tasks 8–12. See the mongodb-memory-server note under Gotchas.
 
 ### NOT verified
 
-- **The full test suite has not been run against Tasks 8–12.** The sandbox
-  could not start `mongodb-memory-server`: the MongoDB 8.2.6 binary download
-  was truncated at ~50% and `fastdl.mongodb.org` resolved intermittently
-  (`EAI_AGAIN`). Test *code* for orders, customers, settings-update and stats
-  is written and committed; it needs one green run on a machine with working
-  DNS. Run `npm run test`.
 - **No runtime walkthrough.** MongoDB Atlas is unreachable from this sandbox
   (`MongooseServerSelectionError` — the sandbox IP is not on the Atlas
   allowlist), so no page was exercised against real data. The Phase 4 plan's
@@ -121,6 +117,17 @@ screen) and `app/not-found.tsx`, both styled with `.errorpage` in
   `status` parameter as `string` will not compile.
 - `PageProps<'/admin/orders/[id]'>` does not exist until route types are
   regenerated. Run `npx next typegen` after adding a dynamic route.
+- `mongodb-memory-server` cannot finish its own download here: the ~820MB
+  MongoDB 8.2.6 zip takes longer than the 60s `beforeAll` hook, so every run
+  restarted a partial and every db-backed suite timed out. Fixed by fetching
+  the archive once with `curl -C -` and dropping the binary where the library
+  looks for it: `~/.cache/mongodb-binaries/mongod-x64-win32-8.2.6.exe`
+  (`mongod-<arch>-<os>-<version>[.exe]`). No config change; it is a machine-local
+  cache, so a fresh machine needs the same one-off.
+- Mongoose marks `createdAt` **immutable** under `timestamps: true`, so
+  `Model.updateOne({ $set: { createdAt } })` is dropped *silently* — the stats
+  tests looked like service bugs when the seed data was simply never backdated.
+  Backdate through `Model.collection.updateOne` (raw driver).
 - `tests/setup/db.ts` used to crash in `afterAll` with "Cannot read properties
   of undefined (reading 'stop')" when `MongoMemoryServer.create()` failed,
   masking the real error. `server` is now optional and stopped with `?.`.
