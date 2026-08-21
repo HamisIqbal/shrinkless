@@ -114,6 +114,25 @@ screen) and `app/not-found.tsx`, both styled with `.errorpage` in
 - Guest -> account cart merge (carried over from Phase 3) is still unproven in
   a browser.
 
+### Redesign (Phase 6) — SHIPPED 2026-08-21
+
+The storefront has been rebuilt to the monochrome editorial direction in
+`2026-08-21-shrinkless-redesign-design.md`. Live on `main`. 211 tests green,
+`tsc` and lint clean, 21 routes build, every page smoke-tested against a local
+database.
+
+**One thing is outstanding and it is data, not code:** production Atlas still
+holds the old vintage catalogue (Field Shirt, Press Overshirt, Shop Tee in
+sand/bone/navy). The redesign is live but showing those products. Running
+`npm run seed:shrinkless` against Atlas replaces them with the Organic Tee in
+black/white/charcoal — it needs a machine whose IP is on the Atlas access list,
+which this one is not.
+
+Also outstanding, all recorded in spec §11: the $48 price is an assumption, the
+`[TBC]` markers in the FAQ and PDP accordions need real numbers, the
+testimonials are placeholders, and every photograph is Unsplash stock rendered
+black and white — no Shrinkless product appears anywhere on the site yet.
+
 ### Production (live 2026-08-21)
 
 `main` is deployed at **https://shrinkless.vercel.app** and serving real Atlas
