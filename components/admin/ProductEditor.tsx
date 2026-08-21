@@ -10,7 +10,8 @@ import {
   type MatrixRow,
 } from '@/lib/admin/variant-matrix';
 import { VariantMatrix } from '@/components/admin/VariantMatrix';
-import type { ProductDTO } from '@/types/dto';
+import { ImageUploader } from '@/components/admin/ImageUploader';
+import type { ImageDTO, ProductDTO } from '@/types/dto';
 
 const DEFAULT_PRICE_CENTS = 4200;
 
@@ -32,6 +33,7 @@ export function ProductEditor({ product }: { product: ProductDTO | null }) {
   const [colorsText, setColorsText] = useState((product?.colors ?? []).join(', '));
   const [edited, setEdited] = useState<Record<string, MatrixRow>>({});
   const [prunedFor, setPrunedFor] = useState<MatrixRow[] | null>(null);
+  const [images, setImages] = useState<ImageDTO[]>(product?.images ?? []);
 
   const sizes = useMemo(() => toList(sizesText), [sizesText]);
   const colors = useMemo(() => toList(colorsText), [colorsText]);
@@ -81,7 +83,7 @@ export function ProductEditor({ product }: { product: ProductDTO | null }) {
       const result = await saveProductAction({
         id: product?.id,
         title, slug, description, category, status,
-        images: product?.images ?? [],
+        images,
         sizes, colors,
         variants: rows.map((row) => ({
           variantId: row.variantId,
@@ -136,6 +138,8 @@ export function ProductEditor({ product }: { product: ProductDTO | null }) {
       <label>Colours (comma separated)
         <input value={colorsText} onChange={(e) => setColorsText(e.target.value)} />
       </label>
+
+      <ImageUploader images={images} onChange={setImages} />
 
       <VariantMatrix rows={rows} onRowChange={handleRowChange} />
 
