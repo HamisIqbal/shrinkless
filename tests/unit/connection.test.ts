@@ -14,6 +14,17 @@ afterAll(async () => {
 });
 
 describe('connectToDatabase', () => {
+  it('does not cache a failed connection attempt', async () => {
+    // A rejected connect used to stay in the cache, so one bad cold start
+    // poisoned every later request on that serverless instance.
+    const dead = 'mongodb://127.0.0.1:1/shrinkless?serverSelectionTimeoutMS=250';
+
+    await expect(connectToDatabase(dead)).rejects.toThrow();
+
+    const recovered = await connectToDatabase(server.getUri());
+    expect(recovered.connection.readyState).toBe(1);
+  });
+
   it('connects and reuses the same connection on a second call', async () => {
     const first = await connectToDatabase(server.getUri());
     const second = await connectToDatabase(server.getUri());

@@ -16,8 +16,24 @@ export async function connectToDatabase(uri?: string): Promise<typeof mongoose> 
 
   const resolvedUri = uri ?? loadServerEnv().MONGODB_URI;
 
-  cache.promise ??= mongoose.connect(resolvedUri, { bufferCommands: false });
-  cache.conn = await cache.promise;
+  // Serverless: a lambda handles one request at a time but is reused, so the
+  // connection is cached across invocations. A *failed* connect must never be
+  // cached — one bad cold start would otherwise poison that instance for the
+  // rest of its life, and every later request would re-await the same rejected
+  // promise instead of retrying.
+  cache.promise ??= mongoose.connect(resolvedUri, {
+    bufferCommands: false,
+    serverSelectionTimeoutMS: 10_000,
+    maxPoolSize: 10,
+  });
+
+  try {
+    cache.conn = await cache.promise;
+  } catch (error) {
+    cache.promise = null;
+    cache.conn = null;
+    throw error;
+  }
 
   return cache.conn;
 }
