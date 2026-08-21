@@ -8,21 +8,40 @@ export default async function CartPage() {
 
   if (!cart || cart.lines.length === 0) {
     return (
-      <div>
-        <h1>Your cart</h1>
-        <p>Your cart is empty.</p>
-        <Link href="/shop">Shop all</Link>
+      <div className="pagehead reveal">
+        <p className="eyebrow">Order</p>
+        <h1 className="display">Your cart</h1>
+        <p className="lede emptystate">Nothing in it yet. Start with the catalogue.</p>
+        <Link href="/shop" className="btn">Shop all</Link>
       </div>
     );
   }
 
   return (
-    <div>
-      <h1>Your cart</h1>
-      <CartLines lines={cart.lines} />
-      <p>Subtotal: {formatCents(cart.subtotalCents)}</p>
-      <p>Shipping and tax are calculated at checkout.</p>
-      <Link href="/checkout">Checkout</Link>
+    <div className="reveal">
+      <header className="pagehead">
+        <p className="eyebrow">Order</p>
+        <h1 className="display">Your cart</h1>
+      </header>
+
+      <div className="cartlayout">
+        <CartLines lines={cart.lines} />
+
+        <aside className="summary" aria-labelledby="summary-heading">
+          <h2 id="summary-heading" className="meta summary__head">Summary</h2>
+          <hr className="rule" />
+          <dl className="summary__rows">
+            <dt>Subtotal</dt>
+            <dd className="tnum">{formatCents(cart.subtotalCents)}</dd>
+            <dt>Shipping</dt>
+            <dd className="summary__pending">At checkout</dd>
+            <dt>Tax</dt>
+            <dd className="summary__pending">At checkout</dd>
+          </dl>
+          <hr className="rule" />
+          <Link href="/checkout" className="btn btn--spot summary__cta">Checkout</Link>
+        </aside>
+      </div>
     </div>
   );
 }

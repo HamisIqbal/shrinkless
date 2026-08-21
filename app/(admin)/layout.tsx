@@ -15,10 +15,11 @@ export default async function AdminLayout({ children }: LayoutProps<'/'>) {
   const actor = await requireAdminPage();
 
   return (
-    <div>
-      <aside>
-        <Link href="/admin">Shrinkless admin</Link>
-        <nav aria-label="Admin">
+    <div className="admin">
+      <aside className="admin__aside">
+        <Link href="/admin" className="admin__mark">Shrinkless admin</Link>
+
+        <nav aria-label="Admin" className="admin__nav">
           <ul>
             {NAV.map((item) => (
               <li key={item.href}>
@@ -27,11 +28,14 @@ export default async function AdminLayout({ children }: LayoutProps<'/'>) {
             ))}
           </ul>
         </nav>
-        <p>Signed in as {actor.email}</p>
-        <Link href="/">Back to store</Link>
+
+        <div className="admin__foot">
+          <p className="admin__actor">{actor.email}</p>
+          <Link href="/" className="admin__back">Back to store</Link>
+        </div>
       </aside>
 
-      <main>{children}</main>
+      <main className="admin__main">{children}</main>
     </div>
   );
 }

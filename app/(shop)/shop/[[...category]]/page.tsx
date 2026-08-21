@@ -15,7 +15,10 @@ export default async function ShopPage(props: PageProps<'/shop/[[...category]]'>
 
   return (
     <div>
-      <h1>{categorySlug ? `Shop: ${categorySlug}` : 'Shop all'}</h1>
+      <header className="pagehead reveal">
+        <p className="eyebrow">Catalogue</p>
+        <h1 className="display">{categorySlug ?? 'Shop all'}</h1>
+      </header>
 
       <FilterBar
         filter={filter}
@@ -24,16 +27,18 @@ export default async function ShopPage(props: PageProps<'/shop/[[...category]]'>
         basePath={categorySlug ? `/shop/${categorySlug}` : '/shop'}
       />
 
-      <p aria-live="polite">
+      <p aria-live="polite" className="meta tnum resultcount">
         {products.length} {products.length === 1 ? 'product' : 'products'}
       </p>
 
       {products.length === 0 ? (
-        <p>Nothing matches those filters.</p>
+        <p className="lede emptystate">
+          Nothing matches those filters. Clear one and try again.
+        </p>
       ) : (
-        <ul>
+        <ul className="grid12 reveal-list catalogue">
           {products.map((product) => (
-            <li key={product.id}>
+            <li key={product.id} className="cardslot">
               <ProductCard product={product} />
             </li>
           ))}

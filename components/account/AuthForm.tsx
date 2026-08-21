@@ -23,20 +23,20 @@ export function AuthForm({ action, submitLabel, includeName = false }: Props) {
   }
 
   return (
-    <form action={handleSubmit}>
+    <form action={handleSubmit} className="authform">
       {includeName && (
-        <label>
+        <label className="field">
           Name
           <input type="text" name="name" autoComplete="name" />
         </label>
       )}
 
-      <label>
+      <label className="field">
         Email
         <input type="email" name="email" required autoComplete="email" />
       </label>
 
-      <label>
+      <label className="field">
         Password
         <input
           type="password"
@@ -46,11 +46,11 @@ export function AuthForm({ action, submitLabel, includeName = false }: Props) {
         />
       </label>
 
-      <button type="submit" disabled={pending}>
+      <button type="submit" className="btn btn--spot authform__submit" disabled={pending}>
         {pending ? 'Working…' : submitLabel}
       </button>
 
-      {error ? <p role="alert">{error}</p> : null}
+      {error ? <p role="alert" className="notice notice--error">{error}</p> : null}
     </form>
   );
 }

@@ -11,10 +11,13 @@ export default async function RegisterPage() {
   if (session?.user) redirect('/account');
 
   return (
-    <div>
-      <h1>Create an account</h1>
+    <div className="pagehead reveal">
+      <p className="eyebrow">Account</p>
+      <h1 className="display">Create an account</h1>
+
       <AuthForm action={registerAction} submitLabel="Create account" includeName />
-      <p>
+
+      <p className="meta">
         Already have an account? <Link href="/login">Sign in</Link>
       </p>
     </div>
