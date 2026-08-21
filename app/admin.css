@@ -1,0 +1,353 @@
+/* ==========================================================================
+   Admin panel. Shares the storefront tokens and nothing else: no paper grain,
+   no reveals, tighter type, denser rules. A back office, not a shopfront.
+   Styling is scoped under .admin and mostly targets elements, so the admin
+   pages stay plain semantic markup.
+   ========================================================================== */
+
+/* Texture is a storefront device. The admin gets clean stock. */
+body:has(.admin)::before { display: none; }
+
+.admin {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 100dvh;
+  font-size: var(--text-step-2);
+}
+
+@media (min-width: 60rem) {
+  .admin { grid-template-columns: 14rem minmax(0, 1fr); }
+}
+
+/* --- Sidebar -------------------------------------------------------------- */
+
+.admin__aside {
+  border-bottom: var(--spacing-rule) solid var(--color-ink);
+  background: var(--color-stock-deep);
+  padding: 1.25rem;
+}
+
+@media (min-width: 60rem) {
+  .admin__aside {
+    border-bottom: 0;
+    border-right: var(--spacing-rule) solid var(--color-ink);
+    position: sticky;
+    top: 0;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+}
+
+.admin__mark {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--text-step-3);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding-bottom: 0.75rem;
+  border-bottom: var(--spacing-rule) solid var(--color-rule);
+}
+
+.admin__nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  margin-top: 1rem;
+}
+
+@media (min-width: 60rem) {
+  .admin__nav ul { display: grid; gap: 0.15rem; }
+}
+
+.admin__nav a {
+  display: block;
+  padding: 0.35rem 0.5rem;
+  margin-inline: -0.5rem;
+  font-family: var(--font-display);
+  font-size: var(--text-step-2);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.admin__nav a:hover { background: var(--color-ink); color: var(--color-stock); }
+
+.admin__actor {
+  font-family: var(--font-display);
+  font-size: var(--text-step-1);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+}
+
+@media (min-width: 60rem) {
+  .admin__foot { margin-top: auto; display: grid; gap: 0.5rem; }
+}
+
+.admin__back {
+  font-family: var(--font-display);
+  font-size: var(--text-step-1);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* --- Main ----------------------------------------------------------------- */
+
+.admin__main { padding: 1.5rem 1.25rem 4rem; min-width: 0; }
+
+@media (min-width: 60rem) {
+  .admin__main { padding: 2.5rem 2.5rem 5rem; }
+}
+
+.admin h1 {
+  font-size: var(--text-step-5);
+  padding-bottom: 0.75rem;
+  border-bottom: var(--spacing-rule) solid var(--color-ink);
+  margin-bottom: 1.5rem;
+}
+
+.admin h2 {
+  font-size: var(--text-step-3);
+  letter-spacing: 0.12em;
+  color: var(--color-ink-soft);
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.4rem;
+  border-bottom: var(--spacing-rule) solid var(--color-rule);
+}
+
+.admin h3 { font-size: var(--text-step-2); letter-spacing: 0.12em; margin-bottom: 0.5rem; }
+
+.admin p { margin-bottom: 0.5rem; }
+
+.admin section + section { margin-top: 1rem; }
+
+/* --- Tables --------------------------------------------------------------- */
+
+.admin table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin th {
+  text-align: left;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: var(--text-step-1);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+  padding: 0.5rem 0.75rem;
+  border-bottom: var(--spacing-rule) solid var(--color-ink);
+  white-space: nowrap;
+}
+
+.admin td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: var(--spacing-rule) solid var(--color-rule);
+  vertical-align: top;
+}
+
+.admin tbody tr:hover { background: var(--color-stock-deep); }
+
+.admin td:first-child, .admin th:first-child { padding-left: 0; }
+.admin td:last-child, .admin th:last-child { padding-right: 0; }
+
+/* --- Definition lists ----------------------------------------------------- */
+
+.admin dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.35rem 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.admin dt {
+  font-family: var(--font-display);
+  font-size: var(--text-step-1);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+}
+
+.admin dd { margin: 0; font-variant-numeric: tabular-nums; }
+
+/* --- Lists ---------------------------------------------------------------- */
+
+.admin ol li,
+.admin main ul li { padding-block: 0.3rem; }
+
+.admin section > ul > li,
+.admin section > ol > li { border-bottom: var(--spacing-rule) solid var(--color-rule); }
+
+/* --- Forms ---------------------------------------------------------------- */
+
+.admin label {
+  display: block;
+  font-family: var(--font-display);
+  font-size: var(--text-step-1);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+  margin-bottom: 0.75rem;
+}
+
+.admin input[type="text"],
+.admin input[type="email"],
+.admin input[type="number"],
+.admin input:not([type]),
+.admin select,
+.admin textarea {
+  display: block;
+  width: 100%;
+  max-width: 28rem;
+  margin-top: 0.3rem;
+  padding: 0.45rem 0.6rem;
+  border: var(--spacing-rule) solid var(--color-rule);
+  border-radius: 0;
+  background: var(--color-stock);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-step-2);
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.admin td input,
+.admin td select { max-width: 8rem; margin-top: 0; }
+
+.admin input:focus, .admin select:focus, .admin textarea:focus {
+  border-color: var(--color-ink);
+  outline: 2px solid var(--color-spot);
+  outline-offset: 1px;
+}
+
+.admin input[type="checkbox"] {
+  width: auto;
+  margin: 0 0.4rem 0 0;
+  accent-color: var(--color-spot);
+}
+
+.admin fieldset {
+  border: var(--spacing-rule) solid var(--color-rule);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.admin legend {
+  font-family: var(--font-display);
+  font-size: var(--text-step-1);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding-inline: 0.4rem;
+}
+
+.admin button {
+  display: inline-block;
+  border: var(--spacing-rule) solid var(--color-ink);
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: var(--text-step-1);
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 0.45rem 0.9rem;
+  margin-right: 0.5rem;
+  cursor: pointer;
+  transition: background-color 140ms ease-out, color 140ms ease-out;
+}
+
+.admin button:hover { background: var(--color-ink); color: var(--color-stock); }
+
+.admin button[type="submit"] {
+  background: var(--color-spot);
+  border-color: var(--color-spot);
+  color: var(--color-stock);
+}
+
+.admin button[type="submit"]:hover {
+  background: var(--color-spot-deep);
+  border-color: var(--color-spot-deep);
+}
+
+.admin button:disabled { opacity: 0.4; cursor: not-allowed; }
+.admin button:disabled:hover { background: transparent; color: var(--color-ink); }
+.admin button[type="submit"]:disabled:hover { background: var(--color-spot); color: var(--color-stock); }
+
+/* --- Status badges -------------------------------------------------------- */
+
+.admin [data-status] {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: var(--text-step-1);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.45rem;
+  border: var(--spacing-rule) solid currentColor;
+  color: var(--color-ink-soft);
+  white-space: nowrap;
+}
+
+.admin [data-status="paid"],
+.admin [data-status="published"] { color: var(--color-ink); }
+
+.admin [data-status="shipped"],
+.admin [data-status="delivered"] { color: var(--color-ochre); }
+
+.admin [data-status="cancelled"],
+.admin [data-status="payment_failed"] { color: var(--color-spot); }
+
+/* --- Feedback ------------------------------------------------------------- */
+
+.admin [role="alert"] { color: var(--color-spot); font-family: var(--font-display); letter-spacing: 0.1em; text-transform: uppercase; font-size: var(--text-step-1); }
+.admin [role="status"] { color: var(--color-ink-soft); font-family: var(--font-display); letter-spacing: 0.1em; text-transform: uppercase; font-size: var(--text-step-1); }
+
+.admin a { text-underline-offset: 0.2em; }
+
+/* --- Variant matrix ------------------------------------------------------- */
+
+.admin caption {
+  text-align: left;
+  font-family: var(--font-display);
+  font-size: var(--text-step-1);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+  padding-bottom: 0.5rem;
+}
+
+/* An orphan row is a size/colour combination that was dropped from the option
+   sets. Variants are never deleted, so the row stays and has to read as
+   retired rather than active. */
+.admin tr[data-orphan] td { color: var(--color-ink-soft); }
+.admin tr[data-orphan] td:first-child { box-shadow: inset 2px 0 0 var(--color-spot); padding-left: 0.5rem; }
+
+/* --- Image uploader ------------------------------------------------------- */
+
+.admin img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border: var(--spacing-rule) solid var(--color-rule);
+}
+
+.admin input[type="file"] {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  max-width: none;
+  font-family: var(--font-display);
+  font-size: var(--text-step-1);
+}
+
+.admin textarea { min-height: 6rem; resize: vertical; }
+
+.admin form > table,
+.admin form > button { margin-top: 1.25rem; }

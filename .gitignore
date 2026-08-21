@@ -52,6 +52,9 @@ next-env.d.ts
 *.exe
 *.zip
 
+# local development database (npm run dev:db)
+/.mongo-data/
+
 # local dev server logs
 dev-out.log
 dev-err.log

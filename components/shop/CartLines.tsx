@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { updateQuantityAction } from '@/app/actions/cart';
+import { cloudinaryUrl } from '@/lib/cloudinary/url';
 import { formatCents } from '@/lib/money';
 import type { CartLineDTO } from '@/types/dto';
 
@@ -18,16 +20,34 @@ export function CartLines({ lines }: { lines: CartLineDTO[] }) {
   }
 
   return (
-    <div>
+    <div className="cartlines">
       <ul>
         {lines.map((line) => (
-          <li key={line.variantId}>
-            <Link href={`/product/${line.productSlug}`}>{line.productTitle}</Link>
-            <p>{line.size.toUpperCase()} / {line.color}</p>
-            <p>{formatCents(line.unitPriceCents)} each</p>
+          <li key={line.variantId} className="cartline">
+            <div className="cartline__plate">
+              {line.imagePublicId ? (
+                <Image
+                  src={cloudinaryUrl(line.imagePublicId, 'c_fill,w_240,h_300,q_auto,f_auto')}
+                  alt={line.productTitle}
+                  width={240}
+                  height={300}
+                  className="cartline__image"
+                />
+              ) : (
+                <span className="cartline__unset" aria-hidden="true">{line.color}</span>
+              )}
+            </div>
 
-            <label>
-              Quantity
+            <div className="cartline__body">
+              <h2 className="cartline__title">
+                <Link href={`/product/${line.productSlug}`}>{line.productTitle}</Link>
+              </h2>
+              <p className="meta">{line.size.toUpperCase()} / {line.color}</p>
+              <p className="meta tnum">{formatCents(line.unitPriceCents)} each</p>
+            </div>
+
+            <label className="field cartline__qty">
+              Qty
               <input
                 type="number"
                 min={1}
@@ -38,16 +58,24 @@ export function CartLines({ lines }: { lines: CartLineDTO[] }) {
               />
             </label>
 
-            <p>{formatCents(line.lineTotalCents)}</p>
-
-            <button type="button" disabled={pending} onClick={() => change(line.variantId, 0)}>
-              Remove
-            </button>
+            <div className="cartline__total">
+              <p className="price tnum">{formatCents(line.lineTotalCents)}</p>
+              <button
+                type="button"
+                className="btn btn--quiet"
+                disabled={pending}
+                onClick={() => change(line.variantId, 0)}
+              >
+                Remove
+              </button>
+            </div>
           </li>
         ))}
       </ul>
 
-      <p role="status" aria-live="polite">{error}</p>
+      <p role="status" aria-live="polite" className={error ? 'notice notice--error' : undefined}>
+        {error}
+      </p>
     </div>
   );
 }

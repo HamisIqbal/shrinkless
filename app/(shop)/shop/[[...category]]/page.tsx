@@ -2,6 +2,7 @@ import { listPublishedProducts } from '@/lib/services/products';
 import { productFilterSchema } from '@/lib/validation/catalogue';
 import { ProductCard } from '@/components/shop/ProductCard';
 import { FilterBar } from '@/components/shop/FilterBar';
+import { Reveal } from '@/components/ui/Reveal';
 
 export default async function ShopPage(props: PageProps<'/shop/[[...category]]'>) {
   const [{ category }, rawSearch] = await Promise.all([props.params, props.searchParams]);
@@ -15,7 +16,10 @@ export default async function ShopPage(props: PageProps<'/shop/[[...category]]'>
 
   return (
     <div>
-      <h1>{categorySlug ? `Shop: ${categorySlug}` : 'Shop all'}</h1>
+      <header className="pagehead">
+        <p className="eyebrow">Catalogue</p>
+        <h1 className="display">{categorySlug ?? 'Shop all'}</h1>
+      </header>
 
       <FilterBar
         filter={filter}
@@ -24,17 +28,21 @@ export default async function ShopPage(props: PageProps<'/shop/[[...category]]'>
         basePath={categorySlug ? `/shop/${categorySlug}` : '/shop'}
       />
 
-      <p aria-live="polite">
+      <p aria-live="polite" className="meta tnum resultcount">
         {products.length} {products.length === 1 ? 'product' : 'products'}
       </p>
 
       {products.length === 0 ? (
-        <p>Nothing matches those filters.</p>
+        <p className="lede emptystate">
+          Nothing matches those filters. Clear one and try again.
+        </p>
       ) : (
-        <ul>
-          {products.map((product) => (
-            <li key={product.id}>
-              <ProductCard product={product} />
+        <ul className="grid12 catalogue">
+          {products.map((product, index) => (
+            <li key={product.id} className="cardslot">
+              <Reveal index={index}>
+                <ProductCard product={product} />
+              </Reveal>
             </li>
           ))}
         </ul>

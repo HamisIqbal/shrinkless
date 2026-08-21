@@ -11,6 +11,12 @@ type Props = {
   basePath: string;
 };
 
+const SORT_LABELS: Record<ProductSort, string> = {
+  newest: 'Newest',
+  'price-asc': 'Price, low to high',
+  'price-desc': 'Price, high to low',
+};
+
 export function FilterBar({ filter, sizes, colors, basePath }: Props) {
   const router = useRouter();
 
@@ -19,50 +25,60 @@ export function FilterBar({ filter, sizes, colors, basePath }: Props) {
     router.push(query ? `${basePath}?${query}` : basePath);
   }
 
+  const filtered = filter.sizes.length > 0 || filter.colors.length > 0;
+
   return (
-    <form aria-label="Filters" onSubmit={(event) => event.preventDefault()}>
-      <fieldset>
-        <legend>Size</legend>
-        {sizes.map((size) => (
-          <label key={size}>
-            <input
-              type="checkbox"
-              checked={filter.sizes.includes(size)}
-              onChange={() => apply({ sizes: toggleValue(filter.sizes, size) })}
-            />
-            {size.toUpperCase()}
-          </label>
-        ))}
+    <form aria-label="Filters" className="filterbar" onSubmit={(event) => event.preventDefault()}>
+      <fieldset className="filterbar__group">
+        <legend className="meta filterbar__legend">Size</legend>
+        <div className="chip-row">
+          {sizes.map((size) => (
+            <label key={size} className="chip">
+              <input
+                type="checkbox"
+                checked={filter.sizes.includes(size)}
+                onChange={() => apply({ sizes: toggleValue(filter.sizes, size) })}
+              />
+              {size.toUpperCase()}
+            </label>
+          ))}
+        </div>
       </fieldset>
 
-      <fieldset>
-        <legend>Colour</legend>
-        {colors.map((color) => (
-          <label key={color}>
-            <input
-              type="checkbox"
-              checked={filter.colors.includes(color)}
-              onChange={() => apply({ colors: toggleValue(filter.colors, color) })}
-            />
-            {color}
-          </label>
-        ))}
+      <fieldset className="filterbar__group">
+        <legend className="meta filterbar__legend">Colour</legend>
+        <div className="chip-row">
+          {colors.map((color) => (
+            <label key={color} className="chip">
+              <input
+                type="checkbox"
+                checked={filter.colors.includes(color)}
+                onChange={() => apply({ colors: toggleValue(filter.colors, color) })}
+              />
+              {color}
+            </label>
+          ))}
+        </div>
       </fieldset>
 
-      <label>
+      <label className="field filterbar__sort">
         Sort
         <select
           value={filter.sort}
           onChange={(event) => apply({ sort: event.target.value as ProductSort })}
         >
           {PRODUCT_SORTS.map((sort) => (
-            <option key={sort} value={sort}>{sort}</option>
+            <option key={sort} value={sort}>{SORT_LABELS[sort] ?? sort}</option>
           ))}
         </select>
       </label>
 
-      {(filter.sizes.length > 0 || filter.colors.length > 0) && (
-        <button type="button" onClick={() => apply({ sizes: [], colors: [] })}>
+      {filtered && (
+        <button
+          type="button"
+          className="btn btn--quiet filterbar__clear"
+          onClick={() => apply({ sizes: [], colors: [] })}
+        >
           Clear filters
         </button>
       )}

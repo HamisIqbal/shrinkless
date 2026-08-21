@@ -1,1 +1,391 @@
 @import "tailwindcss";
+@import "./storefront.css";
+@import "./admin.css";
+
+/* ==========================================================================
+   Shrinkless — 1970s workwear / heritage print shop.
+   Spec §6. Every colour, type step and rule weight in the app resolves to a
+   token declared here. Nothing downstream hardcodes a colour.
+   ========================================================================== */
+
+@theme {
+  /* --- Ink & stock -------------------------------------------------------
+     Warm off-white paper stock, kraft-tinted rather than bleached. Ink is a
+     warm near-black; pure #000 never appears on paper. */
+  --color-stock:        #e9e2d3;
+  --color-stock-deep:   #ded3bf;
+  --color-stock-shade:  #d4c8b1;
+  --color-ink:          #1c1815;
+  --color-ink-soft:     #5c5348;
+  --color-rule:         #bfb29a;
+
+  /* --- Spot inks ---------------------------------------------------------
+     A two-colour press run: one saturated spot for price, sale tags and the
+     primary button only, plus an ochre for secondary marks. */
+  --color-spot:         #c8371b;
+  --color-spot-deep:    #9e2a12;
+  --color-ochre:        #b0842a;
+
+  /* --- Type --------------------------------------------------------------
+     Two families, no third. Condensed grotesque for headings and nav, set
+     tight and uppercase. Slab serif for body and product copy. */
+  --font-display: var(--font-oswald), "Arial Narrow", sans-serif;
+  --font-body:    var(--font-zilla), Georgia, serif;
+
+  /* Fixed six-step scale. Printed matter does not fluidly resize. */
+  --text-step-1: 0.75rem;
+  --text-step-2: 0.875rem;
+  --text-step-3: 1rem;
+  --text-step-4: 1.5rem;
+  --text-step-5: 2.25rem;
+  --text-step-6: 3.5rem;
+
+  --spacing-rule: 1px;
+}
+
+/* --------------------------------------------------------------------------
+   Base
+   -------------------------------------------------------------------------- */
+
+html {
+  background-color: var(--color-stock);
+  color: var(--color-ink);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  position: relative;
+  margin: 0;
+  min-height: 100dvh;
+  background-color: var(--color-stock);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-step-3);
+  line-height: 1.55;
+}
+
+/* Paper grain. One tiled layer over the whole sheet, generated rather than
+   shipped as an asset so it costs no request. Restraint, not a filter. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)' opacity='0.28'/%3E%3C/svg%3E");
+}
+
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: 0.005em;
+  text-transform: uppercase;
+}
+
+p, ul, ol, dl, figure, fieldset, address {
+  margin: 0;
+}
+
+ul, ol { padding: 0; list-style: none; }
+
+fieldset { border: 0; padding: 0; }
+
+address { font-style: normal; }
+
+a { color: inherit; text-underline-offset: 0.2em; }
+
+/* Money, stock counts, SKUs — anything columnar. */
+.tnum,
+input[type="number"] { font-variant-numeric: tabular-nums; }
+
+:focus-visible {
+  outline: 2px solid var(--color-spot);
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   Sheet & grid
+   A visible 12-column grid with hairline gutters, collapsing to 4 on mobile.
+   -------------------------------------------------------------------------- */
+
+.sheet {
+  width: 100%;
+  max-width: 90rem;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+}
+
+@media (min-width: 60rem) {
+  .sheet { padding-inline: 2.5rem; }
+}
+
+.grid12 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+@media (min-width: 60rem) {
+  .grid12 { grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 1.5rem; }
+}
+
+/* A catalogue spread: a narrow left label rail, then the content column.
+   This is the page's structural signature — every section is titled the way a
+   printed catalogue titles a plate. */
+.spread {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem 1.5rem;
+  padding-block: 3rem;
+  border-top: var(--spacing-rule) solid var(--color-rule);
+}
+
+@media (min-width: 60rem) {
+  .spread {
+    grid-template-columns: 10rem minmax(0, 1fr);
+    padding-block: 4.5rem;
+  }
+}
+
+.spread__label {
+  font-family: var(--font-display);
+  font-size: var(--text-step-1);
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+  padding-top: 0.35rem;
+}
+
+.spread__body { min-width: 0; }
+
+.rule {
+  border: 0;
+  border-top: var(--spacing-rule) solid var(--color-rule);
+  margin: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Type roles
+   -------------------------------------------------------------------------- */
+
+.eyebrow {
+  display: block;
+  font-family: var(--font-display);
+  font-size: var(--text-step-1);
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+}
+
+.display {
+  font-size: var(--text-step-5);
+  letter-spacing: -0.01em;
+}
+
+@media (min-width: 60rem) {
+  .display { font-size: var(--text-step-6); }
+}
+
+.title { font-size: var(--text-step-4); }
+
+.lede {
+  font-size: var(--text-step-4);
+  line-height: 1.35;
+  color: var(--color-ink-soft);
+  max-width: 32ch;
+}
+
+.meta {
+  font-family: var(--font-display);
+  font-size: var(--text-step-1);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+}
+
+.price {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-spot);
+  letter-spacing: 0.01em;
+}
+
+.price--lg { font-size: var(--text-step-4); }
+
+/* --------------------------------------------------------------------------
+   Controls
+   No shadows, no rounded corners. Separation comes from rules and whitespace.
+   -------------------------------------------------------------------------- */
+
+.btn {
+  display: inline-block;
+  border: var(--spacing-rule) solid var(--color-ink);
+  background: transparent;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: var(--text-step-2);
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 0.7rem 1.4rem;
+  cursor: pointer;
+  text-decoration: none;
+  border-radius: 0;
+  transition: background-color 140ms ease-out, color 140ms ease-out;
+}
+
+.btn:hover { background: var(--color-ink); color: var(--color-stock); }
+
+.btn--spot {
+  background: var(--color-spot);
+  border-color: var(--color-spot);
+  color: var(--color-stock);
+}
+
+.btn--spot:hover { background: var(--color-spot-deep); border-color: var(--color-spot-deep); }
+
+.btn--quiet {
+  border-color: var(--color-rule);
+  color: var(--color-ink-soft);
+  padding: 0.35rem 0.7rem;
+  font-size: var(--text-step-1);
+}
+
+.btn--quiet:hover { background: var(--color-ink); border-color: var(--color-ink); color: var(--color-stock); }
+
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn:disabled:hover { background: transparent; color: var(--color-ink); }
+.btn--spot:disabled:hover { background: var(--color-spot); color: var(--color-stock); }
+
+.field {
+  display: block;
+  font-family: var(--font-display);
+  font-size: var(--text-step-1);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+  margin-bottom: 1rem;
+}
+
+.field > input,
+.field > select,
+.field > textarea {
+  display: block;
+  width: 100%;
+  margin-top: 0.4rem;
+  padding: 0.6rem 0.7rem;
+  border: var(--spacing-rule) solid var(--color-rule);
+  background: var(--color-stock-deep);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-step-3);
+  letter-spacing: normal;
+  text-transform: none;
+  border-radius: 0;
+}
+
+.field > input:focus,
+.field > select:focus { border-color: var(--color-ink); }
+
+.stack > * + * { margin-top: 1rem; }
+.stack-sm > * + * { margin-top: 0.5rem; }
+.stack-lg > * + * { margin-top: 2rem; }
+
+/* Selectable size / colour chips. */
+.chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: var(--spacing-rule) solid var(--color-rule);
+  padding: 0.4rem 0.75rem;
+  font-family: var(--font-display);
+  font-size: var(--text-step-2);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  background: transparent;
+}
+
+.chip:has(input:checked) {
+  border-color: var(--color-ink);
+  background: var(--color-ink);
+  color: var(--color-stock);
+}
+
+.chip:has(input:disabled) {
+  opacity: 0.35;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+.chip > input { position: absolute; opacity: 0; width: 0; height: 0; }
+.chip:has(input:focus-visible) { outline: 2px solid var(--color-spot); outline-offset: 2px; }
+
+.chip-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+.tag {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: var(--text-step-1);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.5rem;
+  border: var(--spacing-rule) solid currentColor;
+}
+
+.tag--sold { color: var(--color-ink-soft); }
+.tag--spot { color: var(--color-spot); }
+
+/* --------------------------------------------------------------------------
+   Notices
+   -------------------------------------------------------------------------- */
+
+.notice {
+  font-family: var(--font-display);
+  font-size: var(--text-step-2);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.5rem 0;
+}
+
+.notice--error { color: var(--color-spot); }
+.notice--ok { color: var(--color-ink-soft); }
+
+/* --------------------------------------------------------------------------
+   Motion
+   Short, once-only entrance reveals. Everything off under reduced motion.
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Lenis owns the scroll while it is mounted; these are the rules it needs to
+   coexist with native scrolling (its own stylesheet, inlined so no import
+   crosses into the admin bundle). Storefront only — SmoothScroll is mounted in
+   the (shop) layout. */
+html.lenis,
+html.lenis body { height: auto; }
+
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-stopped { overflow: clip; }
+.lenis.lenis-smooth iframe { pointer-events: none; }

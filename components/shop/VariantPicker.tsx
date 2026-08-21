@@ -15,6 +15,7 @@ export function VariantPicker({ sizes, colors, variants }: Props) {
   const [size, setSize] = useState(sizes[0] ?? '');
   const [color, setColor] = useState(colors[0] ?? '');
   const [message, setMessage] = useState('');
+  const [failed, setFailed] = useState(false);
   const [pending, startTransition] = useTransition();
 
   const selected = variants.find(
@@ -32,56 +33,88 @@ export function VariantPicker({ sizes, colors, variants }: Props) {
 
     startTransition(async () => {
       const result = await addToCartAction(selected.id, 1);
+      setFailed(!result.ok);
       setMessage(result.ok ? 'Added to cart' : result.error);
     });
   }
 
   return (
-    <div>
+    <div className="picker stack-lg">
       <fieldset>
-        <legend>Size</legend>
-        {sizes.map((option) => {
-          const variant = findVariant(option, color);
-          return (
-            <label key={option}>
+        <legend className="meta picker__legend">Size</legend>
+        <div className="chip-row">
+          {sizes.map((option) => {
+            const variant = findVariant(option, color);
+            const unavailable = !variant || !variant.inStock;
+
+            return (
+              <label key={option} className="chip">
+                <input
+                  type="radio"
+                  name="size"
+                  value={option}
+                  checked={size === option}
+                  disabled={unavailable}
+                  onChange={() => setSize(option)}
+                />
+                {option.toUpperCase()}
+                {variant && !variant.inStock ? (
+                  <span className="sr-only"> (sold out)</span>
+                ) : null}
+              </label>
+            );
+          })}
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend className="meta picker__legend">Colour</legend>
+        <div className="chip-row">
+          {colors.map((option) => (
+            <label key={option} className="chip">
               <input
                 type="radio"
-                name="size"
+                name="color"
                 value={option}
-                checked={size === option}
-                disabled={!variant || !variant.inStock}
-                onChange={() => setSize(option)}
+                checked={color === option}
+                onChange={() => setColor(option)}
               />
-              {option.toUpperCase()}
-              {variant && !variant.inStock ? ' (sold out)' : ''}
+              {option}
             </label>
-          );
-        })}
+          ))}
+        </div>
       </fieldset>
 
-      <fieldset>
-        <legend>Colour</legend>
-        {colors.map((option) => (
-          <label key={option}>
-            <input
-              type="radio"
-              name="color"
-              value={option}
-              checked={color === option}
-              onChange={() => setColor(option)}
-            />
-            {option}
-          </label>
-        ))}
-      </fieldset>
+      <div className="picker__buy">
+        <p className="price price--lg tnum">
+          {selected ? formatCents(selected.priceCents) : 'Unavailable'}
+        </p>
 
-      <p>{selected ? formatCents(selected.priceCents) : 'Unavailable'}</p>
+        <button
+          type="button"
+          className="btn btn--spot"
+          onClick={add}
+          disabled={!selected || !selected.inStock || pending}
+        >
+          {pending ? 'Adding…' : 'Add to cart'}
+        </button>
+      </div>
 
-      <button type="button" onClick={add} disabled={!selected || !selected.inStock || pending}>
-        {pending ? 'Adding…' : 'Add to cart'}
-      </button>
+      {selected ? (
+        <p className="meta tnum">
+          {selected.sku} — {selected.inStock ? `${selected.stock} in stock` : 'Sold out'}
+        </p>
+      ) : (
+        <p className="meta">That combination is not made.</p>
+      )}
 
-      <p role="status" aria-live="polite">{message}</p>
+      <p
+        role="status"
+        aria-live="polite"
+        className={message ? `notice ${failed ? 'notice--error' : 'notice--ok'}` : undefined}
+      >
+        {message}
+      </p>
     </div>
   );
 }
