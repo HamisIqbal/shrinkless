@@ -215,3 +215,58 @@ Resend. Riskiest phase; give it its own branch.
 
 Note `/cart` already links to `/checkout`, which does not exist yet — that link
 404s until Phase 5 lands.
+
+---
+
+## 2026-08-24 — image-led storefront rebuild
+
+The storefront was rebuilt around photography and a six-product catalogue.
+Live at https://shrinkless.vercel.app.
+
+### What changed structurally
+
+- **Photography is no longer monochrome.** `sat=-100` was appended to every URL
+  in `lib/brand/images.ts`, so the black and white was in the *data*, not the
+  CSS. It is gone and `tests/unit/images.test.ts` fails if it returns. Frames
+  now carry an optional `focus` (`object-position`), because a wide hero crops
+  a portrait source to a narrow band and the default centre lands it on the
+  model's chin rather than the garment.
+- **Catalogue: 1 product → 6**, across two real categories (`men`, `women`).
+  `scripts/seed-shrinkless.ts` is the source of truth and reads
+  `PRODUCT_IMAGES` keyed by slug. Colours are positional against that array —
+  reorder one without the other and the black tee gets the white photograph.
+- **`featured` is a new product field**, set in the admin editor. The homepage
+  "Featured" band reads it. Deliberately not "best sellers": there is no sales
+  history, so ranking would have been invented.
+- **`lib/shop/navigation.ts` must stay free of service imports.** `Header` is a
+  client component and imports `PRIMARY_NAV` from it; the DB query lives in
+  `lib/shop/menu.server.ts`. Merging them drags mongoose into the browser
+  bundle and the build fails.
+
+### Two traps worth knowing about
+
+- **globals.css rules sit in `@layer shrinkless-base`.** `@import` must come
+  first in a stylesheet, which meant every rule in globals.css was *later* in
+  the cascade than all of storefront.css — 85 class pairs collided, and
+  `.masthead__search { display: none }` silently lost to `.ulink`. If you
+  unwrap that layer, the mobile header sprouts desktop utilities again.
+- **Never branch rendered output on `useReducedMotion()`.** It cannot know the
+  preference during SSR, so it returns `false` on the server and the truth on
+  the client — every component that branched hydrated mismatched, and `Reveal`
+  mismatched *structurally* by swapping `<div>` for `<motion.div>`. Policy now
+  lives in one `<MotionConfig reducedMotion="user">`
+  (`components/ui/Motion.tsx`). The hook is still fine inside effects, which is
+  how the hero suppresses its auto-advance.
+- **`.hero__stack` needs `z-index: 0`.** It makes the stack its own stacking
+  context so the slide z-indices compete only with each other. Without it the
+  active frame paints over the scrim and the entire headline.
+
+### Still open
+
+- `/cart` still links to `/checkout`, which still does not exist. Unchanged by
+  this work and still the biggest gap — see Phase 5 above.
+- All photography is Unsplash placeholder. Every frame was opened and checked
+  for competitor wordmarks before use, but it is still someone else's garment.
+- Prices, fabric weights and the `[TBC]` claims on the product page are
+  assumptions and need the real numbers.
+- Reviews on the homepage are labelled "Placeholder review" verbatim.
