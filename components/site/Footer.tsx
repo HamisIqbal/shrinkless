@@ -33,23 +33,29 @@ export function Footer({ storeEmail }: { storeEmail: string }) {
             <p className="meta">Organic Tees That Don&rsquo;t Shrink.</p>
           </div>
 
-          <nav aria-label="Footer">
+          <nav aria-labelledby="colophon-navigate" className="colophon__col">
+            <h2 id="colophon-navigate" className="eyebrow">Navigate</h2>
             <ul className="colophon__links">
               {NAV.map((item) => (
                 <li key={item.href}>
                   <Link href={item.href} className="ulink">{item.label}</Link>
                 </li>
               ))}
+            </ul>
+          </nav>
+
+          <div className="colophon__col">
+            <h2 className="eyebrow">Join us</h2>
+            <ul className="colophon__links">
+              <li>
+                <a href={INSTAGRAM} className="ulink" rel="me noreferrer" target="_blank">
+                  Instagram
+                </a>
+              </li>
               <li>
                 <a href={`mailto:${storeEmail}`} className="ulink">Contact</a>
               </li>
             </ul>
-          </nav>
-
-          <div className="colophon__social">
-            <a href={INSTAGRAM} className="ulink" rel="me noreferrer" target="_blank">
-              Instagram
-            </a>
           </div>
         </div>
 

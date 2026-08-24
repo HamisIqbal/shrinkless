@@ -34,7 +34,9 @@ export function Header({ itemCount, signedIn }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  const overlaid = canOverlay && heroInView;
+  // An open panel needs a solid masthead behind it, or the bar keeps the
+  // hero's white-on-photograph treatment while the panel below it is paper.
+  const overlaid = canOverlay && heroInView && !menuOpen;
 
   useEffect(() => {
     if (!canOverlay) return;
@@ -69,7 +71,9 @@ export function Header({ itemCount, signedIn }: Props) {
   }, [menuOpen]);
 
   return (
-    <header className={`masthead${overlaid ? ' masthead--over' : ''}`}>
+    <header
+      className={`masthead${overlaid ? ' masthead--over' : ''}${menuOpen ? ' masthead--menu' : ''}`}
+    >
       <div className="wrap masthead__inner">
         <Link href="/" className="wordmark">Shrinkless</Link>
 
@@ -104,48 +108,58 @@ export function Header({ itemCount, signedIn }: Props) {
           aria-controls="mobile-nav"
           onClick={() => setMenuOpen((open) => !open)}
         >
+          <span className="masthead__bars" aria-hidden="true" />
           {menuOpen ? 'Close' : 'Menu'}
         </button>
       </div>
 
-      {menuOpen ? (
-        <div className="mobilenav" id="mobile-nav" ref={panelRef}>
+      {/* Stays mounted in both states so closing animates too; `inert` keeps the
+          collapsed panel out of the tab order and away from screen readers. */}
+      <div
+        className={`mobilenav${menuOpen ? ' mobilenav--open' : ''}`}
+        id="mobile-nav"
+        ref={panelRef}
+        inert={!menuOpen}
+      >
+        <div className="mobilenav__inner">
           <nav aria-label="Main, mobile">
-            <ul>
-              {NAV.map((item) => (
-                <li key={item.href}>
+            <ul className="mobilenav__list">
+              {NAV.map((item, index) => (
+                <li key={item.href} className="mobilenav__item">
                   <Link
                     href={item.href}
                     className="mobilenav__link"
+                    aria-current={pathname.startsWith(item.href) ? 'page' : undefined}
                     onClick={() => setMenuOpen(false)}
                   >
-                    {item.label}
+                    <span className="mobilenav__index tnum">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                    <span className="mobilenav__label">{item.label}</span>
+                    <span className="mobilenav__arrow" aria-hidden="true">&rarr;</span>
                   </Link>
                 </li>
               ))}
             </ul>
           </nav>
 
-          <hr className="rule" />
-
-          <ul className="mobilenav__utils">
-            <li>
-              <Link
-                href={signedIn ? '/account' : '/login'}
-                className="ulink"
-                onClick={() => setMenuOpen(false)}
-              >
-                Account
-              </Link>
-            </li>
-            <li>
-              <Link href="/cart" className="ulink" onClick={() => setMenuOpen(false)}>
-                Cart<span className="tnum"> ({itemCount})</span>
-              </Link>
-            </li>
-          </ul>
+          <div className="mobilenav__utils">
+            <Link
+              href={signedIn ? '/account' : '/login'}
+              className="ulink"
+              onClick={() => setMenuOpen(false)}
+            >
+              {signedIn ? 'Account' : 'Sign in'}
+            </Link>
+            <Link href="/shop?focus=search" className="ulink" onClick={() => setMenuOpen(false)}>
+              Search
+            </Link>
+            <Link href="/cart" className="ulink" onClick={() => setMenuOpen(false)}>
+              Cart<span className="tnum"> ({itemCount})</span>
+            </Link>
+          </div>
         </div>
-      ) : null}
+      </div>
     </header>
   );
 }
