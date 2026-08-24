@@ -1,29 +1,136 @@
 import { connectToDatabase, disconnectFromDatabase } from '@/lib/db/connection';
 import { Product } from '@/lib/db/models/product';
 import { Variant } from '@/lib/db/models/variant';
-import { PRODUCT_IMAGES } from '@/lib/brand/images';
+import { PRODUCT_IMAGES, type BrandImage, type ProductSlug } from '@/lib/brand/images';
 
 /**
- * The Shrinkless catalogue: one product, made extremely well.
+ * The Shrinkless catalogue: six tees across two shoppable categories.
  *
- * Three colourways x five sizes. Product images are stored as absolute URLs
- * rather than Cloudinary public IDs — `lib/images.ts` passes those through
- * untouched, so real uploads replace them without a code change.
+ * PRICES ARE ASSUMPTIONS. So are the fabric weights in the copy. Both were
+ * invented to make the storefront demonstrable and both need replacing with
+ * the real numbers before launch.
  *
- * PRICE IS AN ASSUMPTION (spec §11.1). Overwrite PRICE_CENTS with the real one.
+ * Colours are listed in the same order as the product's frames in
+ * `PRODUCT_IMAGES`, because `lib/shop/colorways.ts` matches the two up
+ * positionally. Reorder one without the other and the black tee gets the
+ * white photograph.
+ *
+ * Product images are stored as absolute URLs rather than Cloudinary public
+ * IDs; `lib/images.ts` passes those through untouched, so real uploads replace
+ * them without a code change.
  */
 
-const PRICE_CENTS = 4800;
-const SIZES = ['s', 'm', 'l', 'xl', 'xxl'];
-const COLORS = ['black', 'white', 'charcoal'];
+const MENS_SIZES = ['s', 'm', 'l', 'xl', 'xxl'];
+const WOMENS_SIZES = ['xs', 's', 'm', 'l', 'xl'];
 
-const DESCRIPTION =
-  'Garment dyed organic cotton, cut for everyday wear and built to hold its ' +
-  'shape wash after wash. Made in USA.';
+type Seed = {
+  slug: ProductSlug;
+  title: string;
+  category: 'men' | 'women';
+  priceCents: number;
+  /** Positional against PRODUCT_IMAGES[slug]. */
+  colors: string[];
+  sizes: string[];
+  featured: boolean;
+  description: string;
+  /** `${color}:${size}` pairs that should read as sold out. */
+  soldOut?: string[];
+};
 
-// Not every size of every colour is in stock — a catalogue that is uniformly
-// available is a catalogue nobody believes.
-const OUT_OF_STOCK = new Set(['white:xxl', 'charcoal:s']);
+const CATALOGUE: Seed[] = [
+  {
+    slug: 'mens-organic-tee',
+    title: 'Organic Tee',
+    category: 'men',
+    priceCents: 4800,
+    colors: ['white', 'black', 'bone'],
+    sizes: MENS_SIZES,
+    featured: true,
+    description:
+      'The one everything else is measured against. Garment dyed organic cotton, ' +
+      'a true crew neck, and a body cut straight enough to wear on its own or ' +
+      'under something else. Made in USA.',
+    soldOut: ['bone:xxl'],
+  },
+  {
+    slug: 'mens-heavyweight-tee',
+    title: 'Heavyweight Tee',
+    category: 'men',
+    priceCents: 6200,
+    colors: ['black', 'charcoal'],
+    sizes: MENS_SIZES,
+    featured: true,
+    description:
+      'A denser knit with more weight in the hand and a shoulder that holds its ' +
+      'line. Cut slightly longer and wider than the Organic Tee. Garment dyed, ' +
+      'made in USA.',
+    soldOut: ['charcoal:s'],
+  },
+  {
+    slug: 'mens-long-sleeve-tee',
+    title: 'Long Sleeve Tee',
+    category: 'men',
+    priceCents: 5800,
+    colors: ['teal', 'white'],
+    sizes: MENS_SIZES,
+    featured: false,
+    description:
+      'The Organic Tee body with a set-in long sleeve and a ribbed cuff that ' +
+      'stays put. Garment dyed organic cotton, made in USA.',
+  },
+  {
+    slug: 'womens-organic-tee',
+    title: 'Organic Tee',
+    category: 'women',
+    priceCents: 4600,
+    colors: ['white', 'heather'],
+    sizes: WOMENS_SIZES,
+    featured: true,
+    description:
+      'The same cotton and the same dye process, cut for a shorter body and a ' +
+      'narrower shoulder. Holds its length and its neckline wash after wash. ' +
+      'Made in USA.',
+    soldOut: ['heather:xs'],
+  },
+  {
+    slug: 'womens-boxy-tee',
+    title: 'Boxy Tee',
+    category: 'women',
+    priceCents: 5200,
+    colors: ['olive', 'bone'],
+    sizes: WOMENS_SIZES,
+    featured: false,
+    description:
+      'A wide, square body with a dropped shoulder and a cropped length. Meant ' +
+      'to sit away from the body. Garment dyed organic cotton, made in USA.',
+  },
+  {
+    slug: 'womens-everyday-tee',
+    title: 'Everyday Tee',
+    category: 'women',
+    priceCents: 4400,
+    colors: ['black', 'charcoal'],
+    sizes: WOMENS_SIZES,
+    featured: false,
+    description:
+      'The lightest weight we make, in the two colours that go with everything. ' +
+      'Garment dyed organic cotton, made in USA.',
+    soldOut: ['charcoal:l'],
+  },
+];
+
+/** Frames are stored with pixel dimensions; the manifest states a ratio. */
+const ASPECT_SIZES: Record<BrandImage['aspect'], { width: number; height: number }> = {
+  '3:2': { width: 1600, height: 1067 },
+  '4:5': { width: 1600, height: 2000 },
+  '2:3': { width: 1600, height: 2400 },
+  '1:1': { width: 1600, height: 1600 },
+};
+
+function skuFor(slug: string, color: string, size: string): string {
+  const stem = slug.replace(/^(mens|womens)-/, (m) => (m === 'mens-' ? 'M-' : 'W-'));
+  return `SL-${stem}-${color}-${size}`.toUpperCase();
+}
 
 async function main() {
   await connectToDatabase();
@@ -31,38 +138,50 @@ async function main() {
   await Variant.deleteMany({});
   await Product.deleteMany({});
 
-  const product = await Product.create({
-    title: 'Organic Tee',
-    slug: 'organic-tee',
-    description: DESCRIPTION,
-    category: 'tees',
-    status: 'published',
-    images: COLORS.map((color) => ({
-      publicId: PRODUCT_IMAGES[color].url,
-      width: 1400,
-      height: 1750,
-      alt: PRODUCT_IMAGES[color].alt,
-    })),
-    optionSets: { sizes: SIZES, colors: COLORS },
-  });
+  let variantCount = 0;
 
-  for (const color of COLORS) {
-    for (const size of SIZES) {
-      await Variant.create({
-        productId: product._id,
-        size,
-        color,
-        sku: `SL-TEE-${color.toUpperCase()}-${size.toUpperCase()}`,
-        priceCents: PRICE_CENTS,
-        stock: OUT_OF_STOCK.has(`${color}:${size}`) ? 0 : 24,
-      });
+  for (const seed of CATALOGUE) {
+    const frames = PRODUCT_IMAGES[seed.slug];
+
+    const product = await Product.create({
+      title: seed.title,
+      slug: seed.slug,
+      description: seed.description,
+      category: seed.category,
+      status: 'published',
+      featured: seed.featured,
+      images: frames.map((frame) => ({
+        publicId: frame.url,
+        ...ASPECT_SIZES[frame.aspect],
+        alt: frame.alt,
+      })),
+      optionSets: { sizes: seed.sizes, colors: seed.colors },
+    });
+
+    const soldOut = new Set(seed.soldOut ?? []);
+
+    for (const color of seed.colors) {
+      for (const size of seed.sizes) {
+        await Variant.create({
+          productId: product._id,
+          size,
+          color,
+          sku: skuFor(seed.slug, color, size),
+          priceCents: seed.priceCents,
+          stock: soldOut.has(`${color}:${size}`) ? 0 : 18,
+        });
+        variantCount += 1;
+      }
     }
+
+    console.log(
+      `  ${seed.category.padEnd(5)} ${seed.slug.padEnd(24)} ` +
+        `${seed.colors.length}x${seed.sizes.length} @ $${(seed.priceCents / 100).toFixed(2)}` +
+        `${seed.featured ? '  [featured]' : ''}`,
+    );
   }
 
-  console.log(
-    `seeded organic-tee — ${COLORS.length} colourways x ${SIZES.length} sizes ` +
-      `= ${COLORS.length * SIZES.length} variants at $${(PRICE_CENTS / 100).toFixed(2)}`,
-  );
+  console.log(`\nseeded ${CATALOGUE.length} products, ${variantCount} variants`);
 
   await disconnectFromDatabase();
 }

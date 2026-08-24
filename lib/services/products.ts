@@ -32,6 +32,7 @@ function toProductDTO(product: WithId<ProductDoc>, variants: WithId<VariantDoc>[
     description: product.description,
     category: product.category,
     status: product.status as 'draft' | 'published',
+    featured: Boolean(product.featured),
     images: product.images.map((image) => ({
       publicId: image.publicId,
       width: image.width,
@@ -102,7 +103,53 @@ export async function listPublishedProducts(
   if (filter.sort === 'price-desc') {
     return matching.sort((a, b) => b.minPriceCents - a.minPriceCents);
   }
-  return matching.reverse();
+
+  // "Newest" has to mean newest. Mongo's natural order is not insertion order
+  // and reversing it only looked right while the catalogue was one product.
+  const createdAt = new Map(products.map((p) => [String(p._id), timeOf(p)]));
+  return matching.sort((a, b) => (createdAt.get(b.id) ?? 0) - (createdAt.get(a.id) ?? 0));
+}
+
+/** `timestamps: true` is on the schema but absent from the inferred type. */
+function timeOf(doc: unknown): number {
+  const value = (doc as { createdAt?: Date | string }).createdAt;
+  return value ? new Date(value).getTime() : 0;
+}
+
+/**
+ * The homepage's "New Arrivals" rail. Real recency, straight off `createdAt` —
+ * nothing here is curated.
+ */
+export async function listNewArrivals(limit = 4): Promise<ProductDTO[]> {
+  const all = await listPublishedProducts({ sizes: [], colors: [], sort: 'newest', q: '' });
+  return all.slice(0, limit);
+}
+
+/**
+ * The homepage's featured rail.
+ *
+ * Deliberately NOT "best sellers": the store has no sales history to rank by,
+ * so this reads the `featured` flag an admin sets in the product editor. If
+ * nothing is flagged it falls back to the newest products rather than
+ * rendering an empty band.
+ */
+export async function listFeaturedProducts(limit = 3): Promise<ProductDTO[]> {
+  const all = await listPublishedProducts({ sizes: [], colors: [], sort: 'newest', q: '' });
+  const chosen = all.filter((product) => product.featured);
+
+  return (chosen.length ? chosen : all).slice(0, limit);
+}
+
+/** Everything published in one category, newest first. Powers the gateways. */
+export async function listProductsInCategory(
+  category: string,
+  limit?: number,
+): Promise<ProductDTO[]> {
+  const all = await listPublishedProducts(
+    { sizes: [], colors: [], sort: 'newest', q: '' },
+    category,
+  );
+  return typeof limit === 'number' ? all.slice(0, limit) : all;
 }
 
 export async function getPublishedProductBySlug(slug: string): Promise<ProductDTO | null> {
@@ -129,6 +176,7 @@ export async function listProductsForAdmin(): Promise<AdminProductRowDTO[]> {
       title: product.title,
       slug: product.slug,
       status: product.status as 'draft' | 'published',
+      featured: Boolean(product.featured),
       imagePublicId: product.images[0]?.publicId ?? '',
       variantCount: variants.length,
       totalStock: variants.reduce((sum, variant) => sum + variant.stock, 0),
@@ -155,7 +203,9 @@ export class SlugTakenError extends Error {
   }
 }
 
-export async function saveProduct(input: ProductInput & { id?: string }): Promise<string> {
+export async function saveProduct(
+  input: Omit<ProductInput, 'featured'> & { featured?: boolean; id?: string },
+): Promise<string> {
   await connectToDatabase();
 
   const clash = await Product.findOne({ slug: input.slug }).select('_id').lean();
@@ -169,6 +219,7 @@ export async function saveProduct(input: ProductInput & { id?: string }): Promis
     description: input.description,
     category: input.category,
     status: input.status,
+    featured: input.featured ?? false,
     images: input.images,
     optionSets: { sizes: input.sizes, colors: input.colors },
   };

@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { motion, useReducedMotion } from 'motion/react';
+import { motion } from 'motion/react';
 
 type Props = {
   children: ReactNode;
@@ -11,15 +11,14 @@ type Props = {
 };
 
 /**
- * Spec §6: short, once-only entrance reveals on section headers and grid
- * items. Under prefers-reduced-motion the content renders in place with no
- * animation at all.
+ * Short, once-only entrance reveal for section headers and grid items.
+ *
+ * Deliberately does NOT branch on `useReducedMotion()`: that hook returns
+ * `false` during server rendering, so swapping the element type on it produced
+ * a structural hydration mismatch. `components/ui/Motion` sets the policy
+ * globally instead, and this renders one tree either way.
  */
 export function Reveal({ children, index = 0, className }: Props) {
-  const reduced = useReducedMotion();
-
-  if (reduced) return <div className={className}>{children}</div>;
-
   return (
     <motion.div
       className={className}

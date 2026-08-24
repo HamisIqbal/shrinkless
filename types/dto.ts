@@ -23,6 +23,7 @@ export type ProductDTO = {
   description: string;
   category: string;
   status: 'draft' | 'published';
+  featured: boolean;
   images: ImageDTO[];
   sizes: string[];
   colors: string[];
@@ -55,6 +56,7 @@ export type AdminProductRowDTO = {
   title: string;
   slug: string;
   status: 'draft' | 'published';
+  featured: boolean;
   imagePublicId: string;
   variantCount: number;
   totalStock: number;

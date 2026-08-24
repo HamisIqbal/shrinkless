@@ -13,7 +13,7 @@ export default async function CartPage() {
       <div className="band band--tight wrap cartpage">
         <p className="eyebrow">Cart</p>
         <h1 className="head cartpage__head">Nothing in it yet.</h1>
-        <Link href="/shop" className="btn cartpage__cta">Shop tees</Link>
+        <Link href="/shop" className="btn btn--lg cartpage__cta">Shop tees</Link>
       </div>
     );
   }
@@ -43,7 +43,7 @@ export default async function CartPage() {
 
           <hr className="rule summary__rule" />
 
-          <Link href="/checkout" className="btn btn--block summary__cta">Checkout</Link>
+          <Link href="/checkout" className="btn btn--lg btn--block summary__cta">Checkout</Link>
           <Link href="/shop" className="ulink summary__back">Keep shopping</Link>
         </aside>
       </div>

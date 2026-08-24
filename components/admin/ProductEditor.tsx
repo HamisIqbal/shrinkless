@@ -29,6 +29,7 @@ export function ProductEditor({ product }: { product: ProductDTO | null }) {
   const [description, setDescription] = useState(product?.description ?? '');
   const [category, setCategory] = useState(product?.category ?? '');
   const [status, setStatus] = useState<'draft' | 'published'>(product?.status ?? 'draft');
+  const [featured, setFeatured] = useState(product?.featured ?? false);
   const [sizesText, setSizesText] = useState((product?.sizes ?? []).join(', '));
   const [colorsText, setColorsText] = useState((product?.colors ?? []).join(', '));
   const [edited, setEdited] = useState<Record<string, MatrixRow>>({});
@@ -82,7 +83,7 @@ export function ProductEditor({ product }: { product: ProductDTO | null }) {
     startTransition(async () => {
       const result = await saveProductAction({
         id: product?.id,
-        title, slug, description, category, status,
+        title, slug, description, category, status, featured,
         images,
         sizes, colors,
         variants: rows.map((row) => ({
@@ -129,6 +130,18 @@ export function ProductEditor({ product }: { product: ProductDTO | null }) {
           <option value="draft">Draft</option>
           <option value="published">Published</option>
         </select>
+      </label>
+
+      <label className="checkfield">
+        <input
+          type="checkbox"
+          checked={featured}
+          onChange={(e) => setFeatured(e.target.checked)}
+        />
+        <span>
+          Featured
+          <small>Shows in the Featured band on the homepage.</small>
+        </span>
       </label>
 
       <label>Sizes (comma separated)

@@ -27,7 +27,7 @@ export function QuoteRow({ eyebrow, quotes }: Props) {
 
         <ul className="quotes__row">
           {quotes.map((quote, index) => (
-            <li key={quote.name} className="quotes__item">
+            <li key={`${quote.name}-${index}`} className="quotes__item">
               <Reveal index={index}>
                 <figure className="quotes__figure">
                   <span className="serif-mark quotes__mark" aria-hidden="true">&ldquo;</span>

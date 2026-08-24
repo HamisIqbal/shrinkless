@@ -1,8 +1,13 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getPublishedProductBySlug } from '@/lib/services/products';
+import {
+  getPublishedProductBySlug,
+  listProductsInCategory,
+} from '@/lib/services/products';
 import { imageUrl } from '@/lib/images';
 import { VariantPicker } from '@/components/shop/VariantPicker';
+import { ProductGrid } from '@/components/shop/ProductGrid';
 
 // Native <details> so the accordions work without JavaScript and are keyboard
 // accessible by default. Factual claims are [TBC] until confirmed — spec §11.2.
@@ -47,6 +52,9 @@ export default async function ProductPage(props: PageProps<'/product/[slug]'>) {
 
   const requestedColor = typeof search?.color === 'string' ? search.color : undefined;
 
+  const siblings = await listProductsInCategory(product.category);
+  const related = siblings.filter((item) => item.id !== product.id).slice(0, 3);
+
   // Lead with the colourway the visitor clicked, if they clicked one.
   const gallery = [...product.images].sort((a, b) => {
     if (!requestedColor) return 0;
@@ -55,19 +63,38 @@ export default async function ProductPage(props: PageProps<'/product/[slug]'>) {
     return aMatch - bMatch;
   });
 
+  const categoryLabel = product.category === 'men' ? "Men's" : "Women's";
+
   return (
-    <article className="band band--tight pdp">
+    <article className="pdp">
+      <div className="wrap pdp__crumbs">
+        <nav aria-label="Breadcrumb">
+          <ol className="crumbs">
+            <li><Link href="/shop" className="ulink">Shop</Link></li>
+            <li aria-hidden="true" className="crumbs__sep">/</li>
+            <li>
+              <Link href={`/shop/${product.category}`} className="ulink">
+                {categoryLabel}
+              </Link>
+            </li>
+            <li aria-hidden="true" className="crumbs__sep">/</li>
+            <li><span className="meta">{product.title}</span></li>
+          </ol>
+        </nav>
+      </div>
+
       <div className="wrap pdp__grid">
         <div className="pdp__gallery">
           {gallery.length ? (
             gallery.map((image, index) => (
               <div key={image.publicId} className="frame frame--45 pdp__shot">
                 <Image
-                  src={imageUrl(image.publicId, 'c_fill,w_1200,h_1500,q_auto,f_auto')}
+                  src={imageUrl(image.publicId, 'c_fill,w_1400,h_1750,q_auto,f_auto')}
                   alt={image.alt || product.title}
                   fill
                   priority={index === 0}
-                  sizes="(min-width: 56.25rem) 55vw, 100vw"
+                  loading={index === 0 ? undefined : 'lazy'}
+                  sizes="(min-width: 56.25rem) 58vw, 100vw"
                 />
               </div>
             ))
@@ -78,7 +105,7 @@ export default async function ProductPage(props: PageProps<'/product/[slug]'>) {
 
         <div className="pdp__info">
           <div className="pdp__sticky">
-            <p className="eyebrow">Shrinkless</p>
+            <p className="eyebrow">{categoryLabel}</p>
             <h1 className="head pdp__title">{product.title}</h1>
 
             <VariantPicker
@@ -91,25 +118,41 @@ export default async function ProductPage(props: PageProps<'/product/[slug]'>) {
             {product.description ? (
               <p className="pdp__description">{product.description}</p>
             ) : null}
+
+            <ul className="accordion pdp__accordion">
+              {SECTIONS.map((section) => (
+                <li key={section.title}>
+                  <details className="accordion__item">
+                    <summary className="accordion__summary">
+                      <span>{section.title}</span>
+                      <span className="accordion__mark" aria-hidden="true" />
+                    </summary>
+                    <p className="accordion__body">{section.body}</p>
+                  </details>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </div>
 
-      <div className="wrap pdp__detail">
-        <ul className="accordion">
-          {SECTIONS.map((section) => (
-            <li key={section.title}>
-              <details className="accordion__item">
-                <summary className="accordion__summary">
-                  <span>{section.title}</span>
-                  <span className="accordion__mark" aria-hidden="true" />
-                </summary>
-                <p className="accordion__body">{section.body}</p>
-              </details>
-            </li>
-          ))}
-        </ul>
-      </div>
+      {related.length ? (
+        <section className="band band--white rail pdp__related" aria-labelledby="related-heading">
+          <div className="wrap">
+            <div className="rail__head">
+              <div>
+                <p className="eyebrow">Also in {categoryLabel}</p>
+                <h2 id="related-heading" className="head">You might also like</h2>
+              </div>
+              <Link href={`/shop/${product.category}`} className="ulink rail__more">
+                Shop all
+              </Link>
+            </div>
+
+            <ProductGrid products={related} columns={3} />
+          </div>
+        </section>
+      ) : null}
     </article>
   );
 }

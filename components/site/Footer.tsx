@@ -3,14 +3,43 @@ import { NewsletterForm } from '@/components/site/NewsletterForm';
 
 const INSTAGRAM = 'https://www.instagram.com/shrinkless/';
 
-const NAV = [
-  { href: '/shop', label: 'Shop' },
-  { href: '/our-story', label: 'Our Story' },
-  { href: '/why-shrinkless', label: 'Why Shrinkless' },
-  { href: '/faq', label: 'FAQ' },
-];
+type Column = { title: string; links: { href: string; label: string; external?: boolean }[] };
 
 export function Footer({ storeEmail }: { storeEmail: string }) {
+  // Help links point at the FAQ anchors that exist rather than at pages that
+  // do not. A footer full of dead routes is worse than a short footer.
+  const columns: Column[] = [
+    {
+      title: 'Shop',
+      links: [
+        { href: '/shop', label: 'All Products' },
+        { href: '/shop/men', label: 'Men' },
+        { href: '/shop/women', label: 'Women' },
+        { href: '/shop?sort=newest', label: 'New Arrivals' },
+      ],
+    },
+    {
+      title: 'About',
+      links: [
+        { href: '/our-story', label: 'Our Story' },
+        { href: '/why-shrinkless', label: 'Why Shrinkless' },
+      ],
+    },
+    {
+      title: 'Help',
+      links: [
+        { href: '/faq#shipping', label: 'Shipping' },
+        { href: '/faq#returns', label: 'Returns' },
+        { href: '/faq', label: 'FAQ' },
+        { href: `mailto:${storeEmail}`, label: 'Contact', external: true },
+      ],
+    },
+    {
+      title: 'Follow',
+      links: [{ href: INSTAGRAM, label: 'Instagram', external: true }],
+    },
+  ];
+
   return (
     <footer className="band band--ink colophon">
       <div className="wrap">
@@ -30,32 +59,37 @@ export function Footer({ storeEmail }: { storeEmail: string }) {
         <div className="colophon__grid">
           <div className="colophon__brand">
             <p className="colophon__mark">Shrinkless</p>
-            <p className="meta">Organic Tees That Don&rsquo;t Shrink.</p>
+            <p className="lede colophon__bio">
+              Garment dyed organic cotton tees, cut and sewn in the United States
+              and built to hold their shape wash after wash.
+            </p>
           </div>
 
-          <nav aria-labelledby="colophon-navigate" className="colophon__col">
-            <h2 id="colophon-navigate" className="eyebrow">Navigate</h2>
-            <ul className="colophon__links">
-              {NAV.map((item) => (
-                <li key={item.href}>
-                  <Link href={item.href} className="ulink">{item.label}</Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
-          <div className="colophon__col">
-            <h2 className="eyebrow">Join us</h2>
-            <ul className="colophon__links">
-              <li>
-                <a href={INSTAGRAM} className="ulink" rel="me noreferrer" target="_blank">
-                  Instagram
-                </a>
-              </li>
-              <li>
-                <a href={`mailto:${storeEmail}`} className="ulink">Contact</a>
-              </li>
-            </ul>
+          <div className="colophon__cols">
+            {columns.map((column) => (
+              <nav key={column.title} className="colophon__col" aria-label={column.title}>
+                <h3 className="eyebrow">{column.title}</h3>
+                <ul className="colophon__links">
+                  {column.links.map((link) => (
+                    <li key={`${column.title}-${link.href}`}>
+                      {link.external ? (
+                        <a
+                          href={link.href}
+                          className="ulink"
+                          {...(link.href.startsWith('http')
+                            ? { rel: 'me noreferrer', target: '_blank' }
+                            : {})}
+                        >
+                          {link.label}
+                        </a>
+                      ) : (
+                        <Link href={link.href} className="ulink">{link.label}</Link>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            ))}
           </div>
         </div>
 

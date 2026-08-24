@@ -2,6 +2,19 @@
 @import "./storefront.css";
 @import "./admin.css";
 
+/* --------------------------------------------------------------------------
+   Cascade order
+   `@import` has to come first in a stylesheet, which means every rule below is
+   LATER in the cascade than all of storefront.css — so a bare `.hero__eyebrow`
+   silently lost to `.eyebrow`, and `.masthead__search { display: none }` lost
+   to `.ulink { display: inline-block }`. There were 85 such co-occurrences.
+
+   Putting this file's rules in a layer fixes the whole class of bug at once:
+   unlayered styles always beat layered ones, so the component sheets now win
+   over these defaults on merit rather than on specificity tricks. `@theme`
+   stays outside — it declares tokens, not rules.
+   -------------------------------------------------------------------------- */
+
 /* ==========================================================================
    SHRINKLESS — premium American essentials, editorial.
    Spec: docs/superpowers/specs/2026-08-21-shrinkless-redesign-design.md
@@ -77,331 +90,402 @@
 
   --spacing-rule: 1px;
 
-  /* --- Motion ------------------------------------------------------------- */
+  /* --- Motion -------------------------------------------------------------
+     One curve and four durations for the whole site. Every transition picks
+     from these so the navigation, the hero, the cards and the modal all move
+     with the same hand. */
   --ease-out: cubic-bezier(0.16, 0.84, 0.44, 1);
+
+  --dur-1: 200ms;  /* state flicks: chips, swatches, small hovers */
+  --dur-2: 320ms;  /* the default: buttons, links, headers */
+  --dur-3: 520ms;  /* panels and modals */
+  --dur-4: 900ms;  /* photography: the slow scale under an image */
 }
 
-/* --------------------------------------------------------------------------
-   Base
-   -------------------------------------------------------------------------- */
+@layer shrinkless-base {
+  /* --------------------------------------------------------------------------
+     Base
+     -------------------------------------------------------------------------- */
 
-html {
-  background-color: var(--color-paper);
-  color: var(--color-ink);
-  -webkit-text-size-adjust: 100%;
-}
-
-body {
-  margin: 0;
-  min-height: 100dvh;
-  background-color: var(--color-paper);
-  font-family: var(--font-sans);
-  font-size: var(--text-body);
-  font-weight: 400;
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-}
-
-h1, h2, h3, h4, h5, h6 {
-  margin: 0;
-  font-family: var(--font-sans);
-  font-weight: 500;
-  line-height: 0.95;
-  letter-spacing: -0.03em;
-}
-
-p, ul, ol, dl, figure, fieldset, address { margin: 0; }
-ul, ol { padding: 0; list-style: none; }
-fieldset { border: 0; padding: 0; }
-address { font-style: normal; }
-img, video { display: block; max-width: 100%; }
-
-a { color: inherit; text-underline-offset: 0.22em; }
-
-button { font: inherit; }
-
-/* Money, quantities, SKUs — anything columnar. */
-.tnum,
-input[type="number"] { font-variant-numeric: tabular-nums; }
-
-/* Never removed, only restyled. */
-:focus-visible {
-  outline: 2px solid var(--color-ink);
-  outline-offset: 2px;
-}
-
-.skiplink {
-  position: absolute;
-  left: -9999px;
-  top: 0;
-  z-index: 100;
-  background: var(--color-ink);
-  color: var(--color-white);
-  padding: var(--space-2) var(--space-3);
-  font-size: var(--text-meta);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.skiplink:focus { left: var(--space-3); top: var(--space-3); }
-
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
-/* --------------------------------------------------------------------------
-   Layout
-   A 12-column grid inside a wide measure. Full-bleed bands escape it entirely
-   rather than clawing back with negative margins.
-   -------------------------------------------------------------------------- */
-
-.wrap {
-  width: 100%;
-  max-width: 100rem;
-  margin-inline: auto;
-  padding-inline: clamp(1.25rem, 4vw, 4.5rem);
-}
-
-.grid12 {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-4);
-}
-
-@media (min-width: 56.25rem) {
-  .grid12 { grid-template-columns: repeat(12, minmax(0, 1fr)); }
-}
-
-.band { padding-block: var(--space-7); }
-.band--tight { padding-block: var(--space-6); }
-.band--tall { padding-block: var(--space-8); }
-.band--ink { background: var(--color-ink); color: var(--color-white); }
-.band--white { background: var(--color-white); }
-.band--warm { background: var(--color-warm); }
-
-.rule {
-  border: 0;
-  border-top: var(--spacing-rule) solid var(--color-muted);
-  margin: 0;
-}
-
-/* --------------------------------------------------------------------------
-   Type roles
-   -------------------------------------------------------------------------- */
-
-.display {
-  font-size: var(--text-display);
-  font-weight: 500;
-  line-height: 0.92;
-  letter-spacing: -0.035em;
-  text-transform: uppercase;
-}
-
-.head {
-  font-size: var(--text-head);
-  font-weight: 500;
-  line-height: 0.98;
-  letter-spacing: -0.03em;
-  text-transform: uppercase;
-}
-
-.sub {
-  font-size: var(--text-sub);
-  font-weight: 500;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
-}
-
-.eyebrow {
-  display: block;
-  font-size: var(--text-meta);
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--color-muted-text);
-}
-
-.band--ink .eyebrow { color: var(--color-muted); }
-
-.lede {
-  font-size: 1.0625rem;
-  line-height: 1.6;
-  max-width: 46ch;
-}
-
-.meta {
-  font-size: var(--text-meta);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--color-muted-text);
-}
-
-.band--ink .meta { color: var(--color-muted); }
-
-.serif-mark {
-  font-family: var(--font-serif);
-  font-weight: 400;
-  line-height: 1;
-}
-
-/* --------------------------------------------------------------------------
-   Controls
-   Squared, hairline, monochrome. Two weights and a text link — no more.
-   -------------------------------------------------------------------------- */
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2.75rem;
-  padding: 0.75rem 2rem;
-  border: var(--spacing-rule) solid var(--color-ink);
-  background: var(--color-ink);
-  color: var(--color-white);
-  font-size: var(--text-meta);
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  text-decoration: none;
-  cursor: pointer;
-  transition: background-color 240ms var(--ease-out), color 240ms var(--ease-out);
-}
-
-.btn:hover { background: transparent; color: var(--color-ink); }
-
-.btn--light {
-  border-color: var(--color-white);
-  background: var(--color-white);
-  color: var(--color-ink);
-}
-
-.btn--light:hover { background: transparent; color: var(--color-white); }
-
-.btn--outline {
-  background: transparent;
-  color: var(--color-ink);
-}
-
-.btn--outline:hover { background: var(--color-ink); color: var(--color-white); }
-
-.btn[disabled],
-.btn[aria-disabled="true"] {
-  border-color: var(--color-muted);
-  background: var(--color-muted);
-  color: var(--color-white);
-  cursor: not-allowed;
-}
-
-.btn--block { width: 100%; }
-
-/* A rule that draws itself in from the left. Navigation and inline links. */
-.ulink {
-  position: relative;
-  display: inline-block;
-  text-decoration: none;
-  font-size: var(--text-meta);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.ulink::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -0.35em;
-  height: var(--spacing-rule);
-  background: currentColor;
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 240ms var(--ease-out);
-}
-
-.ulink:hover::after,
-.ulink:focus-visible::after,
-.ulink[aria-current="page"]::after { transform: scaleX(1); }
-
-/* --------------------------------------------------------------------------
-   Media
-   The image scales inside a fixed frame; the frame itself never moves.
-   -------------------------------------------------------------------------- */
-
-.frame {
-  position: relative;
-  overflow: hidden;
-  background: var(--color-paper-deep);
-}
-
-.frame > img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 900ms var(--ease-out);
-}
-
-.frame--32 { aspect-ratio: 3 / 2; }
-.frame--45 { aspect-ratio: 4 / 5; }
-.frame--11 { aspect-ratio: 1 / 1; }
-
-a:hover > .frame > img,
-.zoom:hover .frame > img { transform: scale(1.03); }
-
-/* --------------------------------------------------------------------------
-   Forms
-   -------------------------------------------------------------------------- */
-
-.field { display: grid; gap: var(--space-1); }
-
-.field > label,
-.label {
-  font-size: var(--text-meta);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--color-muted-text);
-}
-
-.input {
-  min-height: 2.75rem;
-  padding: 0.7rem 0.9rem;
-  border: var(--spacing-rule) solid var(--color-muted);
-  border-radius: 0;
-  background: var(--color-white);
-  color: var(--color-ink);
-  font: inherit;
-}
-
-.input:focus-visible { outline: 2px solid var(--color-ink); outline-offset: 0; }
-
-.notice { font-size: var(--text-meta); letter-spacing: 0.08em; text-transform: uppercase; }
-.notice--error { color: var(--color-ink); border-left: 2px solid var(--color-ink); padding-left: 0.6rem; }
-.notice--ok { color: var(--color-muted-text); }
-
-/* --------------------------------------------------------------------------
-   Motion
-   -------------------------------------------------------------------------- */
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+  html {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    -webkit-text-size-adjust: 100%;
   }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background-color: var(--color-paper);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    font-weight: 400;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-weight: 500;
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+  }
+
+  p, ul, ol, dl, figure, fieldset, address { margin: 0; }
+  ul, ol { padding: 0; list-style: none; }
+  fieldset { border: 0; padding: 0; }
+  address { font-style: normal; }
+  img, video { display: block; max-width: 100%; }
+
+  a { color: inherit; text-underline-offset: 0.22em; }
+
+  button { font: inherit; }
+
+  /* Money, quantities, SKUs — anything columnar. */
+  .tnum,
+  input[type="number"] { font-variant-numeric: tabular-nums; }
+
+  /* Never removed, only restyled. */
+  :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+  }
+
+  .skiplink {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 100;
+    background: var(--color-ink);
+    color: var(--color-white);
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--text-meta);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .skiplink:focus { left: var(--space-3); top: var(--space-3); }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* --------------------------------------------------------------------------
+     Layout
+     A 12-column grid inside a wide measure. Full-bleed bands escape it entirely
+     rather than clawing back with negative margins.
+     -------------------------------------------------------------------------- */
+
+  .wrap {
+    width: 100%;
+    max-width: 100rem;
+    margin-inline: auto;
+    padding-inline: clamp(1.25rem, 4vw, 4.5rem);
+  }
+
+  .grid12 {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+
+  @media (min-width: 56.25rem) {
+    .grid12 { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+  }
+
+  .band { padding-block: var(--space-7); }
+  .band--tight { padding-block: var(--space-6); }
+  .band--tall { padding-block: var(--space-8); }
+  .band--ink { background: var(--color-ink); color: var(--color-white); }
+  .band--white { background: var(--color-white); }
+  .band--warm { background: var(--color-warm); }
+
+  .rule {
+    border: 0;
+    border-top: var(--spacing-rule) solid var(--color-muted);
+    margin: 0;
+  }
+
+  /* --------------------------------------------------------------------------
+     Type roles
+     -------------------------------------------------------------------------- */
+
+  .display {
+    font-size: var(--text-display);
+    font-weight: 500;
+    line-height: 0.92;
+    letter-spacing: -0.035em;
+    text-transform: uppercase;
+  }
+
+  .head {
+    font-size: var(--text-head);
+    font-weight: 500;
+    line-height: 0.98;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+  }
+
+  .sub {
+    font-size: var(--text-sub);
+    font-weight: 500;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+  }
+
+  .eyebrow {
+    display: block;
+    font-size: var(--text-meta);
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-muted-text);
+  }
+
+  .band--ink .eyebrow { color: var(--color-muted); }
+
+  .lede {
+    font-size: 1.0625rem;
+    line-height: 1.6;
+    max-width: 46ch;
+  }
+
+  .meta {
+    font-size: var(--text-meta);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-muted-text);
+  }
+
+  .band--ink .meta { color: var(--color-muted); }
+
+  .serif-mark {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    line-height: 1;
+  }
+
+  /* --------------------------------------------------------------------------
+     Controls
+     Squared, hairline, monochrome. Two weights and a text link — no more.
+     -------------------------------------------------------------------------- */
+
+  /* The house hover: a solid fill rises from the bottom edge, takes the whole
+     button, and inverts the label. Leaving reverses the *direction* rather than
+     the animation — the origin flips to the top so the fill keeps travelling
+     upward and off, instead of sinking back down the way it came.
+
+     `--btn-fill` is the colour that rises and `--btn-fill-ink` is what the label
+     becomes underneath it, so every variant is two custom properties rather than
+     a second copy of this block. */
+  .btn {
+    position: relative;
+    isolation: isolate;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.75rem;
+    padding: 0.75rem 2rem;
+    overflow: hidden;
+    border: var(--spacing-rule) solid var(--color-ink);
+    background: var(--color-ink);
+    color: var(--color-white);
+    font-size: var(--text-meta);
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color var(--dur-2) var(--ease-out);
+
+    --btn-fill: var(--color-white);
+    --btn-fill-ink: var(--color-ink);
+  }
+
+  .btn::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--btn-fill);
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: transform var(--dur-2) var(--ease-out);
+  }
+
+  .btn:hover::before,
+  .btn:focus-visible::before {
+    transform: scaleY(1);
+    transform-origin: bottom;
+  }
+
+  .btn:hover,
+  .btn:focus-visible { color: var(--btn-fill-ink); }
+
+  /* On paper, over a photograph. */
+  .btn--light {
+    border-color: var(--color-white);
+    background: var(--color-white);
+    color: var(--color-ink);
+
+    --btn-fill: var(--color-ink);
+    --btn-fill-ink: var(--color-white);
+  }
+
+  /* Hairline only, for the second action in a pair. */
+  .btn--outline {
+    background: transparent;
+    color: var(--color-ink);
+
+    --btn-fill: var(--color-ink);
+    --btn-fill-ink: var(--color-white);
+  }
+
+  /* Hairline over a photograph or an ink band. */
+  .btn--ghost {
+    border-color: var(--color-white);
+    background: transparent;
+    color: var(--color-white);
+
+    --btn-fill: var(--color-white);
+    --btn-fill-ink: var(--color-ink);
+  }
+
+  /* Purchase actions. Spec §25: these have to read first. */
+  .btn--lg {
+    min-height: 3.5rem;
+    padding: 1rem 2.5rem;
+    font-size: 0.875rem;
+    letter-spacing: 0.16em;
+  }
+
+  .btn[disabled],
+  .btn[aria-disabled="true"] {
+    border-color: var(--color-muted);
+    background: var(--color-muted);
+    color: var(--color-white);
+    cursor: not-allowed;
+  }
+
+  /* A disabled control must not animate on hover. */
+  .btn[disabled]::before,
+  .btn[aria-disabled="true"]::before { content: none; }
+
+  .btn[disabled]:hover,
+  .btn[aria-disabled="true"]:hover { color: var(--color-white); }
+
+  .btn--block { width: 100%; }
+
+  /* A rule that draws itself in from the left. Navigation and inline links. */
+  .ulink {
+    position: relative;
+    display: inline-block;
+    text-decoration: none;
+    font-size: var(--text-meta);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .ulink::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -0.35em;
+    height: var(--spacing-rule);
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 240ms var(--ease-out);
+  }
+
+  .ulink:hover::after,
+  .ulink:focus-visible::after,
+  .ulink[aria-current="page"]::after { transform: scaleX(1); }
+
+  /* --------------------------------------------------------------------------
+     Media
+     The image scales inside a fixed frame; the frame itself never moves.
+     -------------------------------------------------------------------------- */
+
+  .frame {
+    position: relative;
+    overflow: hidden;
+    background: var(--color-paper-deep);
+  }
+
+  .frame > img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 900ms var(--ease-out);
+  }
+
+  .frame--32 { aspect-ratio: 3 / 2; }
+  .frame--45 { aspect-ratio: 4 / 5; }
+  .frame--11 { aspect-ratio: 1 / 1; }
+
+  a:hover > .frame > img,
+  .zoom:hover .frame > img { transform: scale(1.03); }
+
+  /* --------------------------------------------------------------------------
+     Forms
+     -------------------------------------------------------------------------- */
+
+  .field { display: grid; gap: var(--space-1); }
+
+  .field > label,
+  .label {
+    font-size: var(--text-meta);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-muted-text);
+  }
+
+  .input {
+    min-height: 2.75rem;
+    padding: 0.7rem 0.9rem;
+    border: var(--spacing-rule) solid var(--color-muted);
+    border-radius: 0;
+    background: var(--color-white);
+    color: var(--color-ink);
+    font: inherit;
+  }
+
+  .input:focus-visible { outline: 2px solid var(--color-ink); outline-offset: 0; }
+
+  .notice { font-size: var(--text-meta); letter-spacing: 0.08em; text-transform: uppercase; }
+  .notice--error { color: var(--color-ink); border-left: 2px solid var(--color-ink); padding-left: 0.6rem; }
+  .notice--ok { color: var(--color-muted-text); }
+
+  /* --------------------------------------------------------------------------
+     Motion
+     -------------------------------------------------------------------------- */
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Lenis owns the scroll while it is mounted. Inlined rather than imported so
+     nothing crosses into the admin bundle. Storefront only. */
+  html.lenis,
+  html.lenis body { height: auto; }
+
+  .lenis.lenis-smooth { scroll-behavior: auto !important; }
+  .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+  .lenis.lenis-stopped { overflow: clip; }
+  .lenis.lenis-smooth iframe { pointer-events: none; }
 }
-
-/* Lenis owns the scroll while it is mounted. Inlined rather than imported so
-   nothing crosses into the admin bundle. Storefront only. */
-html.lenis,
-html.lenis body { height: auto; }
-
-.lenis.lenis-smooth { scroll-behavior: auto !important; }
-.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
-.lenis.lenis-stopped { overflow: clip; }
-.lenis.lenis-smooth iframe { pointer-events: none; }

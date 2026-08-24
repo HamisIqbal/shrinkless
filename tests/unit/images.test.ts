@@ -1,10 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { imageUrl, isRemoteImage } from '@/lib/images';
-import { BRAND_IMAGES, PRODUCT_IMAGES, LIFESTYLE_SLOTS } from '@/lib/brand/images';
+import {
+  BRAND_IMAGES,
+  CATEGORY_IMAGES,
+  HERO_SLIDES,
+  PRODUCT_IMAGES,
+} from '@/lib/brand/images';
+import type { BrandImage } from '@/lib/brand/images';
 
 describe('imageUrl', () => {
   it('passes an absolute URL through untouched', () => {
-    const url = 'https://images.unsplash.com/photo-123?w=800&sat=-100';
+    const url = 'https://images.unsplash.com/photo-123?w=800';
 
     expect(imageUrl(url)).toBe(url);
     expect(imageUrl(url, 'c_fill,w_400')).toBe(url);
@@ -26,7 +32,14 @@ describe('imageUrl', () => {
 });
 
 describe('brand image manifest', () => {
-  const every = [...Object.entries(BRAND_IMAGES), ...Object.entries(PRODUCT_IMAGES)];
+  const every: [string, BrandImage][] = [
+    ...HERO_SLIDES.map((image, i): [string, BrandImage] => [`hero[${i}]`, image]),
+    ...Object.entries(CATEGORY_IMAGES),
+    ...Object.entries(BRAND_IMAGES),
+    ...Object.entries(PRODUCT_IMAGES).flatMap(([slug, frames]) =>
+      frames.map((image, i): [string, BrandImage] => [`${slug}[${i}]`, image]),
+    ),
+  ];
 
   it.each(every)('%s has a usable URL', (_slot, image) => {
     expect(image.url).toMatch(/^https:\/\//);
@@ -38,16 +51,30 @@ describe('brand image manifest', () => {
     expect(image.alt.trim().length).toBeGreaterThan(10);
   });
 
-  it('renders every frame in black and white', () => {
-    for (const [, image] of every) expect(image.url).toContain('sat=-100');
+  // The site used to force every frame monochrome with `sat=-100`. Removing it
+  // was a deliberate brand decision, so it gets a test rather than a comment:
+  // reintroducing the filter anywhere in the manifest fails the build.
+  it('never desaturates a frame', () => {
+    for (const [slot, image] of every) {
+      expect(image.url, `${slot} is desaturated`).not.toContain('sat=-100');
+      expect(image.url, `${slot} is desaturated`).not.toMatch(/[?&]sat=/);
+    }
   });
 
-  it('has nine lifestyle slots, all present in the manifest', () => {
-    expect(LIFESTYLE_SLOTS).toHaveLength(9);
-    for (const slot of LIFESTYLE_SLOTS) expect(BRAND_IMAGES[slot]).toBeDefined();
+  it('has four hero slides, so the campaign cycles rather than blinks', () => {
+    expect(HERO_SLIDES).toHaveLength(4);
   });
 
-  it('covers all three colourways', () => {
-    expect(Object.keys(PRODUCT_IMAGES).sort()).toEqual(['black', 'charcoal', 'white']);
+  it('covers every shoppable category with a gateway frame', () => {
+    expect(Object.keys(CATEGORY_IMAGES).sort()).toEqual(['men', 'women']);
+  });
+
+  it('gives all six products at least one frame', () => {
+    const slugs = Object.keys(PRODUCT_IMAGES);
+
+    expect(slugs).toHaveLength(6);
+    for (const slug of slugs) {
+      expect(PRODUCT_IMAGES[slug as keyof typeof PRODUCT_IMAGES].length).toBeGreaterThan(0);
+    }
   });
 });

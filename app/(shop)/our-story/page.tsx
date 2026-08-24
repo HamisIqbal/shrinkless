@@ -13,7 +13,7 @@ export default function OurStoryPage() {
   return (
     <>
       <ImageBand
-        image={BRAND_IMAGES.dyeStory}
+        image={BRAND_IMAGES.craft}
         eyebrow="Our story"
         headline="One tee, made properly."
       />
@@ -24,14 +24,14 @@ export default function OurStoryPage() {
       />
 
       <SplitFeature
-        image={BRAND_IMAGES.why01}
+        image={BRAND_IMAGES.hanging}
         eyebrow="The process"
         headline="Shrunk before you own it."
         body="We pre-shrink the fabric and garment dye the finished tee at temperature, so the change that normally happens in your machine has already happened in ours."
       />
 
       <SplitFeature
-        image={BRAND_IMAGES.why02}
+        image={BRAND_IMAGES.fabric}
         eyebrow="The material"
         headline="Organic cotton, garment dyed."
         body="Garment dyeing gives each run its own depth and character — the colour settles into the cotton rather than sitting on top of it, and it wears in instead of wearing out."
@@ -39,7 +39,7 @@ export default function OurStoryPage() {
       />
 
       <ImageBand
-        image={BRAND_IMAGES.madeInUsa}
+        image={BRAND_IMAGES.torso}
         eyebrow="Craft"
         glyph="🇺🇸"
         headline="Made in USA."
@@ -48,7 +48,7 @@ export default function OurStoryPage() {
 
       <FullBleedType
         lines={['Less,', 'but better.']}
-        support="One tee. Three colours. Made well enough that we do not need a fourth product."
+        support="Six styles, cut from the same cotton and finished the same way. Made well enough that we do not need a seventh."
         cta={{ href: '/shop', label: 'Shop tees' }}
       />
     </>

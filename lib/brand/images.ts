@@ -1,14 +1,20 @@
 /**
- * Editorial photography slots.
+ * Editorial and product photography slots.
  *
  * These are PLACEHOLDERS. Real Shrinkless photography has not been supplied;
  * every frame here is licensed Unsplash stock and shows someone else's
  * garment. Replace the `url` values before launch — nothing else needs to
  * change, because components only ever read this manifest.
  *
- * `sat=-100` renders every frame black and white. That is deliberate: it is
- * the brand direction, and it is also what makes a set of unrelated stock
- * photographs read as one coherent editorial system.
+ * Frames are served in their NATURAL COLOUR. An earlier revision appended
+ * `sat=-100` to every URL to force the whole site black and white; that is
+ * gone deliberately, and `tests/unit/images.test.ts` now guards against it
+ * coming back. Restraint comes from the palette and the layout, not from
+ * desaturating the photography.
+ *
+ * Every frame below has been opened and checked: no competitor wordmarks on
+ * the garment, no graphic prints that would read as Shrinkless product, and
+ * alt text that describes what is actually in the picture.
  */
 
 export type BrandImage = {
@@ -16,117 +22,225 @@ export type BrandImage = {
   url: string;
   /** Never empty. Screen readers get a real description of the frame. */
   alt: string;
-  aspect: '3:2' | '4:5' | '1:1';
+  aspect: '3:2' | '4:5' | '2:3' | '1:1';
+  /**
+   * `object-position` for this frame. A wide hero crops a portrait source to a
+   * narrow horizontal band, and the default 50% 50% lands that band on the
+   * model's face as often as on the garment — so where to crop is a property
+   * of the photograph, not of the component.
+   */
+  focus?: string;
 };
 
 const UNSPLASH = 'https://images.unsplash.com';
 
-/** Shared transform: black and white, cropped, sensibly sized. */
+/** Shared transform: cropped, sensibly sized, colour left alone. */
 function frame(id: string, width: number): string {
-  return `${UNSPLASH}/${id}?auto=format&fit=crop&w=${width}&q=80&sat=-100`;
+  return `${UNSPLASH}/${id}?auto=format&fit=crop&w=${width}&q=80`;
 }
 
+/* --------------------------------------------------------------------------
+   Hero campaign
+   Four frames, cycled infinitely by components/site/HeroSlider. Ordered so
+   consecutive slides differ in tone and crop — two similar frames back to
+   back make the transition look like a glitch rather than a campaign.
+   -------------------------------------------------------------------------- */
+
+export const HERO_SLIDES = [
+  {
+    url: frame('photo-1605949478009-cf3e01396dd2', 2400),
+    alt: 'A man in a black tee leaning against a bare concrete wall in daylight.',
+    aspect: '4:5',
+    focus: '50% 30%',
+  },
+  {
+    url: frame('photo-1586790170083-2f9ceadc732d', 2400),
+    alt: 'A man in a plain white crew neck tee against an off-white wall.',
+    aspect: '2:3',
+    focus: '50% 45%',
+  },
+  {
+    url: frame('photo-1629137525253-739adcd9c774', 2400),
+    alt: 'A woman in an oversized olive tee against a weathered concrete wall.',
+    aspect: '2:3',
+    focus: '50% 48%',
+  },
+  {
+    url: frame('photo-1611178206041-54d5e075be45', 2400),
+    alt: 'A man in a black crew neck tee against a white plaster wall.',
+    aspect: '4:5',
+    focus: '50% 55%',
+  },
+] as const satisfies readonly BrandImage[];
+
+/* --------------------------------------------------------------------------
+   Category gateways
+   One frame per shoppable category. Keys must match the `category` field on
+   the product documents, or the homepage gateway falls back to no image.
+   -------------------------------------------------------------------------- */
+
+export const CATEGORY_IMAGES = {
+  men: {
+    url: frame('photo-1615903040611-e599dfaa6752', 1600),
+    alt: 'A man in an oversized black tee crossing a street at dusk.',
+    aspect: '4:5',
+    focus: '50% 40%',
+  },
+  women: {
+    url: frame('photo-1546578623-d1d3af878403', 1600),
+    alt: 'A woman in a plain white tee standing on an open road.',
+    aspect: '2:3',
+    focus: '50% 58%',
+  },
+} as const satisfies Record<string, BrandImage>;
+
+export type CategorySlug = keyof typeof CATEGORY_IMAGES;
+
+/* --------------------------------------------------------------------------
+   Editorial
+   -------------------------------------------------------------------------- */
+
 export const BRAND_IMAGES = {
-  hero: {
-    url: frame('photo-1605949478009-cf3e01396dd2', 2000),
-    alt: 'A man in a plain black tee sitting on a concrete wall in daylight.',
+  /** Fabric macro. Carries the "organic cotton" claim visually. */
+  fabric: {
+    url: frame('photo-1632844384543-bb1b2c3900d7', 1600),
+    alt: 'A close view of soft grey cotton jersey, folded and catching the light.',
+    aspect: '4:5',
+  },
+
+  /** Cut-and-sew bench. Carries the "Made in USA" claim visually. */
+  craft: {
+    url: frame('photo-1584184924103-e310d9dc82fc', 1600),
+    alt: 'A tailor cutting cloth by hand at a wooden workbench, tape measure round the neck.',
+    aspect: '4:5',
+  },
+
+  /** The garment alone, no model. Used for the "doesn't shrink" band. */
+  hanging: {
+    url: frame('photo-1581655353564-df123a1eb820', 1600),
+    alt: 'A white tee on a wooden hanger against a poured concrete wall.',
+    aspect: '2:3',
+  },
+
+  /** Flat lay. Used where the composition needs to sit down and be quiet. */
+  folded: {
+    url: frame('photo-1693443687750-611ad77f3aba', 1600),
+    alt: 'A white tee and a black tee folded side by side on a white surface.',
     aspect: '3:2',
   },
 
-  dyeStory: {
-    url: frame('photo-1588354241597-a9880039f0ce', 1400),
-    alt: 'Hands holding a length of woven cotton cloth.',
-    aspect: '4:5',
-  },
-
-  madeInUsa: {
-    url: frame('photo-1660980041852-230420b8f99f', 2000),
-    alt: 'A factory floor lined with garment machinery.',
+  /** Heather grey tee, soft daylight. The calmest frame in the set. */
+  heather: {
+    url: frame('photo-1564584217132-2271feaeb3c5', 1600),
+    alt: 'A heather grey tee hanging on a white wall in soft afternoon light.',
     aspect: '3:2',
   },
 
-  why01: {
-    url: frame('photo-1560796952-f1c9b838544c', 1400),
-    alt: 'A sewing machine needle close up, mid-stitch.',
-    aspect: '4:5',
-  },
-
-  why02: {
-    url: frame('photo-1564584217132-2271feaeb3c5', 1400),
-    alt: 'A grey tee hanging against a plain wall.',
-    aspect: '4:5',
-  },
-
-  lifestyle01: {
-    url: frame('photo-1612089668652-b9ada517be60', 1200),
-    alt: 'A man walking a city sidewalk in the early afternoon.',
-    aspect: '4:5',
-  },
-  lifestyle02: {
-    url: frame('photo-1596517447156-4408f27791ae', 1200),
-    alt: 'Two people sitting on a bench outside a shopfront.',
-    aspect: '1:1',
-  },
-  lifestyle03: {
-    url: frame('photo-1543233604-3baca4d35513', 1200),
-    alt: 'A coffee cup resting on a book beside a window.',
-    aspect: '1:1',
-  },
-  lifestyle04: {
-    url: frame('photo-1591879468972-68d53647238c', 1200),
-    alt: 'A man seated on a concrete bench, photographed from across the street.',
-    aspect: '4:5',
-  },
-  lifestyle05: {
-    url: frame('photo-1746045234010-fceb2bb57479', 1400),
-    alt: 'A café interior looking out over the city.',
-    aspect: '1:1',
-  },
-  lifestyle06: {
-    url: frame('photo-1704300553191-d530728380a8', 1200),
-    alt: 'A man sitting on top of a brick wall.',
-    aspect: '4:5',
-  },
-  lifestyle07: {
-    url: frame('photo-1521834100799-d805ca040e94', 1200),
-    alt: 'Lettering on the side of a plain building.',
-    aspect: '1:1',
-  },
-  lifestyle08: {
-    url: frame('photo-1725218617496-5ccb972f9cab', 1200),
-    alt: 'A man standing with a bicycle inside a concrete building.',
-    aspect: '4:5',
-  },
-  lifestyle09: {
-    url: frame('photo-1763462740475-3f084fc2399c', 1400),
-    alt: 'A figure on a staircase behind construction scaffolding.',
-    aspect: '1:1',
+  /** Studio torso crop. Reads as product, not as portrait. */
+  torso: {
+    url: frame('photo-1571455786673-9d9d6c194f90', 1600),
+    alt: 'A plain black tee photographed close on the body, shoulders to waist.',
+    aspect: '3:2',
   },
 } as const satisfies Record<string, BrandImage>;
 
 export type BrandImageSlot = keyof typeof BRAND_IMAGES;
 
-/** Product photography, keyed by colourway. Seeded into the catalogue. */
-export const PRODUCT_IMAGES: Record<string, BrandImage> = {
-  black: {
-    url: frame('photo-1571455786673-9d9d6c194f90', 1400),
-    alt: 'The organic tee in black, worn.',
-    aspect: '4:5',
-  },
-  white: {
-    url: frame('photo-1581655353564-df123a1eb820', 1400),
-    alt: 'The organic tee in white, laid flat.',
-    aspect: '4:5',
-  },
-  charcoal: {
-    url: frame('photo-1693443687750-611ad77f3aba', 1400),
-    alt: 'The organic tee in charcoal, folded beside a second tee.',
-    aspect: '4:5',
-  },
-};
+/* --------------------------------------------------------------------------
+   Product photography
+   Keyed by product slug, in gallery order — the first frame is the one the
+   grid shows. `scripts/seed-shrinkless.ts` reads this straight into the
+   catalogue, so adding a product means adding a key here first.
+   -------------------------------------------------------------------------- */
 
-export const LIFESTYLE_SLOTS = [
-  'lifestyle01', 'lifestyle02', 'lifestyle03',
-  'lifestyle04', 'lifestyle05', 'lifestyle06',
-  'lifestyle07', 'lifestyle08', 'lifestyle09',
-] as const satisfies readonly BrandImageSlot[];
+export const PRODUCT_IMAGES = {
+  'mens-organic-tee': [
+    {
+      url: frame('photo-1586790170083-2f9ceadc732d', 1600),
+      alt: 'A man in a plain white crew neck tee against an off-white wall.',
+      aspect: '2:3',
+      focus: '50% 62%',
+    },
+    {
+      url: frame('photo-1611178206041-54d5e075be45', 1600),
+      alt: 'A man in a black crew neck tee against a white plaster wall.',
+      aspect: '4:5',
+      focus: '50% 66%',
+    },
+    {
+      url: frame('photo-1581655353564-df123a1eb820', 1600),
+      alt: 'A white tee on a wooden hanger against a poured concrete wall.',
+      aspect: '2:3',
+    },
+  ],
+
+  'mens-heavyweight-tee': [
+    {
+      url: frame('photo-1615903040611-e599dfaa6752', 1600),
+      alt: 'A man in an oversized black tee crossing a street at dusk.',
+      aspect: '4:5',
+      focus: '50% 42%',
+    },
+    {
+      url: frame('photo-1571455786673-9d9d6c194f90', 1600),
+      alt: 'A plain black tee photographed close on the body, shoulders to waist.',
+      aspect: '3:2',
+    },
+  ],
+
+  'mens-long-sleeve-tee': [
+    {
+      url: frame('photo-1624286922676-24e42c1ceff0', 1600),
+      alt: 'A man in a plain deep teal long sleeve tee, photographed outdoors at dusk.',
+      aspect: '2:3',
+    },
+    {
+      url: frame('photo-1622445275463-afa2ab738c34', 1600),
+      alt: 'A man in a loose blank white tee standing outdoors.',
+      aspect: '2:3',
+    },
+  ],
+
+  'womens-organic-tee': [
+    {
+      url: frame('photo-1546578623-d1d3af878403', 1600),
+      alt: 'A woman in a plain white tee standing on an open road.',
+      aspect: '2:3',
+      focus: '50% 46%',
+    },
+    {
+      url: frame('photo-1564584217132-2271feaeb3c5', 1600),
+      alt: 'A heather grey tee hanging on a white wall in soft afternoon light.',
+      aspect: '3:2',
+    },
+  ],
+
+  'womens-boxy-tee': [
+    {
+      url: frame('photo-1629137525253-739adcd9c774', 1600),
+      alt: 'A woman in an oversized olive tee against a weathered concrete wall.',
+      aspect: '2:3',
+      focus: '50% 48%',
+    },
+    {
+      url: frame('photo-1693443687750-611ad77f3aba', 1600),
+      alt: 'A white tee and a black tee folded side by side on a white surface.',
+      aspect: '3:2',
+    },
+  ],
+
+  'womens-everyday-tee': [
+    {
+      url: frame('photo-1604342681413-6954ddca1e6f', 1600),
+      alt: 'A woman in a plain black crew neck tee standing among dark pines.',
+      aspect: '2:3',
+    },
+    {
+      url: frame('photo-1632844384543-bb1b2c3900d7', 1600),
+      alt: 'A close view of soft grey cotton jersey, folded and catching the light.',
+      aspect: '4:5',
+    },
+  ],
+} as const satisfies Record<string, readonly BrandImage[]>;
+
+export type ProductSlug = keyof typeof PRODUCT_IMAGES;

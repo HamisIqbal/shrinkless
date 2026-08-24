@@ -27,6 +27,7 @@ export const productInputSchema = z.object({
   description: z.string().trim().default(''),
   category: z.string().trim().toLowerCase().min(1, 'Category is required'),
   status: z.enum(['draft', 'published']),
+  featured: z.boolean().default(false),
   images: z.array(imageSchema).default([]),
   sizes: z.array(optionValue).default([]),
   colors: z.array(optionValue).default([]),

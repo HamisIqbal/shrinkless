@@ -17,6 +17,10 @@ const productSchema = new Schema(
     description: { type: String, default: '' },
     category: { type: String, required: true, index: true },
     status: { type: String, enum: ['draft', 'published'], default: 'draft', index: true },
+    // Editorially chosen, not computed. The store has no sales history to rank
+    // by, so "featured" is something an admin decides rather than something a
+    // best-seller query invents.
+    featured: { type: Boolean, default: false, index: true },
     images: { type: [imageSchema], default: [] },
     optionSets: {
       sizes: { type: [String], default: [] },

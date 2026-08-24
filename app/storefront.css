@@ -20,6 +20,9 @@
 
 /* --------------------------------------------------------------------------
    Masthead
+   Three states, and they are independent: `--over` is transparency (homepage,
+   at rest, over the campaign); `--compact` is the shorter bar that arrives on
+   the first scroll; `--panel` forces the solid ground while a menu is down.
    -------------------------------------------------------------------------- */
 
 .masthead {
@@ -28,24 +31,37 @@
   z-index: 50;
   background: var(--color-paper);
   border-bottom: var(--spacing-rule) solid var(--color-muted);
-  transition: background-color 300ms var(--ease-out), border-color 300ms var(--ease-out),
-    color 300ms var(--ease-out);
+  transition:
+    background-color var(--dur-2) var(--ease-out),
+    border-color var(--dur-2) var(--ease-out),
+    color var(--dur-2) var(--ease-out);
 }
 
-/* Over the hero: no ground, no rule, white type. */
 .masthead--over {
   background: transparent;
   border-bottom-color: transparent;
   color: var(--color-white);
 }
 
+/* An open panel always needs the solid ground, whatever the hero says. */
+.masthead--panel {
+  background: var(--color-paper);
+  border-bottom-color: var(--color-muted);
+  color: var(--color-ink);
+}
+
 .masthead__inner {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-4);
-  min-height: 4.5rem;
+  min-height: 5.25rem;
+  transition: min-height var(--dur-2) var(--ease-out);
 }
+
+/* Spec §11: the bar tightens on the first scroll rather than at the foot of
+   the hero, so the change is something you cause rather than something you
+   wait for. */
+.masthead--compact .masthead__inner { min-height: 4rem; }
 
 .wordmark {
   font-size: 1.0625rem;
@@ -56,6 +72,40 @@
   white-space: nowrap;
 }
 
+/* Phone: burger left, wordmark centred, utilities right. */
+.masthead__toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin-left: -0.75rem;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.masthead__bars {
+  position: relative;
+  display: block;
+  width: 1.25rem;
+  height: 0.625rem;
+}
+
+.masthead__bars::before,
+.masthead__bars::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: var(--spacing-rule);
+  background: currentColor;
+}
+
+.masthead__bars::before { top: 0; }
+.masthead__bars::after { bottom: 0; }
+
 .mainnav { display: none; }
 
 .mainnav ul {
@@ -64,106 +114,319 @@
   gap: var(--space-5);
 }
 
-.masthead__utils { display: none; align-items: center; gap: var(--space-4); }
+.mainnav__item { position: relative; display: flex; align-items: center; gap: 0.35rem; }
 
-/* An open panel needs the solid masthead, whatever the hero says. */
-.masthead--menu {
-  background: var(--color-paper);
-  border-bottom-color: transparent;
-  color: var(--color-ink);
+.mainnav__disclose {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
 }
 
-.masthead__toggle {
+.mainnav__chevron {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-right: var(--spacing-rule) solid currentColor;
+  border-bottom: var(--spacing-rule) solid currentColor;
+  transform: translateY(-0.1rem) rotate(45deg);
+  transition: transform var(--dur-2) var(--ease-out);
+}
+
+.mainnav__disclose[aria-expanded="true"] .mainnav__chevron {
+  transform: translateY(0.05rem) rotate(-135deg);
+}
+
+.masthead__utils {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-left: auto;
+}
+
+.masthead__search {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* Below the desktop breakpoint the wordmark centres itself between the burger
+   and the utilities, which is why it takes the free space rather than the nav. */
+.wordmark { margin-right: auto; }
+
+@media (max-width: 61.9375rem) {
+  .masthead__inner { justify-content: space-between; }
+  .wordmark { margin-inline: auto; }
+  .masthead__search,
+  .masthead__account { display: none; }
+}
+
+@media (min-width: 62rem) {
+  .mainnav { display: block; margin-left: var(--space-6); }
+  .masthead__toggle { display: none; }
+  .wordmark { margin-right: 0; }
+}
+
+/* --------------------------------------------------------------------------
+   Site search
+   -------------------------------------------------------------------------- */
+
+.sitesearch {
+  display: grid;
+  grid-template-rows: 0fr;
+  background: var(--color-paper);
+  transition: grid-template-rows var(--dur-3) var(--ease-out);
+}
+
+.sitesearch--open { grid-template-rows: 1fr; }
+
+.sitesearch__inner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 0;
+  overflow: hidden;
+  padding-block: 0;
+  transition: padding-block var(--dur-3) var(--ease-out);
+}
+
+.sitesearch--open .sitesearch__inner { padding-block: var(--space-4); }
+
+.sitesearch__input {
+  flex: 1;
+  min-width: 0;
+  min-height: 3rem;
+  padding: 0.5rem 0;
+  border: 0;
+  border-bottom: var(--spacing-rule) solid var(--color-muted);
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-ink);
+  font-size: var(--text-sub);
+  font-family: inherit;
+  letter-spacing: -0.02em;
+}
+
+.sitesearch__input::placeholder { color: var(--color-muted); }
+.sitesearch__input:focus-visible { outline: 0; border-bottom-color: var(--color-ink); }
+
+.sitesearch__go { flex: none; }
+.sitesearch__close { flex: none; border: 0; background: none; padding: 0; color: inherit; cursor: pointer; }
+
+@media (max-width: 40rem) {
+  .sitesearch__go span,
+  .sitesearch__close { display: none; }
+}
+
+/* --------------------------------------------------------------------------
+   Desktop mega menu
+   Spec §12–13: a full-width editorial panel, not a dropdown. Hidden outright
+   below the desktop breakpoint — the drawer covers that job.
+   -------------------------------------------------------------------------- */
+
+.mega {
+  display: none;
+  grid-template-rows: 0fr;
+  background: var(--color-paper);
+  border-top: var(--spacing-rule) solid transparent;
+  transition:
+    grid-template-rows var(--dur-3) var(--ease-out),
+    border-top-color var(--dur-3) var(--ease-out);
+}
+
+@media (min-width: 62rem) { .mega { display: grid; } }
+
+.mega--open { grid-template-rows: 1fr; border-top-color: var(--color-muted); }
+
+.mega__inner {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
+  gap: var(--space-6);
+  align-items: start;
+  min-height: 0;
+  overflow: hidden;
+  padding-block: 0;
+  transition: padding-block var(--dur-3) var(--ease-out);
+}
+
+.mega--open .mega__inner { padding-block: var(--space-6); }
+
+.mega__columns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-5);
+}
+
+.mega__coltitle {
+  display: block;
+  padding-bottom: var(--space-3);
+  border-bottom: var(--spacing-rule) solid var(--color-muted);
+  font-size: var(--text-meta);
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.mega__links { display: grid; gap: var(--space-2); padding-top: var(--space-3); }
+
+.mega__link {
+  display: inline-block;
+  font-size: 1.0625rem;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  color: var(--color-muted-text);
+  transition: color var(--dur-1) var(--ease-out), transform var(--dur-1) var(--ease-out);
+}
+
+.mega__link:hover,
+.mega__link:focus-visible {
+  color: var(--color-ink);
+  transform: translateX(0.2rem);
+}
+
+.mega__features { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+
+.mega__feature { display: grid; gap: var(--space-2); text-decoration: none; }
+
+.mega__frame { background: var(--color-paper-deep); }
+
+.mega__featurefoot { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2); }
+
+.mega__featurelabel {
+  font-size: var(--text-meta);
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* The rows drift in a beat behind the panel so the eye lands on the first
+   column rather than on everything at once. */
+.mega__col,
+.mega__feature {
+  opacity: 0;
+  transform: translateY(0.75rem);
+  transition: opacity var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-out);
+}
+
+.mega--open .mega__col,
+.mega--open .mega__feature { opacity: 1; transform: none; }
+
+.mega--open .mega__col:nth-child(1) { transition-delay: 80ms; }
+.mega--open .mega__col:nth-child(2) { transition-delay: 130ms; }
+.mega--open .mega__col:nth-child(3) { transition-delay: 180ms; }
+.mega--open .mega__feature:nth-child(1) { transition-delay: 200ms; }
+.mega--open .mega__feature:nth-child(2) { transition-delay: 240ms; }
+
+/* --------------------------------------------------------------------------
+   Mobile drawer
+   Spec §14: enters from the right, covers the viewport, dims the page behind
+   it and scrolls inside itself.
+   -------------------------------------------------------------------------- */
+
+.drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  pointer-events: none;
+  visibility: hidden;
+  transition: visibility 0s linear var(--dur-3);
+}
+
+.drawer--open { pointer-events: auto; visibility: visible; transition-delay: 0s; }
+
+.drawer__scrim {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: rgba(10, 10, 10, 0.5);
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity var(--dur-3) var(--ease-out);
+}
+
+.drawer--open .drawer__scrim { opacity: 1; }
+
+.drawer__panel {
+  position: absolute;
+  inset-block: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  width: min(26rem, 100%);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  transform: translateX(100%);
+  transition: transform var(--dur-3) var(--ease-out);
+}
+
+.drawer--open .drawer__panel { transform: none; }
+
+.drawer__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 5.25rem;
+  padding-inline: var(--space-4);
+  border-bottom: var(--spacing-rule) solid var(--color-muted);
+}
+
+.drawer__title { margin: 0; }
+
+.drawer__close {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
   border: 0;
   background: none;
-  color: inherit;
   padding: 0.5rem 0;
+  color: inherit;
   font-size: var(--text-meta);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   cursor: pointer;
 }
 
-/* Two rules that fold into a cross. Same hairline weight as every other rule
-   on the site, so the icon reads as part of the type system, not an add-on. */
-.masthead__bars {
-  position: relative;
-  display: block;
-  width: 1.125rem;
-  height: 0.5rem;
-}
+.drawer__closemark { position: relative; width: 0.75rem; height: 0.75rem; }
 
-.masthead__bars::before,
-.masthead__bars::after {
-  content: '';
+.drawer__closemark::before,
+.drawer__closemark::after {
+  content: "";
   position: absolute;
+  top: 50%;
   left: 0;
   width: 100%;
   height: var(--spacing-rule);
   background: currentColor;
-  transition: top 320ms var(--ease-out), transform 320ms var(--ease-out);
 }
 
-.masthead__bars::before { top: 0; }
-.masthead__bars::after { top: calc(0.5rem - var(--spacing-rule)); }
+.drawer__closemark::before { transform: rotate(45deg); }
+.drawer__closemark::after { transform: rotate(-45deg); }
 
-.masthead__toggle[aria-expanded='true'] .masthead__bars::before {
-  top: calc(50% - var(--spacing-rule) / 2);
-  transform: rotate(45deg);
+/* The panel is fixed to the viewport, so this is the only scroller. */
+.drawer__scroll {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--space-4) var(--space-4) var(--space-6);
 }
 
-.masthead__toggle[aria-expanded='true'] .masthead__bars::after {
-  top: calc(50% - var(--spacing-rule) / 2);
-  transform: rotate(-45deg);
-}
+.drawer__list { display: grid; }
 
-@media (min-width: 62rem) {
-  .mainnav { display: block; }
-  .masthead__utils { display: flex; }
-  .masthead__toggle { display: none; }
-  .mobilenav { display: none; }
-}
+.drawer__item { border-bottom: var(--spacing-rule) solid var(--color-muted); }
 
-/* --------------------------------------------------------------------------
-   Mobile navigation
-   The panel stays mounted so closing animates as well as opening. Height comes
-   from a 0fr -> 1fr grid row rather than a hard-coded max-height, so it is the
-   content that decides how far the panel travels.
-   -------------------------------------------------------------------------- */
+.drawer__row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
 
-.mobilenav {
-  display: grid;
-  grid-template-rows: 0fr;
-  background: var(--color-paper);
-  color: var(--color-ink);
-  border-top: var(--spacing-rule) solid transparent;
-  transition: grid-template-rows 420ms var(--ease-out),
-    border-top-color 420ms var(--ease-out);
-}
-
-.mobilenav--open {
-  grid-template-rows: 1fr;
-  border-top-color: var(--color-muted);
-}
-
-.mobilenav__inner {
-  min-height: 0;
-  overflow: hidden;
-  padding-inline: clamp(1.25rem, 4vw, 4.5rem);
-}
-
-.mobilenav__list { display: grid; padding-top: var(--space-4); }
-
-.mobilenav__item { border-bottom: var(--spacing-rule) solid var(--color-muted); }
-
-.mobilenav__link {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: baseline;
-  gap: var(--space-3);
+.drawer__link {
+  flex: 1;
   padding-block: var(--space-3);
   font-size: var(--text-sub);
   font-weight: 500;
@@ -172,100 +435,145 @@
   text-decoration: none;
 }
 
-.mobilenav__index {
-  font-size: var(--text-meta);
-  font-weight: 400;
-  letter-spacing: 0.14em;
+.drawer__expand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin-right: -0.75rem;
+  border: 0;
+  background: none;
   color: var(--color-muted-text);
+  cursor: pointer;
 }
 
-.mobilenav__arrow {
-  font-size: var(--text-body);
+.drawer__plus { position: relative; width: 0.75rem; height: 0.75rem; }
+
+.drawer__plus::before,
+.drawer__plus::after {
+  content: "";
+  position: absolute;
+  background: currentColor;
+  transition: transform var(--dur-2) var(--ease-out);
+}
+
+.drawer__plus::before { top: 50%; left: 0; width: 100%; height: var(--spacing-rule); }
+.drawer__plus::after { left: 50%; top: 0; width: var(--spacing-rule); height: 100%; }
+
+.drawer__expand[aria-expanded="true"] .drawer__plus::after { transform: scaleY(0); }
+
+.drawer__sub {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--dur-2) var(--ease-out);
+}
+
+.drawer__sub--open { grid-template-rows: 1fr; }
+
+.drawer__subinner {
+  display: grid;
+  gap: var(--space-2);
+  min-height: 0;
+  overflow: hidden;
+  padding-left: var(--space-3);
+}
+
+.drawer__sub--open .drawer__subinner { padding-bottom: var(--space-4); }
+
+.drawer__sublink {
+  display: inline-block;
+  padding-block: 0.35rem;
   color: var(--color-muted-text);
-  transition: transform 240ms var(--ease-out);
+  text-decoration: none;
 }
 
-.mobilenav__link[aria-current='page'] .mobilenav__index,
-.mobilenav__link[aria-current='page'] .mobilenav__arrow { color: var(--color-ink); }
+.drawer__sublink:hover { color: var(--color-ink); }
 
-@media (hover: hover) {
-  .mobilenav__link:hover .mobilenav__arrow { transform: translateX(0.25rem); }
-}
-
-.mobilenav__utils {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-4);
-  padding-block: var(--space-4) var(--space-5);
-}
-
-/* Rows drift up into place a beat behind the panel, so the eye lands on the
-   first item rather than on all four arriving at once. */
-.mobilenav__item,
-.mobilenav__utils {
-  opacity: 0;
-  transform: translateY(0.75rem);
-  transition: opacity 300ms var(--ease-out), transform 300ms var(--ease-out);
-}
-
-.mobilenav--open .mobilenav__item,
-.mobilenav--open .mobilenav__utils {
-  opacity: 1;
-  transform: none;
-}
-
-.mobilenav--open .mobilenav__item:nth-child(1) { transition-delay: 100ms; }
-.mobilenav--open .mobilenav__item:nth-child(2) { transition-delay: 150ms; }
-.mobilenav--open .mobilenav__item:nth-child(3) { transition-delay: 200ms; }
-.mobilenav--open .mobilenav__item:nth-child(4) { transition-delay: 250ms; }
-.mobilenav--open .mobilenav__utils { transition-delay: 300ms; }
-
-/* The global reduce block flattens durations but not delays. */
-@media (prefers-reduced-motion: reduce) {
-  .mobilenav--open .mobilenav__item,
-  .mobilenav--open .mobilenav__utils { transition-delay: 0ms; }
-}
+.drawer__foot { display: flex; flex-wrap: wrap; gap: var(--space-4); padding-top: var(--space-5); }
 
 /* --------------------------------------------------------------------------
-   Hero
+   Hero — campaign slider
    -------------------------------------------------------------------------- */
 
 .hero {
   position: relative;
   display: flex;
-  align-items: flex-end;
-  min-height: 88svh;
-  margin-top: -4.5rem; /* sits under the transparent masthead */
-  padding-block: var(--space-7) var(--space-6);
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 92svh;
+  margin-top: -5.25rem; /* sits under the transparent masthead */
+  padding-block: var(--space-8) var(--space-4);
   color: var(--color-white);
   overflow: hidden;
 }
 
-/* Wide windows crop this 3:2 frame hardest: `cover` scales the photograph to
-   the width, then throws away everything above and below the band that fits.
-   Letting the height track the width instead — capped at the viewport so the
-   hero never runs off the screen, floored so a short laptop window still has
-   room for the type — keeps far more of the picture visible at every size.
-   Below 48rem the frame is already taller than it is wide, so the phone
-   treatment (a flat 88svh) stands unchanged. */
+/* Wide windows crop a portrait frame hardest: `cover` scales to the width and
+   throws away everything above and below the band that fits. Letting the
+   height track the width — capped at the viewport so the hero never runs off
+   the screen, floored so a short laptop window still has room for the type —
+   keeps far more of the photograph visible. Below 48rem the frame is already
+   taller than it is wide and the phone treatment stands. */
 @media (min-width: 48rem) {
-  .hero { min-height: max(32rem, min(100svh, 62.5vw)); }
+  .hero { min-height: max(36rem, min(100svh, 62.5vw)); }
+}
+
+/* z-index:0 is load-bearing: it makes the stack its own stacking context so
+   the frames' z-indices compete only with each other. Without it the active
+   frame's z-index:2 paints over the scrim and the whole headline. */
+.hero__stack { position: absolute; inset: 0; z-index: 0; }
+
+/* Idle frames are clipped away entirely; the outgoing one is held open
+   underneath while the incoming one wipes across the top of it. */
+.hero__frame {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  clip-path: inset(0 0 0 100%);
+}
+
+.hero__frame--under { z-index: 1; clip-path: inset(0 0 0 0); }
+
+.hero__frame--on {
+  z-index: 2;
+  clip-path: inset(0 0 0 0);
+  transition: clip-path 1100ms var(--ease-out);
 }
 
 .hero__image {
   object-fit: cover;
-  /* Bias the crop above centre: the subject sits in the upper half, and the
-     type occupies the lower half of the frame anyway. */
-  object-position: 50% 38%;
+  /* Bias above centre: the subject is in the upper half and the type occupies
+     the lower half of the frame anyway. */
+  object-position: 50% 35%;
+  transform: scale(1.06);
+  transition: transform 7s linear;
 }
 
-.hero__scrim { position: absolute; inset: 0; background: var(--color-scrim); }
+/* The incoming frame settles out of its over-scale across the whole hold, so
+   the photograph is always drifting rather than sitting still and cutting. */
+.hero__frame--on .hero__image { transform: scale(1); }
+
+.hero__scrim {
+  position: absolute;
+  inset: 0;
+  /* Weighted to the foot of the frame, where the type is. A flat tint strong
+     enough for white text over pale concrete would grey out the whole
+     photograph; this keeps the top of the image clean and buys ~5:1 behind
+     the headline and ~8:1 behind the caption. */
+  background: linear-gradient(
+    to top,
+    rgba(10, 10, 10, 0.78) 0%,
+    rgba(10, 10, 10, 0.62) 34%,
+    rgba(10, 10, 10, 0.34) 62%,
+    rgba(10, 10, 10, 0.16) 100%
+  );
+}
 
 .hero__inner { position: relative; width: 100%; }
 
-.hero__eyebrow { color: var(--color-white); opacity: 0.85; }
+.hero__eyebrow { color: var(--color-white); opacity: 0.9; }
 
-.hero__head { margin-top: var(--space-3); max-width: 18ch; }
+.hero__head { margin-top: var(--space-3); max-width: 16ch; }
 
 .hero__lede {
   margin-top: var(--space-4);
@@ -274,16 +582,465 @@
 }
 
 .hero__actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-4);
+  display: grid;
+  gap: var(--space-2);
   margin-top: var(--space-5);
 }
 
-.hero__secondary { color: var(--color-white); }
+@media (min-width: 30rem) {
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+  }
+}
+
+.hero__foot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+.hero__caption {
+  margin: 0;
+  min-width: 0;
+  min-height: 1.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: var(--text-meta);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-white);
+}
+
+.hero__captiontext { display: inline-block; }
+
+.hero__dots { display: flex; align-items: center; gap: var(--space-2); }
+
+.hero__dot {
+  position: relative;
+  display: block;
+  width: 2.5rem;
+  height: 2.75rem;
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* The track. The fill on top of it doubles as the hold timer. */
+.hero__dot::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 50%;
+  height: var(--spacing-rule);
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.hero__dotfill {
+  position: absolute;
+  inset-inline: 0;
+  top: 50%;
+  height: var(--spacing-rule);
+  background: var(--color-white);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+.hero__dot--on .hero__dotfill { animation: hero-hold linear forwards; }
+
+@keyframes hero-hold {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* Reduced motion holds one frame: no cross-dissolve, no drift, no timer bar. */
+@media (prefers-reduced-motion: reduce) {
+  .hero__image { transform: none; }
+  .hero__frame--on { transition: none; }
+  .hero__dot--on .hero__dotfill { animation: none; transform: scaleX(1); }
+}
 
 .hero__sentinel { position: absolute; bottom: 0; left: 0; height: 1px; width: 100%; }
+
+/* --------------------------------------------------------------------------
+   Category gateways
+   Spec §9: two campaign blocks, side by side, the whole tile clickable.
+   -------------------------------------------------------------------------- */
+
+.gateway { background: var(--color-paper); }
+
+.gateway__grid { display: grid; }
+
+@media (min-width: 48rem) {
+  .gateway__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.gateway__tile {
+  position: relative;
+  display: block;
+  text-decoration: none;
+  color: var(--color-white);
+}
+
+.gateway__frame {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: var(--color-paper-deep);
+}
+
+@media (min-width: 48rem) {
+  .gateway__frame { aspect-ratio: 3 / 4; }
+}
+
+@media (min-width: 75rem) {
+  .gateway__frame { aspect-ratio: 4 / 5; }
+}
+
+.gateway__image {
+  object-fit: cover;
+  transition: transform var(--dur-4) var(--ease-out);
+}
+
+.gateway__tile:hover .gateway__image,
+.gateway__tile:focus-visible .gateway__image { transform: scale(1.04); }
+
+/* Same reasoning as the hero: the label and its "3 styles" caption sit at the
+   bottom of the frame, so that is where the weight goes. */
+.gateway__wash {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(10, 10, 10, 0.74) 0%,
+    rgba(10, 10, 10, 0.42) 38%,
+    rgba(10, 10, 10, 0.12) 72%,
+    rgba(10, 10, 10, 0.08) 100%
+  );
+  transition: opacity var(--dur-2) var(--ease-out);
+}
+
+.gateway__tile:hover .gateway__wash { opacity: 0.82; }
+
+.gateway__body {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+  padding: clamp(1.25rem, 4vw, 3rem);
+}
+
+.gateway__label { color: var(--color-white); }
+.gateway__meta { color: rgba(255, 255, 255, 0.92); }
+
+.gateway__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.2rem;
+  border-bottom: var(--spacing-rule) solid currentColor;
+  font-size: var(--text-meta);
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.gateway__arrow { transition: transform var(--dur-2) var(--ease-out); }
+
+.gateway__tile:hover .gateway__arrow,
+.gateway__tile:focus-visible .gateway__arrow { transform: translateX(0.3rem); }
+
+/* --------------------------------------------------------------------------
+   Product rails
+   -------------------------------------------------------------------------- */
+
+.rail__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-bottom: var(--space-5);
+}
+
+.rail__more { flex: none; }
+
+/* --------------------------------------------------------------------------
+   Product grid and cards
+   Spec §15–18: the image is the card. Name and price are captions under it.
+   -------------------------------------------------------------------------- */
+
+.pgrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5) var(--space-3);
+}
+
+@media (min-width: 48rem) {
+  .pgrid { gap: var(--space-6) var(--space-4); }
+  .pgrid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .pgrid--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+.pcard { display: grid; gap: var(--space-2); }
+
+.pcard__media { position: relative; }
+
+.pcard__plate { display: block; text-decoration: none; }
+
+.pcard__media .frame { background: var(--color-paper-deep); }
+
+.pcard__media .frame > img,
+.pcard__media .frame img {
+  transition: transform var(--dur-4) var(--ease-out);
+}
+
+.pcard:hover .frame img { transform: scale(1.03); }
+
+.pcard__flag {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  padding: 0.3rem 0.6rem;
+  background: var(--color-paper);
+  font-size: var(--text-meta);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* Quick view: hidden until the card is hovered on pointer devices, and always
+   present where there is no hover to reveal it (spec §18, §20). */
+/* Above the card's full-bleed link overlay, or it cannot be clicked. */
+.pcard__quick {
+  position: absolute;
+  z-index: 2;
+  top: var(--space-2);
+  right: var(--space-2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: var(--spacing-rule) solid var(--color-ink);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  cursor: pointer;
+  transition:
+    opacity var(--dur-2) var(--ease-out),
+    transform var(--dur-2) var(--ease-out),
+    background-color var(--dur-1) var(--ease-out),
+    color var(--dur-1) var(--ease-out);
+}
+
+.pcard__quick:hover { background: var(--color-ink); color: var(--color-paper); }
+
+/* A ring and a handle: the least ambiguous "look closer" mark at 40px. */
+.pcard__quickmark {
+  position: relative;
+  width: 0.9rem;
+  height: 0.9rem;
+  border: var(--spacing-rule) solid currentColor;
+  border-radius: 50%;
+}
+
+.pcard__quickmark::after {
+  content: "";
+  position: absolute;
+  right: -0.32rem;
+  bottom: -0.32rem;
+  width: 0.45rem;
+  height: var(--spacing-rule);
+  background: currentColor;
+  transform: rotate(45deg);
+}
+
+@media (hover: hover) {
+  .pcard__quick { opacity: 0; transform: translateY(-0.35rem); }
+
+  .pcard:hover .pcard__quick,
+  .pcard__quick:focus-visible { opacity: 1; transform: none; }
+}
+
+.pcard__foot {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+/* Side by side only once the card is wide enough that a long single-word name
+   still fits beside a price. Below that they stack. */
+@media (min-width: 62rem) {
+  .pcard__foot {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-2);
+    align-items: baseline;
+  }
+}
+
+/* Deliberately small. The photograph is doing the selling (spec §16). */
+.pcard__title {
+  min-width: 0;
+  font-size: var(--text-body);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.pcard__link { text-decoration: none; }
+
+.pcard__link::after {
+  /* The whole plate is the target; the visible link is just the label. */
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.pcard { position: relative; }
+
+.pcard__price { font-weight: 500; }
+
+.pcard__colors { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+
+.swatchdot {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 1rem;
+  height: 1rem;
+  padding: 0;
+  border: var(--spacing-rule) solid var(--color-muted);
+  background: var(--dot, var(--color-paper-deep));
+  cursor: pointer;
+  transition: box-shadow var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out);
+}
+
+.swatchdot--on {
+  border-color: var(--color-ink);
+  box-shadow: 0 0 0 2px var(--color-paper), 0 0 0 3px var(--color-ink);
+}
+
+/* One palette, shared by the card dots, the picker swatches and quick view.
+   Colour is never the only carrier: every dot sits beside or is labelled by
+   the colour name. */
+.dot--black    { --dot: #0a0a0a; }
+.dot--white    { --dot: #ffffff; }
+.dot--bone     { --dot: #e8e4da; }
+.dot--charcoal { --dot: #4a4a48; }
+.dot--heather  { --dot: #b6b8ba; }
+.dot--olive    { --dot: #6b6a4f; }
+.dot--teal     { --dot: #2f4f52; }
+
+/* --------------------------------------------------------------------------
+   Quick view
+   Spec §19: a miniature product page. Backdrop fades, panel scales 96% → 100%.
+   -------------------------------------------------------------------------- */
+
+.quick {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3);
+}
+
+.quick__scrim {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: rgba(10, 10, 10, 0.55);
+  cursor: pointer;
+}
+
+.quick__panel {
+  position: relative;
+  display: grid;
+  width: min(64rem, 100%);
+  max-height: min(92svh, 56rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+@media (min-width: 48rem) {
+  .quick__panel { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); }
+}
+
+.quick__close {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: var(--spacing-rule) solid var(--color-ink);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out);
+}
+
+.quick__close:hover { background: var(--color-ink); color: var(--color-paper); }
+
+.quick__closemark { position: relative; width: 0.8rem; height: 0.8rem; }
+
+.quick__closemark::before,
+.quick__closemark::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: var(--spacing-rule);
+  background: currentColor;
+}
+
+.quick__closemark::before { transform: rotate(45deg); }
+.quick__closemark::after { transform: rotate(-45deg); }
+
+.quick__media { position: relative; }
+.quick__media .frame { background: var(--color-paper-deep); }
+
+/* Side by side, the purchase column is the taller of the two, so a fixed 4:5
+   frame leaves a slab of empty paper under the photograph. Let the media
+   column take the panel's height and crop to fit it instead. */
+@media (min-width: 48rem) {
+  .quick__media .frame { height: 100%; aspect-ratio: auto; }
+}
+
+.quick__body {
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+  padding: clamp(1.25rem, 3vw, 2.5rem);
+}
+
+.quick__title { text-transform: uppercase; }
+.quick__price { font-size: var(--text-sub); font-weight: 500; }
+.quick__copy { max-width: 44ch; color: var(--color-muted-text); }
+
+.quick__group { display: grid; gap: var(--space-2); }
+.quick__legend { display: block; }
+
+.quick__actions { display: grid; gap: var(--space-2); }
+.quick__status { min-height: 1.25rem; }
+.quick__full { justify-self: start; }
 
 /* --------------------------------------------------------------------------
    Statement
@@ -296,130 +1053,11 @@
 .statement__support { justify-self: start; }
 
 @media (min-width: 56.25rem) {
-  .statement__inner { grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); align-items: end; }
-  .statement__support { justify-self: end; }
-}
-
-/* --------------------------------------------------------------------------
-   Collection
-   -------------------------------------------------------------------------- */
-
-.collection__head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-4);
-  padding-bottom: var(--space-5);
-}
-
-.collection__grid { display: grid; gap: var(--space-5) var(--space-4); }
-
-@media (min-width: 48rem) {
-  .collection__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
-
-.tile { display: grid; gap: var(--space-2); }
-
-.tile__plate { display: block; text-decoration: none; }
-
-.tile__foot {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 0 var(--space-3);
-  padding-top: var(--space-2);
-  border-top: var(--spacing-rule) solid var(--color-muted);
-}
-
-.tile__title { font-size: var(--text-body); font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; }
-.tile__title a { text-decoration: none; }
-
-.tile__color {
-  grid-column: 1;
-  font-size: var(--text-meta);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--color-muted-text);
-}
-
-.tile__price { grid-column: 2; grid-row: 1 / span 2; align-self: start; font-weight: 500; }
-
-.tile__quick {
-  justify-self: start;
-  border: 0;
-  background: none;
-  padding: 0;
-  color: inherit;
-  cursor: pointer;
-}
-
-.tile__quick--sold { color: var(--color-muted-text); cursor: default; }
-
-/* On a touch device the trigger cannot depend on hover, so it simply stays. */
-@media (hover: hover) {
-  .tile__quick { opacity: 0; transition: opacity 240ms var(--ease-out); }
-  .tile:hover .tile__quick,
-  .tile:focus-within .tile__quick { opacity: 1; }
-  .tile__quick--sold { opacity: 1; }
-}
-
-.tile__sizes { display: flex; flex-wrap: wrap; gap: var(--space-1); padding-top: var(--space-1); }
-
-.sizechip {
-  min-width: 2.75rem;
-  min-height: 2.75rem;
-  padding: 0 0.6rem;
-  border: var(--spacing-rule) solid var(--color-ink);
-  background: transparent;
-  color: var(--color-ink);
-  font-size: var(--text-meta);
-  letter-spacing: 0.1em;
-  cursor: pointer;
-  transition: background-color 200ms var(--ease-out), color 200ms var(--ease-out);
-}
-
-.sizechip:hover:not(:disabled) { background: var(--color-ink); color: var(--color-white); }
-
-.sizechip:disabled {
-  border-color: var(--color-muted);
-  color: var(--color-muted-text);
-  text-decoration: line-through;
-  cursor: not-allowed;
-}
-
-.tile__error { padding-top: var(--space-1); }
-
-/* --------------------------------------------------------------------------
-   Why — asymmetric, so the eye moves diagonally
-   -------------------------------------------------------------------------- */
-
-.why__head { padding-block: var(--space-3) var(--space-6); max-width: 16ch; }
-
-.why__grid { display: grid; gap: var(--space-5); }
-
-.why__number {
-  font-size: var(--text-meta);
-  letter-spacing: 0.2em;
-  color: var(--color-muted-text);
-}
-
-.why__title { padding-top: var(--space-2); text-transform: uppercase; }
-
-.why__body { padding-top: var(--space-2); max-width: 34ch; color: var(--color-muted-text); }
-
-.why__media { align-self: start; }
-
-@media (min-width: 56.25rem) {
-  .why__grid {
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    row-gap: var(--space-7);
+  .statement__inner {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
+    align-items: end;
+    gap: var(--space-6);
   }
-
-  .why__media--a { grid-column: 1 / span 4; grid-row: 1 / span 2; }
-  .why__point--1 { grid-column: 6 / span 3; grid-row: 1; }
-  .why__point--2 { grid-column: 10 / span 3; grid-row: 1; align-self: end; }
-  .why__media--b { grid-column: 9 / span 4; grid-row: 3 / span 2; }
-  .why__point--3 { grid-column: 1 / span 3; grid-row: 3; }
-  .why__point--4 { grid-column: 5 / span 3; grid-row: 4; align-self: end; }
 }
 
 /* --------------------------------------------------------------------------
@@ -437,20 +1075,47 @@
 .split { display: grid; }
 
 .split__body {
-  display: flex;
-  align-items: center;
+  display: grid;
+  align-content: center;
   padding: var(--space-6) clamp(1.25rem, 4vw, 4.5rem);
 }
 
 .split__head { padding-top: var(--space-2); }
 .split__lede { padding-top: var(--space-4); }
-.split__cta { margin-top: var(--space-5); }
+.split__cta { margin-top: var(--space-5); justify-self: start; }
 
 @media (min-width: 56.25rem) {
-  .split { grid-template-columns: 6fr 4fr; align-items: stretch; }
-  .split__media .frame { height: 100%; aspect-ratio: auto; min-height: 42rem; }
+  .split { grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); align-items: stretch; }
   .split--flip .split__media { order: 2; }
-  .split--flip .split__body { order: 1; }
+  .split__media .frame { height: 100%; aspect-ratio: auto; }
+}
+
+/* --------------------------------------------------------------------------
+   Why — numbered points
+   -------------------------------------------------------------------------- */
+
+.why__head { padding-block: var(--space-3) var(--space-6); max-width: 16ch; }
+
+.why__grid { display: grid; gap: var(--space-5); }
+
+.why__number {
+  font-size: var(--text-meta);
+  letter-spacing: 0.16em;
+  color: var(--color-muted-text);
+}
+
+.why__title { padding-top: var(--space-2); text-transform: uppercase; }
+.why__body { padding-top: var(--space-2); max-width: 34ch; color: var(--color-muted-text); }
+.why__media { align-self: start; }
+
+@media (min-width: 56.25rem) {
+  .why__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-6) var(--space-4);
+  }
+
+  .why__media--a { grid-column: 3 / span 2; grid-row: 1 / span 2; }
+  .why__media--b { grid-column: 1 / span 2; grid-row: 3 / span 2; }
 }
 
 /* --------------------------------------------------------------------------
@@ -461,7 +1126,7 @@
   position: relative;
   display: flex;
   align-items: flex-end;
-  min-height: 34rem;
+  min-height: 72svh;
   padding-block: var(--space-7);
   color: var(--color-white);
   overflow: hidden;
@@ -470,34 +1135,10 @@
 .imageband__image { object-fit: cover; }
 .imageband__scrim { position: absolute; inset: 0; background: var(--color-scrim); }
 .imageband__inner { position: relative; width: 100%; }
-.imageband__eyebrow { color: var(--color-white); opacity: 0.85; }
+.imageband__eyebrow { color: var(--color-white); opacity: 0.9; }
 .imageband__glyph { padding-right: 0.5rem; font-size: 0.75rem; }
 .imageband__head { padding-top: var(--space-2); }
 .imageband__lede { padding-top: var(--space-3); color: var(--color-white); }
-
-/* --------------------------------------------------------------------------
-   Lifestyle grid — uneven on purpose, and it stays uneven on mobile
-   -------------------------------------------------------------------------- */
-
-.lifestyle__head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-4);
-  padding-bottom: var(--space-5);
-}
-
-.lifestyle__grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-3);
-}
-
-@media (min-width: 56.25rem) {
-  .lifestyle__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-4); }
-  .lifestyle__cell--1 { grid-column: span 2; }
-  .lifestyle__cell--6 { grid-column: span 2; }
-}
 
 /* --------------------------------------------------------------------------
    Quotes
@@ -506,7 +1147,7 @@
 .quotes__row { display: grid; gap: var(--space-5); padding-top: var(--space-5); }
 
 @media (min-width: 56.25rem) {
-  .quotes__row { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-6); }
+  .quotes__row { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-5); }
 }
 
 .quotes__item { border-top: var(--spacing-rule) solid var(--color-muted); padding-top: var(--space-4); }
@@ -515,11 +1156,10 @@
 
 .quotes__mark {
   position: absolute;
-  top: -0.35em;
-  left: -0.08em;
-  font-size: 6rem;
-  color: var(--color-muted);
-  opacity: 0.5;
+  top: -1.5rem;
+  left: -0.5rem;
+  font-size: 5rem;
+  color: var(--color-warm);
   pointer-events: none;
 }
 
@@ -568,20 +1208,20 @@
 
 .signup__status--error { color: var(--color-white); }
 
-/* The signup reserves a line for its status message whether or not there is one
-   to show, so an even `margin-block` reads as lopsided: the gap above the rule
-   looks a line shorter than the gap below it. The top margin pays that line
-   back, which is what makes the two gaps *look* equal. */
+/* The signup reserves a line for its status message whether or not there is
+   one to show, so an even `margin-block` reads as lopsided: the gap above the
+   rule looks a line shorter than the gap below it. The top margin pays that
+   line back, which is what makes the two gaps *look* equal. */
 .colophon__rule {
   margin-top: calc(var(--space-7) + 1.25rem);
   margin-bottom: var(--space-7);
   border-color: var(--color-muted-text);
 }
 
-.colophon__grid { display: grid; gap: var(--space-5); }
+.colophon__grid { display: grid; gap: var(--space-6); }
 
-@media (min-width: 48rem) {
-  .colophon__grid { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); }
+@media (min-width: 56.25rem) {
+  .colophon__grid { grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); }
 }
 
 .colophon__mark {
@@ -591,7 +1231,17 @@
   text-transform: uppercase;
 }
 
-.colophon__brand .meta { padding-top: var(--space-2); }
+.colophon__bio { padding-top: var(--space-3); color: var(--color-muted); max-width: 34ch; }
+
+.colophon__cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5);
+}
+
+@media (min-width: 48rem) {
+  .colophon__cols { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
 
 .colophon__links {
   display: grid;
@@ -600,13 +1250,15 @@
   padding-top: var(--space-3);
 }
 
-.colophon__legal { padding-top: var(--space-6); }
+.colophon__legal { padding-top: var(--space-7); }
 
 /* --------------------------------------------------------------------------
    Shop
    -------------------------------------------------------------------------- */
 
-.shoppage__head { padding-bottom: var(--space-5); }
+.shoppage__head { padding-bottom: var(--space-6); max-width: 52rem; }
+.shoppage__title { padding-block: var(--space-2) var(--space-3); }
+.shoppage__intro { color: var(--color-muted-text); }
 
 .filterbar {
   display: flex;
@@ -692,13 +1344,25 @@
    Product detail
    -------------------------------------------------------------------------- */
 
+.pdp { padding-top: var(--space-5); }
+
+.pdp__crumbs { padding-bottom: var(--space-4); }
+
+.crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+
+.crumbs__sep { color: var(--color-muted); }
+
 .pdp__grid { display: grid; gap: var(--space-5); }
+
+.pdp__accordion { margin-top: var(--space-5); }
+
+.pdp__related { margin-top: var(--space-7); }
 
 .pdp__gallery { display: grid; gap: var(--space-3); }
 
 @media (min-width: 56.25rem) {
   .pdp__grid { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: var(--space-6); }
-  .pdp__sticky { position: sticky; top: 6.5rem; }
+  .pdp__sticky { position: sticky; top: 5.5rem; }
 }
 
 .pdp__title { padding-block: var(--space-2) var(--space-4); }
@@ -742,16 +1406,14 @@
 
 .swatch--on { border-color: var(--color-ink); }
 
-/* Colour is never the only carrier of meaning â€” the name sits beside the dot. */
+/* Colour is never the only carrier of meaning — the name sits beside the dot.
+   The value itself comes from the shared `.dot--*` palette further up. */
 .swatch__dot {
   width: 1.5rem;
   height: 1.5rem;
   border: var(--spacing-rule) solid var(--color-muted);
+  background: var(--dot, var(--color-paper-deep));
 }
-
-.swatch__dot--black { background: #0a0a0a; }
-.swatch__dot--white { background: #ffffff; }
-.swatch__dot--charcoal { background: #4a4a48; }
 
 .swatch:has(:focus-visible) { outline: 2px solid var(--color-ink); outline-offset: 2px; }
 
@@ -871,7 +1533,7 @@
 .summary { align-self: start; }
 
 @media (min-width: 56.25rem) {
-  .summary { position: sticky; top: 6.5rem; }
+  .summary { position: sticky; top: 5.5rem; }
 }
 
 .summary__rule { margin-block: var(--space-3); }
@@ -992,3 +1654,25 @@
   color: var(--color-muted-text);
 }
 
+
+/* --------------------------------------------------------------------------
+   Admin — inline checkbox
+   The product editor stacks label-over-input everywhere else; a checkbox has
+   to sit beside its label or it reads as a stray control.
+   -------------------------------------------------------------------------- */
+
+.checkfield {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.checkfield input { margin-top: 0.3rem; width: 1rem; height: 1rem; flex: none; }
+
+.checkfield small {
+  display: block;
+  color: var(--color-muted-text);
+  font-size: var(--text-meta);
+  text-transform: none;
+  letter-spacing: 0;
+}

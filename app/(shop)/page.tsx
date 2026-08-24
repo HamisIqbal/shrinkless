@@ -1,17 +1,29 @@
 import Link from 'next/link';
-import { listPublishedProducts } from '@/lib/services/products';
-import { productFilterSchema } from '@/lib/validation/catalogue';
-import { toColorways } from '@/lib/shop/colorways';
-import { BRAND_IMAGES } from '@/lib/brand/images';
-import { Hero } from '@/components/editorial/Hero';
+import {
+  listFeaturedProducts,
+  listNewArrivals,
+  listProductsInCategory,
+} from '@/lib/services/products';
+import { BRAND_IMAGES, HERO_SLIDES } from '@/lib/brand/images';
+import { SHOPPABLE } from '@/lib/shop/navigation';
+import { HeroSlider, type HeroSlide } from '@/components/site/HeroSlider';
+import { CategoryGateway, type Gateway } from '@/components/shop/CategoryGateway';
+import { ProductGrid } from '@/components/shop/ProductGrid';
 import { StatementBlock } from '@/components/editorial/StatementBlock';
 import { SplitFeature } from '@/components/editorial/SplitFeature';
-import { FullBleedType } from '@/components/editorial/FullBleedType';
 import { ImageBand } from '@/components/editorial/ImageBand';
+import { FullBleedType } from '@/components/editorial/FullBleedType';
 import { NumberedPoints, type Point } from '@/components/editorial/NumberedPoints';
-import { EditorialGrid } from '@/components/editorial/EditorialGrid';
 import { QuoteRow, type Quote } from '@/components/editorial/QuoteRow';
-import { CollectionTile } from '@/components/shop/CollectionTile';
+import { Reveal } from '@/components/ui/Reveal';
+
+/** Captions ride with the frames, so the campaign reads as a sequence. */
+const HERO_CAPTIONS = [
+  'Organic Tee — Black',
+  'Organic Tee — White',
+  'Boxy Tee — Olive',
+  'Heavyweight Tee — Black',
+];
 
 const WHY: Point[] = [
   {
@@ -53,90 +65,109 @@ const QUOTES: Quote[] = [
 ];
 
 export default async function HomePage() {
-  const products = await listPublishedProducts(productFilterSchema.parse({}));
-  const tee = products[0];
-  const colorways = tee ? toColorways(tee) : [];
+  const [newArrivals, featured, ...categories] = await Promise.all([
+    listNewArrivals(6),
+    listFeaturedProducts(3),
+    ...SHOPPABLE.map(({ slug }) => listProductsInCategory(slug)),
+  ]);
+
+  const slides: HeroSlide[] = HERO_SLIDES.map((image, index) => ({
+    image,
+    caption: HERO_CAPTIONS[index] ?? 'Shrinkless',
+  }));
+
+  const gateways: Gateway[] = SHOPPABLE.map(({ slug, label }, index) => ({
+    slug,
+    label,
+    count: categories[index]?.length ?? 0,
+  }));
 
   return (
     <>
-      <Hero
-        image={BRAND_IMAGES.hero}
-        eyebrow="Shrinkless"
+      <HeroSlider
+        slides={slides}
+        eyebrow="Made in USA"
         headline={['Organic tees', "that don't shrink."]}
-        lede="Garment dyed organic tees. Made in USA."
+        lede="Garment dyed organic cotton, cut and sewn in the United States."
         primary={{ href: '/shop', label: 'Shop tees' }}
         secondary={{ href: '/why-shrinkless', label: 'Why Shrinkless' }}
       />
+
+      {/* Shopping direction, immediately after the hero — before any story. */}
+      <CategoryGateway gateways={gateways} />
+
+      <section className="band band--white rail" aria-labelledby="new-heading">
+        <div className="wrap">
+          <Reveal>
+            <div className="rail__head">
+              <div>
+                <p className="eyebrow">Just landed</p>
+                <h2 id="new-heading" className="head">New Arrivals</h2>
+              </div>
+              <Link href="/shop?sort=newest" className="ulink rail__more">Shop all</Link>
+            </div>
+          </Reveal>
+
+          {newArrivals.length ? (
+            <ProductGrid products={newArrivals} columns={3} />
+          ) : (
+            <p className="lede">The catalogue is empty. Seed it with <code>npm run seed:shrinkless</code>.</p>
+          )}
+        </div>
+      </section>
 
       <StatementBlock
         lines={['The tee', 'that stays', 'the same.']}
         support="Garment dyed organic cotton tees engineered to hold their shape, wash after wash."
       />
 
-      <section className="band band--white collection" aria-labelledby="collection-heading">
-        <div className="wrap">
-          <div className="collection__head">
-            <h2 id="collection-heading" className="head">The Collection</h2>
-            <Link href="/shop" className="ulink">Shop all</Link>
-          </div>
-
-          {colorways.length === 0 ? (
-            <p className="lede">The first run is on the press.</p>
-          ) : (
-            <ul className="collection__grid">
-              {colorways.map((colorway) => (
-                <li key={colorway.color}>
-                  <CollectionTile
-                    slug={tee.slug}
-                    title={tee.title}
-                    color={colorway.color}
-                    priceCents={colorway.priceCents}
-                    image={colorway.image}
-                    variants={colorway.variants}
-                  />
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </section>
-
-      <NumberedPoints
-        eyebrow="The difference"
-        headline="Why Shrinkless?"
-        points={WHY}
-        images={[BRAND_IMAGES.why01, BRAND_IMAGES.why02]}
-      />
-
-      <FullBleedType
-        lines={['Your tee', 'should fit', 'the same way', 'tomorrow.']}
-        support="We make tees designed for real life, real washing and real wear."
-        cta={{ href: '/shop', label: 'Shop Shrinkless' }}
-      />
-
       <SplitFeature
-        image={BRAND_IMAGES.dyeStory}
-        eyebrow="Garment dyed"
-        headline="Made differently."
-        body="We garment dye our finished tees to create their character, feel and lasting fit."
-        cta={{ href: '/our-story', label: 'Our story' }}
+        image={BRAND_IMAGES.fabric}
+        eyebrow="The cotton"
+        headline="Organic, and heavier than it looks."
+        body="Long-staple organic cotton, knitted to a weight that hangs instead of clinging. Garment dyed after it is sewn, which is what gives the colour its depth and the body its hand."
+        cta={{ href: '/why-shrinkless', label: 'How it is made' }}
       />
 
       <ImageBand
-        image={BRAND_IMAGES.madeInUsa}
-        eyebrow="Craft"
-        glyph="🇺🇸"
-        headline="Made in USA."
-        body="Cut and sewn in the United States, by people who do this for a living."
+        image={BRAND_IMAGES.hanging}
+        eyebrow="The promise"
+        headline="Wash it. Dry it. Wear it."
+        body="The shrinking happens in our facility, not in your machine."
       />
 
-      <EditorialGrid
-        eyebrow="Everyday"
-        headline="Worn everywhere."
-        follow={{ href: 'https://www.instagram.com/shrinkless/', label: 'Follow @shrinkless' }}
+      {featured.length ? (
+        <section className="band band--white rail" aria-labelledby="featured-heading">
+          <div className="wrap">
+            <Reveal>
+              <div className="rail__head">
+                <div>
+                  <p className="eyebrow">Chosen by us</p>
+                  <h2 id="featured-heading" className="head">Featured</h2>
+                </div>
+                <Link href="/shop" className="ulink rail__more">Shop all</Link>
+              </div>
+            </Reveal>
+
+            <ProductGrid products={featured} columns={3} />
+          </div>
+        </section>
+      ) : null}
+
+      <NumberedPoints
+        eyebrow="Why Shrinkless"
+        headline="Four things, done properly."
+        points={WHY}
+        images={[BRAND_IMAGES.craft, BRAND_IMAGES.torso]}
       />
 
-      <QuoteRow eyebrow="Wearers" quotes={QUOTES} />
+      <QuoteRow quotes={QUOTES} />
+
+      <FullBleedType
+        lines={['Start', 'with one.']}
+        support="Six styles, two fits, and a tee that comes out of the wash the same size it went in."
+        cta={{ href: '/shop', label: 'Shop the collection' }}
+      />
     </>
   );
 }

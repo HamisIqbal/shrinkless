@@ -44,11 +44,11 @@ export default function WhyShrinklessPage() {
         eyebrow="The difference"
         headline="Four reasons."
         points={POINTS}
-        images={[BRAND_IMAGES.why01, BRAND_IMAGES.why02]}
+        images={[BRAND_IMAGES.fabric, BRAND_IMAGES.hanging]}
       />
 
       <SplitFeature
-        image={BRAND_IMAGES.dyeStory}
+        image={BRAND_IMAGES.heather}
         eyebrow="In practice"
         headline="The wash test."
         body="A tee that fits in the shop and not after laundry day was never the right size. Ours is finished at temperature before it reaches you, so what you try on is what you keep."

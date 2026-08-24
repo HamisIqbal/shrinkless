@@ -81,7 +81,7 @@ export function VariantPicker({ sizes, colors, variants, initialColor }: Props) 
                 checked={color === option}
                 onChange={() => setColor(option)}
               />
-              <span className={`swatch__dot swatch__dot--${option}`} aria-hidden="true" />
+              <span className={`swatch__dot dot--${option}`} aria-hidden="true" />
               <span className="swatch__name">{option}</span>
             </label>
           ))}
@@ -120,7 +120,7 @@ export function VariantPicker({ sizes, colors, variants, initialColor }: Props) 
       <div className="picker__actions">
         <button
           type="button"
-          className="btn btn--block"
+          className="btn btn--lg btn--block"
           onClick={() => add()}
           disabled={pending}
         >
@@ -131,7 +131,7 @@ export function VariantPicker({ sizes, colors, variants, initialColor }: Props) 
             the cart rather than pretending to be an express checkout. */}
         <button
           type="button"
-          className="btn btn--outline btn--block"
+          className="btn btn--outline btn--lg btn--block"
           onClick={() => add(() => router.push('/cart'))}
           disabled={pending}
         >
