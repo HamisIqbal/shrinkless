@@ -6,7 +6,14 @@ import { getPublishedProductBySlug, listPublishedProducts } from '@/lib/services
 
 withTestDatabase();
 
-const noFilter = { sizes: [], colors: [], sort: 'newest' as const, q: '' };
+const noFilter = {
+  sizes: [],
+  colors: [],
+  sort: 'newest' as const,
+  q: '',
+  minPrice: null,
+  maxPrice: null,
+};
 
 async function seedCatalogue() {
   const shirt = await Product.create({

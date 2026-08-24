@@ -4,8 +4,11 @@ import { buildShopMenu } from '@/lib/shop/menu.server';
 import { auth } from '@/auth';
 import { SmoothScroll } from '@/components/ui/SmoothScroll';
 import { Motion } from '@/components/ui/Motion';
+import { AnnounceBar } from '@/components/site/AnnounceBar';
 import { Header } from '@/components/site/Header';
 import { Footer } from '@/components/site/Footer';
+import { FooterReveal } from '@/components/site/FooterReveal';
+import { InstagramStrip } from '@/components/site/InstagramStrip';
 
 export default async function ShopLayout({ children }: LayoutProps<'/'>) {
   const [settings, cart, session, menu] = await Promise.all([
@@ -18,13 +21,12 @@ export default async function ShopLayout({ children }: LayoutProps<'/'>) {
   return (
     <Motion>
     <div className="shell">
+      <div className="shell__stack">
       <SmoothScroll />
 
       <a href="#main" className="skiplink">Skip to content</a>
 
-      {settings.announcement ? (
-        <p role="status" className="announce">{settings.announcement}</p>
-      ) : null}
+      <AnnounceBar message={settings.announcement} />
 
       <Header
         menu={menu}
@@ -35,7 +37,12 @@ export default async function ShopLayout({ children }: LayoutProps<'/'>) {
 
       <main id="main">{children}</main>
 
-      <Footer storeEmail={settings.storeEmail} />
+        <InstagramStrip />
+      </div>
+
+      <FooterReveal>
+        <Footer storeEmail={settings.storeEmail} />
+      </FooterReveal>
     </div>
     </Motion>
   );

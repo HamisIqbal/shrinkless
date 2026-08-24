@@ -4,16 +4,14 @@ import {
   listNewArrivals,
   listProductsInCategory,
 } from '@/lib/services/products';
-import { BRAND_IMAGES, HERO_SLIDES } from '@/lib/brand/images';
+import { BRAND_IMAGES, HERO_SLIDES, PRODUCT_IMAGES } from '@/lib/brand/images';
 import { SHOPPABLE } from '@/lib/shop/navigation';
 import { HeroSlider, type HeroSlide } from '@/components/site/HeroSlider';
 import { CategoryGateway, type Gateway } from '@/components/shop/CategoryGateway';
 import { ProductGrid } from '@/components/shop/ProductGrid';
-import { StatementBlock } from '@/components/editorial/StatementBlock';
-import { SplitFeature } from '@/components/editorial/SplitFeature';
+import { OverlayTiles, type Tile } from '@/components/editorial/OverlayTiles';
 import { ImageBand } from '@/components/editorial/ImageBand';
 import { FullBleedType } from '@/components/editorial/FullBleedType';
-import { NumberedPoints, type Point } from '@/components/editorial/NumberedPoints';
 import { QuoteRow, type Quote } from '@/components/editorial/QuoteRow';
 import { Reveal } from '@/components/ui/Reveal';
 
@@ -25,26 +23,47 @@ const HERO_CAPTIONS = [
   'Heavyweight Tee — Black',
 ];
 
-const WHY: Point[] = [
+/* Each claim sits on the frame that evidences it. */
+const WHY: Tile[] = [
   {
-    number: '01',
+    index: '01',
     title: 'Organic Cotton',
     body: 'Premium organic cotton, selected for everyday wear.',
+    image: BRAND_IMAGES.fabric,
   },
   {
-    number: '02',
+    index: '02',
     title: 'Garment Dyed',
-    body: 'The finished garment is dyed for its distinctive character and feel.',
+    body: 'The finished garment is dyed for its character and its feel.',
+    image: BRAND_IMAGES.folded,
   },
   {
-    number: '03',
+    index: '03',
     title: "Doesn't Shrink",
-    body: 'Built to maintain its fit and proportions wash after wash.',
+    body: 'Built to hold its fit and its proportions, wash after wash.',
+    image: BRAND_IMAGES.hanging,
   },
   {
-    number: '04',
+    index: '04',
     title: 'Made in USA',
-    body: 'Proudly made in the USA.',
+    body: 'Cut and sewn in the United States.',
+    image: BRAND_IMAGES.craft,
+  },
+];
+
+/* The old statement band said this in type over an empty ground. */
+const STATEMENT: Tile[] = [
+  {
+    title: 'The tee that stays the same.',
+    body: 'Pre-shrunk, then garment dyed at temperature — so the change happens in our facility, not in your machine.',
+    image: BRAND_IMAGES.torso,
+    href: '/why-shrinkless',
+  },
+  {
+    title: 'Worn in, not worn out.',
+    body: 'Garment dyeing settles the colour into the cotton rather than sitting on top of it.',
+    image: BRAND_IMAGES.heather,
+    href: '/our-story',
   },
 ];
 
@@ -116,21 +135,10 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <StatementBlock
-        lines={['The tee', 'that stays', 'the same.']}
-        support="Garment dyed organic cotton tees engineered to hold their shape, wash after wash."
-      />
-
-      <SplitFeature
-        image={BRAND_IMAGES.fabric}
-        eyebrow="The cotton"
-        headline="Organic, and heavier than it looks."
-        body="Long-staple organic cotton, knitted to a weight that hangs instead of clinging. Garment dyed after it is sewn, which is what gives the colour its depth and the body its hand."
-        cta={{ href: '/why-shrinkless', label: 'How it is made' }}
-      />
+      <OverlayTiles tiles={STATEMENT} columns={2} tall />
 
       <ImageBand
-        image={BRAND_IMAGES.hanging}
+        image={PRODUCT_IMAGES['mens-heavyweight-tee'][0]}
         eyebrow="The promise"
         headline="Wash it. Dry it. Wear it."
         body="The shrinking happens in our facility, not in your machine."
@@ -154,14 +162,14 @@ export default async function HomePage() {
         </section>
       ) : null}
 
-      <NumberedPoints
+      <OverlayTiles
         eyebrow="Why Shrinkless"
-        headline="Four things, done properly."
-        points={WHY}
-        images={[BRAND_IMAGES.craft, BRAND_IMAGES.torso]}
+        heading="Four things, done properly."
+        tiles={WHY}
+        columns={4}
       />
 
-      <QuoteRow quotes={QUOTES} />
+      <QuoteRow eyebrow="Reviews" heading="What people say." quotes={QUOTES} />
 
       <FullBleedType
         lines={['Start', 'with one.']}

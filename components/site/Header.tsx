@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { PRIMARY_NAV, type ShopMenu } from '@/lib/shop/navigation';
 import { MegaMenu } from '@/components/site/MegaMenu';
+import { SearchIcon, AccountIcon, CartIcon } from '@/components/site/icons';
 import { MobileDrawer } from '@/components/site/MobileDrawer';
 
 type Props = {
@@ -20,6 +21,10 @@ const COMPACT_AT = 16;
 /**
  * Sits over the campaign hero on the homepage and takes a solid ground the
  * moment the page moves.
+ *
+ * The shop panel is a click-only disclosure. It used to open on hover, which
+ * meant it dropped over the page whenever the pointer merely crossed the bar on
+ * its way somewhere else.
  *
  * Spec §11: the compact bar has to arrive on the *first* meaningful scroll,
  * so the trigger is scroll position, not the foot of the hero. Sixteen pixels
@@ -39,7 +44,6 @@ export function Header({ menu, itemCount, signedIn, storeEmail }: Props) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
 
-  const closeTimer = useRef(0);
   const searchInput = useRef<HTMLInputElement>(null);
 
   const overlaid = canOverlay && !scrolled && !megaOpen && !searchOpen;
@@ -96,20 +100,7 @@ export function Header({ menu, itemCount, signedIn, storeEmail }: Props) {
     if (searchOpen) searchInput.current?.focus();
   }, [searchOpen]);
 
-  useEffect(() => () => window.clearTimeout(closeTimer.current), []);
-
-  // A short grace period on leaving: the pointer has to cross a few pixels of
-  // dead space between the trigger and the panel, and closing on that gap
-  // makes the menu feel like it is running away.
-  const holdOpen = useCallback(() => {
-    window.clearTimeout(closeTimer.current);
-    setMegaOpen(true);
-  }, []);
-
-  const releaseOpen = useCallback(() => {
-    window.clearTimeout(closeTimer.current);
-    closeTimer.current = window.setTimeout(() => setMegaOpen(false), 160);
-  }, []);
+  const closeMega = useCallback(() => setMegaOpen(false), []);
 
   function submitSearch(event: React.FormEvent) {
     event.preventDefault();
@@ -128,7 +119,7 @@ export function Header({ menu, itemCount, signedIn, storeEmail }: Props) {
 
   return (
     <>
-      <header className={classes} onMouseLeave={releaseOpen}>
+      <header className={classes}>
         <div className="wrap masthead__inner">
           <button
             type="button"
@@ -147,40 +138,32 @@ export function Header({ menu, itemCount, signedIn, storeEmail }: Props) {
             <ul>
               {PRIMARY_NAV.map((item) => {
                 const isShop = item.href === '/shop';
-                const current =
-                  item.href === '/shop'
-                    ? pathname === '/shop'
-                    : pathname.startsWith(item.href);
+                const current = isShop
+                  ? pathname === '/shop'
+                  : pathname.startsWith(item.href);
 
                 return (
-                  <li
-                    key={item.href}
-                    className={isShop ? 'mainnav__item mainnav__item--mega' : 'mainnav__item'}
-                    onMouseEnter={isShop ? holdOpen : releaseOpen}
-                  >
-                    <Link
-                      href={item.href}
-                      className="ulink"
-                      aria-current={current ? 'page' : undefined}
-                      onFocus={isShop ? holdOpen : releaseOpen}
-                    >
-                      {item.label}
-                    </Link>
-
+                  <li key={item.href} className="mainnav__item">
                     {isShop ? (
                       <button
                         type="button"
-                        className="mainnav__disclose"
+                        className="ulink mainnav__trigger"
                         aria-expanded={megaOpen}
                         aria-controls="shop-mega"
                         onClick={() => setMegaOpen((value) => !value)}
                       >
+                        {item.label}
                         <span className="mainnav__chevron" aria-hidden="true" />
-                        <span className="visually-hidden">
-                          {megaOpen ? 'Close shop menu' : 'Open shop menu'}
-                        </span>
                       </button>
-                    ) : null}
+                    ) : (
+                      <Link
+                        href={item.href}
+                        className="ulink"
+                        aria-current={current ? 'page' : undefined}
+                      >
+                        {item.label}
+                      </Link>
+                    )}
                   </li>
                 );
               })}
@@ -190,20 +173,31 @@ export function Header({ menu, itemCount, signedIn, storeEmail }: Props) {
           <div className="masthead__utils">
             <button
               type="button"
-              className="ulink masthead__search"
+              className="iconbtn masthead__search"
               aria-expanded={searchOpen}
               aria-controls="site-search"
               onClick={() => setSearchOpen((value) => !value)}
             >
-              Search
+              <SearchIcon />
+              <span className="visually-hidden">Search</span>
             </button>
 
-            <Link href={signedIn ? '/account' : '/login'} className="ulink masthead__account">
-              Account
+            <Link
+              href={signedIn ? '/account' : '/login'}
+              className="iconbtn masthead__account"
+            >
+              <AccountIcon />
+              <span className="visually-hidden">{signedIn ? 'Account' : 'Sign in'}</span>
             </Link>
 
-            <Link href="/cart" className="ulink">
-              Cart<span className="tnum"> ({itemCount})</span>
+            <Link href="/cart" className="iconbtn iconbtn--cart">
+              <CartIcon />
+              {itemCount > 0 ? (
+                <span className="iconbtn__count tnum" aria-hidden="true">{itemCount}</span>
+              ) : null}
+              <span className="visually-hidden">
+                Cart, {itemCount} {itemCount === 1 ? 'item' : 'items'}
+              </span>
             </Link>
           </div>
         </div>
@@ -237,14 +231,7 @@ export function Header({ menu, itemCount, signedIn, storeEmail }: Props) {
           </form>
         </div>
 
-        <div onMouseEnter={holdOpen} onMouseLeave={releaseOpen}>
-          <MegaMenu
-            menu={menu}
-            open={megaOpen}
-            id="shop-mega"
-            onNavigate={() => setMegaOpen(false)}
-          />
-        </div>
+        <MegaMenu menu={menu} open={megaOpen} id="shop-mega" onNavigate={closeMega} />
       </header>
 
       <div id="mobile-drawer">

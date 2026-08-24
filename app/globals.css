@@ -90,6 +90,10 @@
 
   --spacing-rule: 1px;
 
+  /* The one radius on the site: the page slab's bottom corners, where it lifts
+     off the footer. Nothing else is rounded. */
+  --radius-slab: clamp(1.25rem, 3vw, 2.5rem);
+
   /* --- Motion -------------------------------------------------------------
      One curve and four durations for the whole site. Every transition picks
      from these so the navigation, the hero, the cards and the modal all move
@@ -100,6 +104,10 @@
   --dur-2: 320ms;  /* the default: buttons, links, headers */
   --dur-3: 520ms;  /* panels and modals */
   --dur-4: 900ms;  /* photography: the slow scale under an image */
+
+  /* The hero rail's slide. Mirrored by SLIDE_MS in HeroSlider — the component
+     has to know when the slide has finished to make its jump home. */
+  --hero-slide: 700ms;
 }
 
 @layer shrinkless-base {
@@ -139,6 +147,18 @@
   img, video { display: block; max-width: 100%; }
 
   a { color: inherit; text-underline-offset: 0.22em; }
+
+  /* The browser default is a purple-blue that belongs to no part of this
+     palette. Ink on warm reads as a highlighter over paper. */
+  ::selection {
+    background: var(--color-ink);
+    color: var(--color-paper);
+  }
+
+  .band--ink ::selection {
+    background: var(--color-paper);
+    color: var(--color-ink);
+  }
 
   button { font: inherit; }
 
@@ -431,6 +451,7 @@
 
   .frame--32 { aspect-ratio: 3 / 2; }
   .frame--45 { aspect-ratio: 4 / 5; }
+  .frame--34 { aspect-ratio: 3 / 4; }
   .frame--11 { aspect-ratio: 1 / 1; }
 
   a:hover > .frame > img,

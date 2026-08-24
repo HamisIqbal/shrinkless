@@ -2,8 +2,7 @@ import { notFound } from 'next/navigation';
 import { listPublishedProducts } from '@/lib/services/products';
 import { productFilterSchema } from '@/lib/validation/catalogue';
 import { SHOPPABLE } from '@/lib/shop/navigation';
-import { ProductGrid } from '@/components/shop/ProductGrid';
-import { FilterBar } from '@/components/shop/FilterBar';
+import { ShopBrowser } from '@/components/shop/ShopBrowser';
 
 export const metadata = { title: 'Shop' };
 
@@ -37,8 +36,20 @@ export default async function ShopPage(props: PageProps<'/shop/[[...category]]'>
   const filter = productFilterSchema.parse(rawSearch);
   const products = await listPublishedProducts(filter, categorySlug);
 
-  const sizes = [...new Set(products.flatMap((product) => product.sizes))];
-  const colors = [...new Set(products.flatMap((product) => product.colors))];
+  // The filter options describe the category, not the current result set —
+  // otherwise filtering to XXL removes every other size from the list and the
+  // shopper cannot get back without editing the URL.
+  const all = await listPublishedProducts(
+    { sizes: [], colors: [], sort: 'newest', q: '', minPrice: null, maxPrice: null },
+    categorySlug,
+  );
+
+  const sizes = [...new Set(all.flatMap((product) => product.sizes))];
+  const colors = [...new Set(all.flatMap((product) => product.colors))];
+  const prices = all.map((product) => product.minPriceCents / 100);
+  const priceFloor = prices.length ? Math.floor(Math.min(...prices)) : 0;
+  const priceCeiling = prices.length ? Math.ceil(Math.max(...prices)) : 0;
+
   const basePath = categorySlug ? `/shop/${categorySlug}` : '/shop';
   const intro = (categorySlug && INTRO[categorySlug]) || FALLBACK;
 
@@ -51,25 +62,16 @@ export default async function ShopPage(props: PageProps<'/shop/[[...category]]'>
           <p className="lede shoppage__intro">{intro.copy}</p>
         </header>
 
-        <FilterBar
+        <ShopBrowser
+          products={products}
           filter={filter}
           sizes={sizes}
           colors={colors}
+          priceFloor={priceFloor}
+          priceCeiling={priceCeiling}
           basePath={basePath}
           focusSearch={rawSearch?.focus === 'search'}
         />
-
-        <p className="meta shoppage__count tnum">
-          {products.length} {products.length === 1 ? 'style' : 'styles'}
-        </p>
-
-        {products.length === 0 ? (
-          <p className="lede shoppage__empty">
-            Nothing matches that. Clear a filter and try again.
-          </p>
-        ) : (
-          <ProductGrid products={products} columns={3} />
-        )}
       </div>
     </div>
   );

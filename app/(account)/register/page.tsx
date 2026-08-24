@@ -17,8 +17,8 @@ export default async function RegisterPage() {
 
       <AuthForm action={registerAction} submitLabel="Create account" includeName />
 
-      <p className="meta">
-        Already have an account? <Link href="/login">Sign in</Link>
+      <p className="authswap">
+        Already have an account? <Link href="/login" className="ulink">Sign in</Link>
       </p>
     </div>
   );

@@ -1,6 +1,5 @@
 import { BRAND_IMAGES } from '@/lib/brand/images';
-import { StatementBlock } from '@/components/editorial/StatementBlock';
-import { NumberedPoints, type Point } from '@/components/editorial/NumberedPoints';
+import { OverlayTiles, type Tile } from '@/components/editorial/OverlayTiles';
 import { SplitFeature } from '@/components/editorial/SplitFeature';
 import { FullBleedType } from '@/components/editorial/FullBleedType';
 
@@ -9,43 +8,45 @@ export const metadata = {
   description: 'Organic cotton, garment dyed, built to hold its fit. Made in USA.',
 };
 
-const POINTS: Point[] = [
+const POINTS: Tile[] = [
   {
-    number: '01',
+    index: '01',
     title: 'Organic Cotton',
     body: 'Premium organic cotton, selected for everyday wear. Certification: [TBC].',
+    image: BRAND_IMAGES.fabric,
   },
   {
-    number: '02',
+    index: '02',
     title: 'Garment Dyed',
     body: 'The finished garment is dyed for its distinctive character and feel.',
+    image: BRAND_IMAGES.folded,
   },
   {
-    number: '03',
+    index: '03',
     title: "Doesn't Shrink",
     body: 'Built to maintain its fit and proportions wash after wash. Expected residual shrinkage: [TBC]%.',
+    image: BRAND_IMAGES.hanging,
   },
   {
-    number: '04',
+    index: '04',
     title: 'Made in USA',
     body: 'Proudly made in the USA.',
+    image: BRAND_IMAGES.craft,
   },
 ];
 
 export default function WhyShrinklessPage() {
   return (
     <>
-      <StatementBlock
-        lines={['Why', 'Shrinkless?']}
-        support="Four things separate this tee from the one that stopped fitting."
-      />
+      <header className="band band--tight wrap pagehead">
+        <p className="eyebrow">The difference</p>
+        <h1 className="display pagehead__title">Why Shrinkless?</h1>
+        <p className="lede pagehead__lede">
+          Four things separate this tee from the one that stopped fitting.
+        </p>
+      </header>
 
-      <NumberedPoints
-        eyebrow="The difference"
-        headline="Four reasons."
-        points={POINTS}
-        images={[BRAND_IMAGES.fabric, BRAND_IMAGES.hanging]}
-      />
+      <OverlayTiles tiles={POINTS} columns={4} />
 
       <SplitFeature
         image={BRAND_IMAGES.heather}

@@ -7,33 +7,43 @@ export type Quote = {
 
 type Props = {
   eyebrow?: string;
+  heading?: string;
   quotes: Quote[];
 };
 
 /**
- * Three quotes on hairlines. The Cormorant quotation mark is set large and
- * pale behind the text — it is the only serif on the site apart from its twin,
- * and it earns its place by doing the job a testimonial card would otherwise
- * do with a border and a shadow.
+ * Three quotes on an ink band.
+ *
+ * The previous version set an oversized serif quotation mark behind each quote,
+ * which collided with the text at every width that mattered — a decoration
+ * fighting the thing it was decorating. There is no mark now: the band's
+ * contrast, a hairline and a numbered attribution do the same job without
+ * anything overlapping anything.
  *
  * Placeholder copy until real reviews exist (spec §11.3).
  */
-export function QuoteRow({ eyebrow, quotes }: Props) {
+export function QuoteRow({ eyebrow, heading, quotes }: Props) {
   return (
-    <section className="band band--white quotes" aria-labelledby="quotes-heading">
+    <section className="band band--ink quotes" aria-labelledby="quotes-heading">
       <div className="wrap">
-        {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
-        <h2 id="quotes-heading" className="visually-hidden">What people say</h2>
+        <Reveal>
+          <div className="quotes__head">
+            {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
+            <h2 id="quotes-heading" className="head quotes__title">
+              {heading ?? 'What people say'}
+            </h2>
+          </div>
+        </Reveal>
 
         <ul className="quotes__row">
           {quotes.map((quote, index) => (
             <li key={`${quote.name}-${index}`} className="quotes__item">
               <Reveal index={index}>
                 <figure className="quotes__figure">
-                  <span className="serif-mark quotes__mark" aria-hidden="true">&ldquo;</span>
-                  <blockquote className="quotes__text">
-                    <p>{quote.text}</p>
-                  </blockquote>
+                  <p className="quotes__index tnum" aria-hidden="true">
+                    {String(index + 1).padStart(2, '0')}
+                  </p>
+                  <blockquote className="quotes__text">{quote.text}</blockquote>
                   <figcaption className="meta quotes__name">{quote.name}</figcaption>
                 </figure>
               </Reveal>

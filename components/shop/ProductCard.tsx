@@ -16,45 +16,51 @@ type Props = {
 };
 
 /**
- * Image, name, price — in that order of weight.
+ * Image, name, price — in that order of weight, and by a wide margin. The
+ * frame is most of the card; the name and price are captions under it.
  *
- * The frame is a fixed 4:5 for every card regardless of what shape the source
- * photograph is, because a grid where one product is taller than its
- * neighbours reads as broken rather than as editorial (spec §17).
+ * Every card crops to the same 3:4 regardless of the source photograph's
+ * shape, because a grid where one product is taller than its neighbours reads
+ * as broken rather than as editorial.
  *
- * The colour dots are the image switcher, not decoration: picking one swaps
- * the frame and carries the choice through to the product page. That is the
- * one interaction worth having on a card, so it is the only one here — the
- * quick-view control stays hidden until the card is hovered, and is
- * permanently visible only where there is no hover to depend on.
+ * One index drives everything. The arrows step through the product's frames;
+ * the colour dots jump to the frame for that colour (images and colours are
+ * stored positionally, which the seed guarantees); and the price and the link
+ * follow whichever colourway that index lands on. Two separate indices would
+ * let the picture and the price disagree.
  */
 export function ProductCard({ product, index = 0, onQuickView }: Props) {
   const colorways = useMemo(() => toColorways(product), [product]);
-  const [active, setActive] = useState(0);
+  const [shot, setShot] = useState(0);
 
-  const colorway = colorways[active] ?? colorways[0];
-  const image = colorway?.image ?? (product.images[0]
-    ? { url: product.images[0].publicId, alt: product.images[0].alt }
-    : null);
+  const frames = product.images;
+  const hasFrames = frames.length > 0;
+  const many = frames.length > 1;
+
+  const colorway = colorways[Math.min(shot, colorways.length - 1)] ?? colorways[0];
+  const image = frames[shot] ?? frames[0];
 
   const soldOut = colorways.every((option) => !option.inStock);
   const href = colorway
     ? `/product/${product.slug}?color=${encodeURIComponent(colorway.color)}`
     : `/product/${product.slug}`;
 
+  const step = (delta: number) =>
+    setShot((current) => (current + delta + frames.length) % frames.length);
+
   return (
     <article className="pcard">
       <div className="pcard__media">
         <Link href={href} className="pcard__plate" tabIndex={-1} aria-hidden="true">
-          <div className="frame frame--45">
-            {image ? (
+          <div className="frame frame--34">
+            {hasFrames ? (
               <Image
-                src={imageUrl(image.url, 'c_fill,w_1000,h_1250,q_auto,f_auto')}
+                src={imageUrl(image.publicId, 'c_fill,w_1200,h_1600,q_auto,f_auto')}
                 alt=""
                 fill
                 loading={index < 2 ? undefined : 'lazy'}
                 priority={index < 2}
-                sizes="(min-width: 62rem) 30vw, (min-width: 48rem) 45vw, 50vw"
+                sizes="(min-width: 75rem) 33vw, (min-width: 48rem) 48vw, 50vw"
               />
             ) : null}
           </div>
@@ -62,23 +68,48 @@ export function ProductCard({ product, index = 0, onQuickView }: Props) {
 
         {soldOut ? <p className="pcard__flag">Sold out</p> : null}
 
-        <button
-          type="button"
-          className="pcard__quick"
-          onClick={() => onQuickView(product)}
-        >
-          <span className="pcard__quickmark" aria-hidden="true" />
-          <span className="visually-hidden">Quick view: {product.title}</span>
+        <button type="button" className="pcard__preview" onClick={() => onQuickView(product)}>
+          Preview
+          <span className="visually-hidden"> {product.title}</span>
         </button>
+
+        {many ? (
+          <>
+            <button
+              type="button"
+              className="pcard__step pcard__step--prev"
+              onClick={() => step(-1)}
+            >
+              <span className="pcard__chev" aria-hidden="true" />
+              <span className="visually-hidden">Previous image of {product.title}</span>
+            </button>
+
+            <button
+              type="button"
+              className="pcard__step pcard__step--next"
+              onClick={() => step(1)}
+            >
+              <span className="pcard__chev" aria-hidden="true" />
+              <span className="visually-hidden">Next image of {product.title}</span>
+            </button>
+
+            <ol className="pcard__ticks" aria-hidden="true">
+              {frames.map((frame, i) => (
+                <li
+                  key={frame.publicId}
+                  className={`pcard__tick${i === shot ? ' pcard__tick--on' : ''}`}
+                />
+              ))}
+            </ol>
+          </>
+        ) : null}
       </div>
 
       <div className="pcard__foot">
         <h3 className="pcard__title">
           <Link href={href} className="pcard__link">
             {product.title}
-            <span className="visually-hidden">
-              {colorway ? `, ${colorway.color}` : ''}
-            </span>
+            <span className="visually-hidden">{colorway ? `, ${colorway.color}` : ''}</span>
           </Link>
         </h3>
 
@@ -94,12 +125,14 @@ export function ProductCard({ product, index = 0, onQuickView }: Props) {
               <button
                 type="button"
                 className={`swatchdot dot--${option.color}${
-                  optionIndex === active ? ' swatchdot--on' : ''
+                  optionIndex === Math.min(shot, colorways.length - 1)
+                    ? ' swatchdot--on'
+                    : ''
                 }`}
-                aria-pressed={optionIndex === active}
-                onMouseEnter={() => setActive(optionIndex)}
-                onFocus={() => setActive(optionIndex)}
-                onClick={() => setActive(optionIndex)}
+                aria-pressed={optionIndex === Math.min(shot, colorways.length - 1)}
+                onMouseEnter={() => setShot(optionIndex)}
+                onFocus={() => setShot(optionIndex)}
+                onClick={() => setShot(optionIndex)}
               >
                 <span className="visually-hidden">Show {option.color}</span>
               </button>

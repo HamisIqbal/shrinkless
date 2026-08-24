@@ -1,6 +1,5 @@
 import { BRAND_IMAGES } from '@/lib/brand/images';
 import { ImageBand } from '@/components/editorial/ImageBand';
-import { StatementBlock } from '@/components/editorial/StatementBlock';
 import { SplitFeature } from '@/components/editorial/SplitFeature';
 import { FullBleedType } from '@/components/editorial/FullBleedType';
 
@@ -18,10 +17,14 @@ export default function OurStoryPage() {
         headline="One tee, made properly."
       />
 
-      <StatementBlock
-        lines={['We got tired', 'of tees that', 'stopped fitting.']}
-        support="Every wardrobe has one: the tee that fit perfectly until the third wash, and then belonged to somebody smaller."
-      />
+      <header className="band band--tight wrap pagehead">
+        <p className="eyebrow">The beginning</p>
+        <h2 className="display pagehead__title">We got tired of tees that stopped fitting.</h2>
+        <p className="lede pagehead__lede">
+          Every wardrobe has one: the tee that fit perfectly until the third wash,
+          and then belonged to somebody smaller.
+        </p>
+      </header>
 
       <SplitFeature
         image={BRAND_IMAGES.hanging}

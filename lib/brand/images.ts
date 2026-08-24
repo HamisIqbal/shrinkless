@@ -34,7 +34,14 @@ export type BrandImage = {
 
 const UNSPLASH = 'https://images.unsplash.com';
 
-/** Shared transform: cropped, sensibly sized, colour left alone. */
+/**
+ * Shared transform: cropped, sensibly sized, colour left alone.
+ *
+ * Keep these close to the largest size the frame is actually displayed at.
+ * Unsplash generates each width on demand, and a cold transform of a 1600px
+ * crop can take twenty seconds — long enough for Next's image optimizer to
+ * time out and serve a 500 instead of a photograph.
+ */
 function frame(id: string, width: number): string {
   return `${UNSPLASH}/${id}?auto=format&fit=crop&w=${width}&q=80`;
 }
@@ -48,25 +55,25 @@ function frame(id: string, width: number): string {
 
 export const HERO_SLIDES = [
   {
-    url: frame('photo-1605949478009-cf3e01396dd2', 2400),
+    url: frame('photo-1605949478009-cf3e01396dd2', 1800),
     alt: 'A man in a black tee leaning against a bare concrete wall in daylight.',
     aspect: '4:5',
     focus: '50% 30%',
   },
   {
-    url: frame('photo-1586790170083-2f9ceadc732d', 2400),
+    url: frame('photo-1586790170083-2f9ceadc732d', 1800),
     alt: 'A man in a plain white crew neck tee against an off-white wall.',
     aspect: '2:3',
     focus: '50% 45%',
   },
   {
-    url: frame('photo-1629137525253-739adcd9c774', 2400),
+    url: frame('photo-1629137525253-739adcd9c774', 1800),
     alt: 'A woman in an oversized olive tee against a weathered concrete wall.',
     aspect: '2:3',
     focus: '50% 48%',
   },
   {
-    url: frame('photo-1611178206041-54d5e075be45', 2400),
+    url: frame('photo-1611178206041-54d5e075be45', 1800),
     alt: 'A man in a black crew neck tee against a white plaster wall.',
     aspect: '4:5',
     focus: '50% 55%',
@@ -81,13 +88,13 @@ export const HERO_SLIDES = [
 
 export const CATEGORY_IMAGES = {
   men: {
-    url: frame('photo-1615903040611-e599dfaa6752', 1600),
+    url: frame('photo-1615903040611-e599dfaa6752', 1200),
     alt: 'A man in an oversized black tee crossing a street at dusk.',
     aspect: '4:5',
     focus: '50% 40%',
   },
   women: {
-    url: frame('photo-1546578623-d1d3af878403', 1600),
+    url: frame('photo-1546578623-d1d3af878403', 1200),
     alt: 'A woman in a plain white tee standing on an open road.',
     aspect: '2:3',
     focus: '50% 58%',
@@ -103,42 +110,42 @@ export type CategorySlug = keyof typeof CATEGORY_IMAGES;
 export const BRAND_IMAGES = {
   /** Fabric macro. Carries the "organic cotton" claim visually. */
   fabric: {
-    url: frame('photo-1632844384543-bb1b2c3900d7', 1600),
+    url: frame('photo-1632844384543-bb1b2c3900d7', 1200),
     alt: 'A close view of soft grey cotton jersey, folded and catching the light.',
     aspect: '4:5',
   },
 
   /** Cut-and-sew bench. Carries the "Made in USA" claim visually. */
   craft: {
-    url: frame('photo-1584184924103-e310d9dc82fc', 1600),
+    url: frame('photo-1584184924103-e310d9dc82fc', 1200),
     alt: 'A tailor cutting cloth by hand at a wooden workbench, tape measure round the neck.',
     aspect: '4:5',
   },
 
   /** The garment alone, no model. Used for the "doesn't shrink" band. */
   hanging: {
-    url: frame('photo-1581655353564-df123a1eb820', 1600),
+    url: frame('photo-1581655353564-df123a1eb820', 1200),
     alt: 'A white tee on a wooden hanger against a poured concrete wall.',
     aspect: '2:3',
   },
 
   /** Flat lay. Used where the composition needs to sit down and be quiet. */
   folded: {
-    url: frame('photo-1693443687750-611ad77f3aba', 1600),
+    url: frame('photo-1693443687750-611ad77f3aba', 1200),
     alt: 'A white tee and a black tee folded side by side on a white surface.',
     aspect: '3:2',
   },
 
   /** Heather grey tee, soft daylight. The calmest frame in the set. */
   heather: {
-    url: frame('photo-1564584217132-2271feaeb3c5', 1600),
+    url: frame('photo-1564584217132-2271feaeb3c5', 1200),
     alt: 'A heather grey tee hanging on a white wall in soft afternoon light.',
     aspect: '3:2',
   },
 
   /** Studio torso crop. Reads as product, not as portrait. */
   torso: {
-    url: frame('photo-1571455786673-9d9d6c194f90', 1600),
+    url: frame('photo-1571455786673-9d9d6c194f90', 1200),
     alt: 'A plain black tee photographed close on the body, shoulders to waist.',
     aspect: '3:2',
   },
@@ -156,19 +163,19 @@ export type BrandImageSlot = keyof typeof BRAND_IMAGES;
 export const PRODUCT_IMAGES = {
   'mens-organic-tee': [
     {
-      url: frame('photo-1586790170083-2f9ceadc732d', 1600),
+      url: frame('photo-1586790170083-2f9ceadc732d', 1200),
       alt: 'A man in a plain white crew neck tee against an off-white wall.',
       aspect: '2:3',
       focus: '50% 62%',
     },
     {
-      url: frame('photo-1611178206041-54d5e075be45', 1600),
+      url: frame('photo-1611178206041-54d5e075be45', 1200),
       alt: 'A man in a black crew neck tee against a white plaster wall.',
       aspect: '4:5',
       focus: '50% 66%',
     },
     {
-      url: frame('photo-1581655353564-df123a1eb820', 1600),
+      url: frame('photo-1581655353564-df123a1eb820', 1200),
       alt: 'A white tee on a wooden hanger against a poured concrete wall.',
       aspect: '2:3',
     },
@@ -176,13 +183,13 @@ export const PRODUCT_IMAGES = {
 
   'mens-heavyweight-tee': [
     {
-      url: frame('photo-1615903040611-e599dfaa6752', 1600),
+      url: frame('photo-1615903040611-e599dfaa6752', 1200),
       alt: 'A man in an oversized black tee crossing a street at dusk.',
       aspect: '4:5',
       focus: '50% 42%',
     },
     {
-      url: frame('photo-1571455786673-9d9d6c194f90', 1600),
+      url: frame('photo-1571455786673-9d9d6c194f90', 1200),
       alt: 'A plain black tee photographed close on the body, shoulders to waist.',
       aspect: '3:2',
     },
@@ -190,12 +197,12 @@ export const PRODUCT_IMAGES = {
 
   'mens-long-sleeve-tee': [
     {
-      url: frame('photo-1624286922676-24e42c1ceff0', 1600),
+      url: frame('photo-1624286922676-24e42c1ceff0', 1200),
       alt: 'A man in a plain deep teal long sleeve tee, photographed outdoors at dusk.',
       aspect: '2:3',
     },
     {
-      url: frame('photo-1622445275463-afa2ab738c34', 1600),
+      url: frame('photo-1622445275463-afa2ab738c34', 1200),
       alt: 'A man in a loose blank white tee standing outdoors.',
       aspect: '2:3',
     },
@@ -203,13 +210,13 @@ export const PRODUCT_IMAGES = {
 
   'womens-organic-tee': [
     {
-      url: frame('photo-1546578623-d1d3af878403', 1600),
+      url: frame('photo-1546578623-d1d3af878403', 1200),
       alt: 'A woman in a plain white tee standing on an open road.',
       aspect: '2:3',
       focus: '50% 46%',
     },
     {
-      url: frame('photo-1564584217132-2271feaeb3c5', 1600),
+      url: frame('photo-1564584217132-2271feaeb3c5', 1200),
       alt: 'A heather grey tee hanging on a white wall in soft afternoon light.',
       aspect: '3:2',
     },
@@ -217,13 +224,13 @@ export const PRODUCT_IMAGES = {
 
   'womens-boxy-tee': [
     {
-      url: frame('photo-1629137525253-739adcd9c774', 1600),
+      url: frame('photo-1629137525253-739adcd9c774', 1200),
       alt: 'A woman in an oversized olive tee against a weathered concrete wall.',
       aspect: '2:3',
       focus: '50% 48%',
     },
     {
-      url: frame('photo-1693443687750-611ad77f3aba', 1600),
+      url: frame('photo-1693443687750-611ad77f3aba', 1200),
       alt: 'A white tee and a black tee folded side by side on a white surface.',
       aspect: '3:2',
     },
@@ -231,12 +238,12 @@ export const PRODUCT_IMAGES = {
 
   'womens-everyday-tee': [
     {
-      url: frame('photo-1604342681413-6954ddca1e6f', 1600),
+      url: frame('photo-1604342681413-6954ddca1e6f', 1200),
       alt: 'A woman in a plain black crew neck tee standing among dark pines.',
       aspect: '2:3',
     },
     {
-      url: frame('photo-1632844384543-bb1b2c3900d7', 1600),
+      url: frame('photo-1632844384543-bb1b2c3900d7', 1200),
       alt: 'A close view of soft grey cotton jersey, folded and catching the light.',
       aspect: '4:5',
     },

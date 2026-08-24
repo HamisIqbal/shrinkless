@@ -17,8 +17,8 @@ export default async function LoginPage() {
 
       <AuthForm action={loginAction} submitLabel="Sign in" />
 
-      <p className="meta">
-        No account? <Link href="/register">Create one</Link>
+      <p className="authswap">
+        No account? <Link href="/register" className="ulink">Create one</Link>
       </p>
     </div>
   );

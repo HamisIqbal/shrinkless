@@ -23,23 +23,22 @@ type Props = {
   interval?: number;
 };
 
+/** Must match `--hero-slide` in storefront.css. */
+const SLIDE_MS = 700;
+
 /**
- * The campaign hero: a stack of frames cycling 1 → 2 → 3 → 4 → 1, forever.
+ * The campaign hero: frames on a rail that slides sideways, the way a phone
+ * carousel does, advancing on its own and never reaching an end.
  *
- * The incoming frame wipes across the outgoing one rather than dissolving into
- * it. A cross-dissolve spends its whole duration showing two photographs at
- * partial opacity, which reads as a double exposure — the one thing that makes
- * a campaign look cheap. Wiping keeps both frames fully opaque, so at every
- * moment you are looking at a real photograph. Under it the frame settles out
- * of a slight over-scale across the whole hold, so the image is always drifting
- * rather than sitting still and then cutting.
+ * The seamlessness is the whole trick. The rail carries one extra copy of the
+ * first frame after the last one, so advancing off the end slides onto that
+ * clone rather than rewinding through every frame. The instant that slide
+ * finishes, the rail jumps back to the real first frame with transitions
+ * switched off — same picture, same position, no visible move. Take the clone
+ * away and the loop becomes a long backwards scroll every fourth beat.
  *
  * The caption is the only text that changes; the headline is the brand
  * statement and stays put, so there is exactly one stable `<h1>` on the page.
- *
- * The image stack animates in CSS rather than through Motion: it is the
- * heaviest thing on the page and `opacity`/`transform` on a handful of nodes
- * is cheaper than a React render per frame.
  *
  * `#hero-sentinel` at the foot is what the header watches. Moving or renaming
  * it silently breaks the header's overlay state.
@@ -51,23 +50,26 @@ export function HeroSlider({
   lede,
   primary,
   secondary,
-  interval = 6000,
+  interval = 5200,
 }: Props) {
   const reduced = useReducedMotion();
-  // The outgoing frame has to stay painted underneath while the incoming one
-  // wipes over it, so the slider tracks a pair, not an index.
-  const [[active, previous], setFrame] = useState<[number, number | null]>([0, null]);
+  const count = slides.length;
+
+  // 0..count. `count` is the clone of slide 0 sitting past the end of the rail.
+  const [position, setPosition] = useState(0);
+  // While true the rail moves with no transition — used for the jump home.
+  const [silent, setSilent] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [hovering, setHovering] = useState(false);
 
-  const count = slides.length;
-  // Hovering the hero usually means reading it. Advancing out from under the
-  // cursor is the single most irritating thing a carousel can do.
   const paused = hidden || hovering;
+  const active = position % count;
 
   const go = useCallback(
-    (next: number) =>
-      setFrame(([current]) => [((next % count) + count) % count, current]),
+    (next: number) => {
+      setSilent(false);
+      setPosition(((next % count) + count) % count);
+    },
     [count],
   );
 
@@ -77,12 +79,44 @@ export function HeroSlider({
   useEffect(() => {
     if (reduced || paused || count < 2) return;
 
-    const timer = window.setInterval(
-      () => setFrame(([current]) => [(current + 1) % count, current]),
-      interval,
-    );
+    const timer = window.setInterval(() => {
+      setSilent(false);
+      setPosition((current) => current + 1);
+    }, interval);
+
     return () => window.clearInterval(timer);
   }, [reduced, paused, count, interval]);
+
+  // Landed on the clone: wait for the slide to finish, then swap to the real
+  // first frame without a transition. Both show the same photograph in the
+  // same place, so the swap is invisible.
+  useEffect(() => {
+    if (position !== count) return;
+
+    const timer = window.setTimeout(() => {
+      setSilent(true);
+      setPosition(0);
+    }, SLIDE_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [position, count]);
+
+  // Re-arm transitions once the browser has painted the silent jump. Two
+  // frames, because a single one can be coalesced with the state change that
+  // caused it and the rail would animate the jump after all.
+  useEffect(() => {
+    if (!silent) return;
+
+    let second = 0;
+    const first = requestAnimationFrame(() => {
+      second = requestAnimationFrame(() => setSilent(false));
+    });
+
+    return () => {
+      cancelAnimationFrame(first);
+      cancelAnimationFrame(second);
+    };
+  }, [silent]);
 
   // A carousel animating in a hidden tab is pure battery cost.
   useEffect(() => {
@@ -94,6 +128,8 @@ export function HeroSlider({
     return () => document.removeEventListener('visibilitychange', onVisibility);
   }, []);
 
+  const rail = [...slides, slides[0]];
+
   return (
     <section
       className="hero"
@@ -103,29 +139,30 @@ export function HeroSlider({
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
     >
-      <div className="hero__stack" aria-live="off">
-        {slides.map((slide, index) => (
-          <div
-            key={slide.image.url}
-            className={
-              'hero__frame' +
-              (index === active ? ' hero__frame--on' : '') +
-              (index === previous ? ' hero__frame--under' : '')
-            }
-            aria-hidden={index !== active}
-          >
-            <Image
-              src={slide.image.url}
-              alt={slide.image.alt}
-              fill
-              priority={index === 0}
-              loading={index === 0 ? undefined : 'lazy'}
-              sizes="100vw"
-              className="hero__image"
-              style={slide.image.focus ? { objectPosition: slide.image.focus } : undefined}
-            />
-          </div>
-        ))}
+      <div className="hero__stack">
+        <div
+          className={`hero__rail${silent ? ' hero__rail--silent' : ''}`}
+          style={{ transform: `translate3d(-${position * 100}%, 0, 0)` }}
+        >
+          {rail.map((slide, index) => (
+            <div
+              className="hero__slide"
+              key={index}
+              aria-hidden={index !== active || undefined}
+            >
+              <Image
+                src={slide.image.url}
+                alt={index === count ? '' : slide.image.alt}
+                fill
+                priority={index === 0}
+                loading={index === 0 ? undefined : 'lazy'}
+                sizes="100vw"
+                className="hero__image"
+                style={slide.image.focus ? { objectPosition: slide.image.focus } : undefined}
+              />
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="hero__scrim" aria-hidden="true" />
@@ -179,11 +216,9 @@ export function HeroSlider({
                 {/* The rule fills across while the frame holds, so the
                     indicator doubles as the timer. */}
                 <span
-                  key={index === active ? `run-${active}` : 'idle'}
+                  key={index === active ? `run-${position}` : 'idle'}
                   className="hero__dotfill"
-                  style={
-                    index === active ? { animationDuration: `${interval}ms` } : undefined
-                  }
+                  style={index === active ? { animationDuration: `${interval}ms` } : undefined}
                   aria-hidden="true"
                 />
               </button>
