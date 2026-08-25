@@ -26,6 +26,11 @@ const productSchema = new Schema(
     // freshly seeded catalogue was created in the same second, so deriving
     // this from `createdAt` would either badge all of them or none.
     badge: { type: String, enum: ['none', 'new'], default: 'none' },
+    // Out of 5, to one decimal. Zero means "not rated yet" and draws nothing,
+    // which is the honest state for a product nobody has reviewed — a card
+    // showing 0.0 would read as a terrible rating rather than as no rating.
+    // There is no review collection yet; this is the number an admin sets.
+    rating: { type: Number, default: 0, min: 0, max: 5 },
     images: { type: [imageSchema], default: [] },
     optionSets: {
       sizes: { type: [String], default: [] },

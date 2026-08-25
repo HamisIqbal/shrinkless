@@ -3,6 +3,7 @@ import { readCartView } from '@/lib/cart-session';
 import { buildShopMenu } from '@/lib/shop/menu.server';
 import { auth } from '@/auth';
 import { Motion } from '@/components/ui/Motion';
+import { ToastProvider } from '@/components/ui/Toast';
 import { AnnounceBar } from '@/components/site/AnnounceBar';
 import { Header } from '@/components/site/Header';
 import { Footer } from '@/components/site/Footer';
@@ -19,6 +20,7 @@ export default async function AccountLayout({ children }: LayoutProps<'/'>) {
 
   return (
     <Motion>
+    <ToastProvider>
     <div className="shell">
       <div className="shell__stack">
       <AnnounceBar message={settings.announcement} />
@@ -43,6 +45,7 @@ export default async function AccountLayout({ children }: LayoutProps<'/'>) {
         <Footer storeEmail={settings.storeEmail} />
       </FooterReveal>
     </div>
+    </ToastProvider>
     </Motion>
   );
 }

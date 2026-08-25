@@ -4,7 +4,6 @@ import {
   useEffect,
   useId,
   useRef,
-  useState,
   useSyncExternalStore,
   useTransition,
 } from 'react';
@@ -15,6 +14,7 @@ import { useRouter } from 'next/navigation';
 import { updateQuantityAction } from '@/app/actions/cart';
 import { imageUrl } from '@/lib/images';
 import { formatCents } from '@/lib/money';
+import { useToast } from '@/components/ui/Toast';
 import type { CartViewDTO } from '@/types/dto';
 
 /**
@@ -58,8 +58,8 @@ export function CartSheet({ cart, open, onClose }: Props) {
   const router = useRouter();
   const panelRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
+  const toast = useToast();
 
-  const [error, setError] = useState('');
   const [pending, startTransition] = useTransition();
 
   // The sheet is rendered into `document.body` rather than where it sits in
@@ -77,12 +77,18 @@ export function CartSheet({ cart, open, onClose }: Props) {
   function change(variantId: string, quantity: number) {
     startTransition(async () => {
       const result = await updateQuantityAction(variantId, quantity);
-      setError(result.ok ? '' : result.error);
+
+      if (!result.ok) {
+        toast(result.error, 'error');
+        return;
+      }
+
+      if (quantity === 0) toast('Removed from cart');
 
       // The action revalidates the layout, but this component is holding the
       // cart it was handed at render. Refresh so the sheet redraws from the
       // cart that now exists rather than the one that did.
-      if (result.ok) router.refresh();
+      router.refresh();
     });
   }
 
@@ -262,10 +268,6 @@ export function CartSheet({ cart, open, onClose }: Props) {
             </ul>
 
             <div className="cartsheet__foot">
-              <p role="status" aria-live="polite" className="cartsheet__error">
-                {error}
-              </p>
-
               <div className="cartsheet__total">
                 <span>Subtotal</span>
                 <span className="tnum">{formatCents(cart?.subtotalCents ?? 0)}</span>

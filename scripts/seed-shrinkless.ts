@@ -6,9 +6,11 @@ import { PRODUCT_IMAGES, type BrandImage, type ProductSlug } from '@/lib/brand/i
 /**
  * The Shrinkless catalogue: six tees across two shoppable categories.
  *
- * PRICES ARE ASSUMPTIONS. So are the fabric weights in the copy. Both were
- * invented to make the storefront demonstrable and both need replacing with
- * the real numbers before launch.
+ * PRICES ARE ASSUMPTIONS. So are the fabric weights in the copy, and so are
+ * the RATINGS — there is no review collection yet, and every number below was
+ * invented to make the storefront demonstrable. All three need replacing with
+ * real figures before launch. A rating of 0 draws no badge at all, which is
+ * the honest setting for anything unreviewed.
  *
  * Colours are listed in the same order as the product's frames in
  * `PRODUCT_IMAGES`, because `lib/shop/colorways.ts` matches the two up
@@ -34,6 +36,8 @@ type Seed = {
   featured: boolean;
   /** Editorial flag drawn on the card. Sold out is worked out from stock. */
   badge?: 'new';
+  /** Out of 5, drawn top left on the card. Omit for no badge. */
+  rating?: number;
   description: string;
   /** `${color}:${size}` pairs that should read as sold out. */
   soldOut?: string[];
@@ -53,6 +57,7 @@ const CATALOGUE: Seed[] = [
     colors: ['white', 'black', 'bone'],
     sizes: MENS_SIZES,
     featured: true,
+    rating: 4.9,
     description:
       'The one everything else is measured against. Garment dyed organic cotton, ' +
       'a true crew neck, and a body cut straight enough to wear on its own or ' +
@@ -67,6 +72,7 @@ const CATALOGUE: Seed[] = [
     colors: ['black', 'charcoal'],
     sizes: MENS_SIZES,
     featured: true,
+    rating: 4.8,
     description:
       'A denser knit with more weight in the hand and a shoulder that holds its ' +
       'line. Cut slightly longer and wider than the Organic Tee. Garment dyed, ' +
@@ -81,6 +87,7 @@ const CATALOGUE: Seed[] = [
     colors: ['teal', 'white'],
     sizes: MENS_SIZES,
     featured: false,
+    rating: 5,
     badge: 'new',
     description:
       'The Organic Tee body with a set-in long sleeve and a ribbed cuff that ' +
@@ -94,6 +101,7 @@ const CATALOGUE: Seed[] = [
     colors: ['white', 'heather'],
     sizes: WOMENS_SIZES,
     featured: true,
+    rating: 4.9,
     description:
       'The same cotton and the same dye process, cut for a shorter body and a ' +
       'narrower shoulder. Holds its length and its neckline wash after wash. ' +
@@ -108,6 +116,7 @@ const CATALOGUE: Seed[] = [
     colors: ['olive', 'bone'],
     sizes: WOMENS_SIZES,
     featured: false,
+    rating: 4.7,
     description:
       'A wide, square body with a dropped shoulder and a cropped length. Meant ' +
       'to sit away from the body. Garment dyed organic cotton, made in USA.',
@@ -124,6 +133,7 @@ const CATALOGUE: Seed[] = [
     colors: ['black', 'charcoal'],
     sizes: WOMENS_SIZES,
     featured: false,
+    rating: 4.8,
     description:
       'The lightest weight we make, in the two colours that go with everything. ' +
       'Garment dyed organic cotton, made in USA.',
@@ -163,6 +173,7 @@ async function main() {
       status: 'published',
       featured: seed.featured,
       badge: seed.badge ?? 'none',
+      rating: seed.rating ?? 0,
       images: frames.map((frame) => ({
         publicId: frame.url,
         ...ASPECT_SIZES[frame.aspect],

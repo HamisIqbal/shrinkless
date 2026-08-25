@@ -55,6 +55,32 @@ export function ArrowIcon({ className }: IconProps) {
   );
 }
 
+export function EyeIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <path d="M1.75 10S4.75 4.75 10 4.75 18.25 10 18.25 10 15.25 15.25 10 15.25 1.75 10 1.75 10Z" />
+      <circle cx="10" cy="10" r="2.5" />
+    </svg>
+  );
+}
+
+/* Filled, unlike the rest of the set. A rating is a mark rather than a
+   control, and a hairline outline star at 11px reads as noise. */
+export function StarIcon({ className }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      stroke="none"
+      aria-hidden
+      focusable={false}
+      className={className}
+    >
+      <path d="M10 2.5l2.32 4.7 5.18.76-3.75 3.65.885 5.16L10 14.33l-4.635 2.44.885-5.16L2.5 7.96l5.18-.76z" />
+    </svg>
+  );
+}
+
 export function InstagramIcon({ className }: IconProps) {
   return (
     <svg {...base} className={className}>

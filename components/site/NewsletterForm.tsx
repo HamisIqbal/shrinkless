@@ -1,12 +1,22 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect } from 'react';
 import { subscribeAction, type NewsletterState } from '@/app/actions/newsletter';
+import { useToast } from '@/components/ui/Toast';
 
 const INITIAL: NewsletterState = { status: 'idle' };
 
 export function NewsletterForm() {
   const [state, formAction, pending] = useActionState(subscribeAction, INITIAL);
+  const toast = useToast();
+
+  // The form action is the external system here; this reflects whatever it
+  // came back with. `state` is a fresh object per submission, so resubmitting
+  // the same address toasts again rather than going quiet.
+  useEffect(() => {
+    if (state.status === 'idle') return;
+    toast(state.message, state.status === 'error' ? 'error' : 'ok');
+  }, [state, toast]);
 
   return (
     <form action={formAction} className="signup">
@@ -22,20 +32,11 @@ export function NewsletterForm() {
         autoComplete="email"
         placeholder="Email address"
         className="signup__input"
-        aria-describedby={state.status === 'idle' ? undefined : 'newsletter-status'}
       />
 
       <button type="submit" className="btn btn--light signup__submit" disabled={pending}>
         {pending ? 'Joining' : 'Join'}
       </button>
-
-      <p
-        id="newsletter-status"
-        role="status"
-        className={`signup__status${state.status === 'error' ? ' signup__status--error' : ''}`}
-      >
-        {state.status === 'idle' ? '' : state.message}
-      </p>
     </form>
   );
 }

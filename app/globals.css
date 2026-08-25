@@ -90,9 +90,13 @@
 
   --spacing-rule: 1px;
 
-  /* The one radius on the site: the page slab's bottom corners, where it lifts
-     off the footer. Nothing else is rounded. */
+  /* Two radii, and they do different jobs. The slab is the page's bottom
+     corners, where it lifts off the footer — a large, architectural curve.
+     The card is the softening on a product photograph and on the labels that
+     sit over it: enough to take the hard corner off, not enough to read as a
+     rounded-rectangle app. Pills elsewhere use 999px directly. */
   --radius-slab: clamp(1.25rem, 3vw, 2.5rem);
+  --radius-card: 0.75rem;
 
   /* --- Motion -------------------------------------------------------------
      One curve and four durations for the whole site. Every transition picks

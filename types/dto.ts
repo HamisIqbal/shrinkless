@@ -26,6 +26,8 @@ export type ProductDTO = {
   featured: boolean;
   /** Editorial flag drawn on the card. Sold out is derived from stock. */
   badge: 'none' | 'new';
+  /** Out of 5. Zero means unrated, and draws no badge at all. */
+  rating: number;
   images: ImageDTO[];
   sizes: string[];
   colors: string[];

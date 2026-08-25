@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { addToCartAction } from '@/app/actions/cart';
+import { useToast } from '@/components/ui/Toast';
 import { formatCents } from '@/lib/money';
 import { sizeOrder } from '@/lib/shop/colorways';
 import type { VariantDTO } from '@/types/dto';
@@ -17,13 +18,12 @@ type Props = {
 
 export function VariantPicker({ sizes, colors, variants, initialColor }: Props) {
   const router = useRouter();
+  const toast = useToast();
 
   const [color, setColor] = useState(
     initialColor && colors.includes(initialColor) ? initialColor : (colors[0] ?? ''),
   );
   const [size, setSize] = useState('');
-  const [message, setMessage] = useState('');
-  const [failed, setFailed] = useState(false);
   const [pending, startTransition] = useTransition();
 
   const ordered = [...sizes].sort((a, b) => sizeOrder(a) - sizeOrder(b));
@@ -39,15 +39,13 @@ export function VariantPicker({ sizes, colors, variants, initialColor }: Props) 
 
   function add(then?: () => void) {
     if (!selected) {
-      setFailed(true);
-      setMessage('Choose a size first');
+      toast('Choose a size first', 'error');
       return;
     }
 
     startTransition(async () => {
       const result = await addToCartAction(selected.id, 1);
-      setFailed(!result.ok);
-      setMessage(result.ok ? 'Added to cart' : result.error);
+      toast(result.ok ? 'Added to cart' : result.error, result.ok ? 'ok' : 'error');
 
       if (result.ok) {
         router.refresh();
@@ -138,14 +136,6 @@ export function VariantPicker({ sizes, colors, variants, initialColor }: Props) 
           Buy now
         </button>
       </div>
-
-      <p
-        role="status"
-        aria-live="polite"
-        className={message ? `notice ${failed ? 'notice--error' : 'notice--ok'} picker__status` : 'picker__status'}
-      >
-        {message}
-      </p>
     </div>
   );
 }

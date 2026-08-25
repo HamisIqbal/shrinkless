@@ -31,6 +31,7 @@ export function ProductEditor({ product }: { product: ProductDTO | null }) {
   const [status, setStatus] = useState<'draft' | 'published'>(product?.status ?? 'draft');
   const [featured, setFeatured] = useState(product?.featured ?? false);
   const [badge, setBadge] = useState<'none' | 'new'>(product?.badge ?? 'none');
+  const [rating, setRating] = useState(String(product?.rating ?? 0));
   const [sizesText, setSizesText] = useState((product?.sizes ?? []).join(', '));
   const [colorsText, setColorsText] = useState((product?.colors ?? []).join(', '));
   const [edited, setEdited] = useState<Record<string, MatrixRow>>({});
@@ -85,6 +86,7 @@ export function ProductEditor({ product }: { product: ProductDTO | null }) {
       const result = await saveProductAction({
         id: product?.id,
         title, slug, description, category, status, featured, badge,
+        rating: Number(rating) || 0,
         images,
         sizes, colors,
         variants: rows.map((row) => ({
@@ -151,6 +153,18 @@ export function ProductEditor({ product }: { product: ProductDTO | null }) {
           <option value="new">New arrival</option>
         </select>
         <small>Drawn on the product card. Sold out is worked out from stock.</small>
+      </label>
+
+      <label>Rating
+        <input
+          type="number"
+          min={0}
+          max={5}
+          step={0.1}
+          value={rating}
+          onChange={(e) => setRating(e.target.value)}
+        />
+        <small>Out of 5, drawn on the card. Leave at 0 for no rating.</small>
       </label>
 
       <label>Sizes (comma separated)

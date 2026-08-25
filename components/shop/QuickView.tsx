@@ -9,6 +9,7 @@ import { formatCents } from '@/lib/money';
 import { imageUrl } from '@/lib/images';
 import { sizeOrder, toColorways } from '@/lib/shop/colorways';
 import { addToCartAction } from '@/app/actions/cart';
+import { useToast } from '@/components/ui/Toast';
 import type { ProductDTO } from '@/types/dto';
 
 type Props = {
@@ -32,12 +33,11 @@ const EASE = [0.16, 0.84, 0.44, 1] as const;
 export function QuickView({ product, onClose }: Props) {
   const router = useRouter();
   const panelRef = useRef<HTMLDivElement>(null);
+  const toast = useToast();
 
   const [color, setColor] = useState(product.colors[0] ?? '');
   const [size, setSize] = useState('');
   const [quantity, setQuantity] = useState(1);
-  const [message, setMessage] = useState('');
-  const [failed, setFailed] = useState(false);
   const [pending, startTransition] = useTransition();
 
   const colorways = useMemo(() => toColorways(product), [product]);
@@ -107,15 +107,13 @@ export function QuickView({ product, onClose }: Props) {
 
   function add(then?: () => void) {
     if (!selected) {
-      setFailed(true);
-      setMessage('Choose a size first');
+      toast('Choose a size first', 'error');
       return;
     }
 
     startTransition(async () => {
       const result = await addToCartAction(selected.id, quantity);
-      setFailed(!result.ok);
-      setMessage(result.ok ? 'Added to cart' : result.error);
+      toast(result.ok ? 'Added to cart' : result.error, result.ok ? 'ok' : 'error');
 
       if (result.ok) {
         router.refresh();
@@ -286,14 +284,6 @@ export function QuickView({ product, onClose }: Props) {
               Buy now
             </button>
           </div>
-
-          <p
-            role="status"
-            aria-live="polite"
-            className={message ? `notice ${failed ? 'notice--error' : 'notice--ok'} quick__status` : 'quick__status'}
-          >
-            {message}
-          </p>
 
           <Link href={href} className="ulink quick__full" onClick={onClose}>
             View full product

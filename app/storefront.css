@@ -1295,20 +1295,25 @@
 
 /* --------------------------------------------------------------------------
    Product grid and cards
-   Spec §15–18: the image is the card. Name and price are captions under it.
+   Spec §15-18: the image is the card. Name and price are captions under it.
    -------------------------------------------------------------------------- */
 
-/* Bigger frames, quieter captions. The grid gives the photography every pixel
-   it can: tighter gutters than the rest of the page, a taller 2:3 crop, and
-   only three across even on a wide monitor. */
+/* One product at a time on a phone. Two-up meant every photograph was drawn at
+   roughly 170px wide on the commonest screen there is, which is a thumbnail of
+   a garment rather than a picture of one — and the whole grid is built on the
+   premise that the photograph does the selling. One column costs a scroll and
+   buys twice the width. */
 .pgrid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-4) var(--space-1);
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-6);
 }
 
 @media (min-width: 48rem) {
-  .pgrid { gap: var(--space-5) var(--space-2); }
+  .pgrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-5) var(--space-2);
+  }
 }
 
 @media (min-width: 75rem) {
@@ -1318,144 +1323,189 @@
 
 .pcard { position: relative; display: grid; gap: var(--space-2); }
 
-.pcard__media { position: relative; }
+.pcard__media {
+  position: relative;
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  background: var(--color-paper-deep);
+}
 
-.pcard__plate { display: block; text-decoration: none; }
+/* The reel. Everything the frames do — swipe, trackpad, drag, arrow keys,
+   momentum, snap — is this rule plus the one under it. */
+.pcard__reel {
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
 
-.pcard__media .frame { background: var(--color-paper-deep); }
+/* A scrollbar under a photograph is a seam in it. */
+.pcard__reel::-webkit-scrollbar { display: none; }
 
-.pcard__media .frame img { transition: transform var(--dur-4) var(--ease-out); }
+.pcard__reel:focus-visible { outline: 2px solid var(--color-ink); outline-offset: -2px; }
 
-.pcard:hover .frame img { transform: scale(1.03); }
+/* While a mouse is dragging, snapping has to be out of the way or every
+   `scrollLeft` write gets pulled back to the nearest frame and the card judders
+   instead of following the pointer. Restored on release, which is when
+   ProductCard scrolls to the frame the drag landed nearest. */
+.pcard__reel--drag {
+  scroll-snap-type: none;
+  scroll-behavior: auto;
+  cursor: grabbing;
+  user-select: none;
+}
 
-/* Status, top left, opposite the preview. Small on purpose: it is a label on
-   the photograph, not a sticker over it. */
-.pcard__flag {
+.pcard__frame {
+  position: relative;
+  flex: 0 0 100%;
+  aspect-ratio: 2 / 3;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  overflow: hidden;
+  background: var(--color-paper-deep);
+  text-decoration: none;
+  -webkit-user-drag: none;
+}
+
+.pcard__frame img {
+  object-fit: cover;
+  transition: transform var(--dur-4) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .pcard__reel { cursor: grab; }
+  .pcard:hover .pcard__frame img { transform: scale(1.03); }
+}
+
+/* --- corners ------------------------------------------------------------- */
+
+/* Everything that sits on the photograph shares one radius and one recipe: a
+   translucent ground with the picture blurred behind it, so the label stays
+   legible over a white wall and over a black tee without either inventing a
+   solid block or being lost in the frame. */
+.pcard__rating,
+.pcard__flag,
+.pcard__preview {
+  border-radius: 999px;
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+}
+
+/* --- rating -------------------------------------------------------------- */
+
+.pcard__rating {
   position: absolute;
   z-index: 2;
   top: var(--space-2);
   left: var(--space-2);
-  padding: 0.28rem 0.5rem;
-  background: var(--color-paper);
-  color: var(--color-ink);
-  font-size: 0.6875rem;
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-/* New arrivals get the ink treatment so the two flags never read as the same
-   kind of news. Sold out keeps the pale ground — it is an absence. */
-.pcard__flag--new { background: var(--color-ink); color: var(--color-white); }
-
-.pcard__flag--sold { color: var(--color-muted-text); }
-
-/* A word, not a glyph. The icon version was a 40px circle that read as a
-   decoration rather than an offer. Above the card's full-bleed link overlay,
-   or it cannot be clicked. */
-.pcard__preview {
-  position: absolute;
-  z-index: 2;
-  top: var(--space-2);
-  right: var(--space-2);
-  padding: 0.3rem 0.55rem;
-  border: var(--spacing-rule) solid var(--color-ink);
-  background: var(--color-paper);
-  color: var(--color-ink);
-  font-size: 0.6875rem;
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition:
-    opacity var(--dur-2) var(--ease-out),
-    transform var(--dur-2) var(--ease-out),
-    background-color var(--dur-1) var(--ease-out),
-    color var(--dur-1) var(--ease-out);
-}
-
-.pcard__preview:hover { background: var(--color-ink); color: var(--color-paper); }
-
-/* Step through the product's other angles without leaving the grid. */
-/* The plate is 1.75rem. It used to be 2.75rem, which on a card this size read
-   as two buttons parked on the photograph rather than as a way through it.
-   The hit area is kept honest separately, below. */
-.pcard__step {
-  position: absolute;
-  z-index: 2;
-  top: 50%;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  margin-top: -0.875rem;
-  border: 0;
-  background: rgba(245, 244, 240, 0.88);
+  gap: 0.3rem;
+  padding: 0.25rem 0.55rem 0.25rem 0.45rem;
+  background: rgba(245, 244, 240, 0.82);
   color: var(--color-ink);
-  cursor: pointer;
-  transition: opacity var(--dur-2) var(--ease-out), background-color var(--dur-1) var(--ease-out);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  /* A label, not a control. Left clickable it would swallow drags that began
+     in the top-left corner of the photograph. */
+  pointer-events: none;
 }
 
-/* Touch has no hover to enlarge the target, so the plate stays small and the
-   tappable box grows past it instead. */
-@media (pointer: coarse) {
-  .pcard__step::after {
-    content: "";
+.pcard__star { width: 0.75rem; height: 0.75rem; }
+
+/* --- quick view ---------------------------------------------------------- */
+
+/* An eye, and only where there is a pointer to reveal it with. On a phone this
+   was a button permanently parked on the photograph offering a miniature of
+   the page that tapping the photograph already opens. */
+.pcard__preview { display: none; }
+
+@media (hover: hover) and (pointer: fine) {
+  .pcard__preview {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 2.75rem;
-    height: 2.75rem;
-    transform: translate(-50%, -50%);
+    z-index: 2;
+    top: var(--space-2);
+    right: var(--space-2);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.125rem;
+    height: 2.125rem;
+    border: 0;
+    padding: 0;
+    background: rgba(245, 244, 240, 0.82);
+    color: var(--color-ink);
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(-0.35rem);
+    transition:
+      opacity var(--dur-2) var(--ease-out),
+      transform var(--dur-2) var(--ease-out),
+      background-color var(--dur-1) var(--ease-out),
+      color var(--dur-1) var(--ease-out);
   }
+
+  .pcard__preview svg { width: 1.0625rem; height: 1.0625rem; }
+
+  .pcard__preview:hover { background: var(--color-ink); color: var(--color-paper); }
+
+  .pcard:hover .pcard__preview,
+  .pcard:focus-within .pcard__preview { opacity: 1; transform: none; }
 }
 
-.pcard__step:hover { background: var(--color-paper); }
-.pcard__step--prev { left: var(--space-1); }
-.pcard__step--next { right: var(--space-1); }
+/* --- status and position, along the bottom edge -------------------------- */
 
-.pcard__chev {
-  width: 0.375rem;
-  height: 0.375rem;
-  border-top: var(--spacing-rule) solid currentColor;
-  border-right: var(--spacing-rule) solid currentColor;
-}
-
-.pcard__step--prev .pcard__chev { transform: translateX(0.12rem) rotate(-135deg); }
-.pcard__step--next .pcard__chev { transform: translateX(-0.12rem) rotate(45deg); }
-
-.pcard__ticks {
+/* Both live in one bottom-anchored stack so they can never collide: the flag
+   is the news, the ticks are the position, and the ticks stay closest to the
+   edge because that is where a scroll indicator belongs. */
+.pcard__foot--over {
   position: absolute;
   z-index: 2;
-  left: 50%;
-  bottom: var(--space-2);
-  display: flex;
-  gap: 0.25rem;
-  transform: translateX(-50%);
+  inset-inline: var(--space-3);
+  bottom: var(--space-3);
+  display: grid;
+  gap: var(--space-2);
+  justify-items: center;
+  pointer-events: none;
 }
 
+.pcard__flag {
+  padding: 0.4rem 0.9rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* Sold out is an absence, so it is the quieter of the two: the frame stays
+   visible through it rather than being stamped over. */
+.pcard__flag--sold {
+  background: rgba(10, 10, 10, 0.55);
+  color: var(--color-white);
+}
+
+/* A new arrival is news, and gets the solid ground to say so. */
+.pcard__flag--new {
+  background: rgba(245, 244, 240, 0.92);
+  color: var(--color-ink);
+}
+
+.pcard__ticks { display: flex; gap: 0.25rem; }
+
 .pcard__tick {
-  width: 0.875rem;
+  width: 1rem;
   height: 2px;
-  background: rgba(245, 244, 240, 0.55);
+  border-radius: 2px;
+  background: rgba(245, 244, 240, 0.5);
   transition: background-color var(--dur-1) var(--ease-out);
 }
 
 .pcard__tick--on { background: var(--color-paper); }
 
-/* Hover reveals the controls on a pointer device; where there is no hover to
-   reveal them, they simply stay. */
-@media (hover: hover) {
-  .pcard__preview { opacity: 0; transform: translateY(-0.4rem); }
-  .pcard__step { opacity: 0; }
-
-  .pcard:hover .pcard__preview,
-  .pcard:focus-within .pcard__preview { opacity: 1; transform: none; }
-
-  .pcard:hover .pcard__step,
-  .pcard:focus-within .pcard__step { opacity: 1; }
-}
+/* --- captions ------------------------------------------------------------ */
 
 .pcard__foot {
   display: grid;
@@ -1482,13 +1532,7 @@
 }
 
 .pcard__link { text-decoration: none; }
-
-.pcard__link::after {
-  /* The whole plate is the target; the visible link is just the label. */
-  content: "";
-  position: absolute;
-  inset: 0;
-}
+.pcard__link:hover { text-decoration: underline; text-underline-offset: 0.3em; }
 
 .pcard__price {
   font-size: var(--text-meta);
@@ -1498,6 +1542,7 @@
 }
 
 .pcard__colors { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+
 
 .swatchdot {
   position: relative;
@@ -1627,7 +1672,6 @@
 .quick__legend { display: block; }
 
 .quick__actions { display: grid; gap: var(--space-2); }
-.quick__status { min-height: 1.25rem; }
 .quick__full { justify-self: start; }
 
 /* --------------------------------------------------------------------------
@@ -1813,24 +1857,13 @@
 .signup__input::placeholder { color: var(--color-muted); }
 .signup__input:focus-visible { outline: 0; border-bottom-color: var(--color-white); }
 
-.signup__status {
-  grid-column: 1 / -1;
-  min-height: 1.25rem;
-  font-size: var(--text-meta);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-muted);
-}
 
-.signup__status--error { color: var(--color-white); }
-
-/* The signup reserves a line for its status message whether or not there is
-   one to show, so an even `margin-block` reads as lopsided: the gap above the
-   rule looks a line shorter than the gap below it. The top margin pays that
-   line back, which is what makes the two gaps *look* equal. */
+/* Even again. The signup used to reserve a line under itself for a status
+   message it usually had nothing to put in, and this margin paid that phantom
+   line back so the two gaps looked equal. The message is a toast now and the
+   line is gone, so the compensation goes with it. */
 .colophon__rule {
-  margin-top: calc(var(--space-7) + 1.25rem);
-  margin-bottom: var(--space-7);
+  margin-block: var(--space-7);
   border-color: var(--color-muted-text);
 }
 
@@ -2256,7 +2289,6 @@
 
 .picker__actions { display: grid; gap: var(--space-2); padding-top: var(--space-2); }
 
-.picker__status { min-height: 1.25rem; }
 
 .pdp__detail { padding-top: var(--space-7); }
 
@@ -2393,6 +2425,124 @@
 
 .summary__cta { margin-top: var(--space-3); }
 .summary__back { display: inline-block; margin-top: var(--space-4); }
+
+/* --------------------------------------------------------------------------
+   Toaster
+   Replies to something the shopper just did. Ink ground, paper type, uppercase
+   meta at the store's letter-spacing — the same inversion `.btn` uses, so the
+   store answers in its own voice rather than in a notification library's.
+
+   Top centre rather than a corner: the cart sheet owns the bottom of the
+   window at every width, and a reply about the cart that appears underneath
+   the cart is not a reply.
+   -------------------------------------------------------------------------- */
+
+.toaster {
+  position: fixed;
+  z-index: 90;
+  top: 0;
+  left: 50%;
+  display: grid;
+  gap: var(--space-2);
+  width: min(26rem, calc(100vw - 2 * var(--space-3)));
+  padding-top: calc(var(--space-3) + env(safe-area-inset-top));
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  position: relative;
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+  border-radius: var(--radius-card);
+  background: var(--color-ink);
+  color: var(--color-paper);
+  box-shadow: 0 1rem 2.5rem rgba(10, 10, 10, 0.28);
+  pointer-events: auto;
+  animation: toast-in var(--dur-3) var(--ease-out) both;
+}
+
+/* The one mark that separates a confirmation from a refusal, and it is a rule
+   rather than a colour — the palette has no red in it, and adding one for a
+   two-word message would put a colour on the site that appears nowhere else.
+   The words carry the meaning; this carries the glance. */
+.toast__rule {
+  position: absolute;
+  left: 0;
+  top: var(--space-3);
+  bottom: var(--space-3);
+  width: 2px;
+  border-radius: 2px;
+  background: var(--color-muted-text);
+}
+
+.toast--ok .toast__rule { background: var(--color-paper); }
+.toast--error .toast__rule { background: var(--color-warm); }
+
+.toast__text {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-meta);
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  line-height: 1.5;
+}
+
+.toast__close {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-top: -0.1rem;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: color var(--dur-1) var(--ease-out);
+}
+
+.toast__close:hover { color: var(--color-paper); }
+
+/* A cross drawn from one box, the same way the filter toggle draws one. */
+.toast__closemark {
+  position: relative;
+  display: block;
+  width: 0.625rem;
+  height: 0.625rem;
+}
+
+.toast__closemark::before,
+.toast__closemark::after {
+  content: "";
+  position: absolute;
+  top: calc(50% - var(--spacing-rule) / 2);
+  left: 0;
+  width: 100%;
+  height: var(--spacing-rule);
+  background: currentColor;
+}
+
+.toast__closemark::before { transform: rotate(45deg); }
+.toast__closemark::after { transform: rotate(-45deg); }
+
+.toast :focus-visible { outline: 2px solid var(--color-paper); outline-offset: 2px; }
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translate3d(0, -0.75rem, 0); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Arriving from nowhere is the whole point of the component; arriving by
+   sliding is not. Reduced motion keeps the message and drops the travel. */
+@media (prefers-reduced-motion: reduce) {
+  .toast { animation: none; }
+}
 
 /* --------------------------------------------------------------------------
    Cart sheet
@@ -2616,13 +2766,6 @@
   background: var(--cart-raised);
 }
 
-.cartsheet__error {
-  min-height: 1.25rem;
-  font-size: var(--text-meta);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--cart-spot);
-}
 
 .cartsheet__total {
   display: flex;

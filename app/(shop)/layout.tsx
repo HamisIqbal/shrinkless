@@ -4,6 +4,7 @@ import { buildShopMenu } from '@/lib/shop/menu.server';
 import { auth } from '@/auth';
 import { SmoothScroll } from '@/components/ui/SmoothScroll';
 import { Motion } from '@/components/ui/Motion';
+import { ToastProvider } from '@/components/ui/Toast';
 import { AnnounceBar } from '@/components/site/AnnounceBar';
 import { Header } from '@/components/site/Header';
 import { Footer } from '@/components/site/Footer';
@@ -20,6 +21,7 @@ export default async function ShopLayout({ children }: LayoutProps<'/'>) {
 
   return (
     <Motion>
+    <ToastProvider>
     <div className="shell">
       <div className="shell__stack">
       <SmoothScroll />
@@ -44,6 +46,7 @@ export default async function ShopLayout({ children }: LayoutProps<'/'>) {
         <Footer storeEmail={settings.storeEmail} />
       </FooterReveal>
     </div>
+    </ToastProvider>
     </Motion>
   );
 }

@@ -23,6 +23,7 @@ const product: ProductDTO = {
   status: 'published',
   featured: false,
   badge: 'none',
+  rating: 0,
   images: [
     { publicId: 'https://img/black.jpg', width: 1400, height: 1750, alt: 'Black tee' },
     { publicId: 'https://img/white.jpg', width: 1400, height: 1750, alt: 'White tee' },

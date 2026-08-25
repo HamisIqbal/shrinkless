@@ -29,6 +29,7 @@ export const productInputSchema = z.object({
   status: z.enum(['draft', 'published']),
   featured: z.boolean().default(false),
   badge: z.enum(['none', 'new']).default('none'),
+  rating: z.number().min(0).max(5).default(0),
   images: z.array(imageSchema).default([]),
   sizes: z.array(optionValue).default([]),
   colors: z.array(optionValue).default([]),

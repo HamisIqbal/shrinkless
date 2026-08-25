@@ -1,21 +1,24 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useTransition } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { updateQuantityAction } from '@/app/actions/cart';
 import { imageUrl } from '@/lib/images';
 import { formatCents } from '@/lib/money';
+import { useToast } from '@/components/ui/Toast';
 import type { CartLineDTO } from '@/types/dto';
 
 export function CartLines({ lines }: { lines: CartLineDTO[] }) {
-  const [error, setError] = useState('');
+  const toast = useToast();
   const [pending, startTransition] = useTransition();
 
   function change(variantId: string, quantity: number) {
     startTransition(async () => {
       const result = await updateQuantityAction(variantId, quantity);
-      setError(result.ok ? '' : result.error);
+
+      if (!result.ok) toast(result.error, 'error');
+      else if (quantity === 0) toast('Removed from cart');
     });
   }
 
@@ -83,9 +86,6 @@ export function CartLines({ lines }: { lines: CartLineDTO[] }) {
         ))}
       </ul>
 
-      <p role="status" aria-live="polite" className={error ? 'notice notice--error' : undefined}>
-        {error}
-      </p>
     </div>
   );
 }
