@@ -21,6 +21,11 @@ const productSchema = new Schema(
     // by, so "featured" is something an admin decides rather than something a
     // best-seller query invents.
     featured: { type: Boolean, default: false, index: true },
+    // Editorial, like `featured`, and for the same reason: "new" is a decision
+    // about what to promote, not a fact about a timestamp. Every product in a
+    // freshly seeded catalogue was created in the same second, so deriving
+    // this from `createdAt` would either badge all of them or none.
+    badge: { type: String, enum: ['none', 'new'], default: 'none' },
     images: { type: [imageSchema], default: [] },
     optionSets: {
       sizes: { type: [String], default: [] },

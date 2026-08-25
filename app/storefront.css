@@ -18,1196 +18,6 @@
 .shell__stack > main { flex: 1; }
 
 /* --------------------------------------------------------------------------
-   Footer reveal
-   The page is a slab with rounded bottom corners that scrolls over a footer
-   pinned to the viewport. `--footer-h` is measured and published by
-   components/site/FooterReveal.
-
-   `overflow: clip` rather than `hidden` is load-bearing: `hidden` would make
-   this a scroll container and the sticky masthead inside it would stop
-   sticking. `clip` still clips to the radius and creates no scroll box.
-   -------------------------------------------------------------------------- */
-
-@media (min-width: 62rem) {
-  .shell__stack {
-    border-bottom-left-radius: var(--radius-slab);
-    border-bottom-right-radius: var(--radius-slab);
-    margin-bottom: var(--footer-h, 0px);
-  }
-
-  .footerdock {
-    position: fixed;
-    inset-inline: 0;
-    bottom: 0;
-    z-index: 0;
-  }
-
-  /* The cut corners have to reveal something. Behind the slab is the page
-     canvas, and paper-on-paper made a 40px radius invisible — so the canvas
-     goes ink and `body` stops painting over it. Overscrolling at the top of
-     the page shows the same ink, which is the right colour to land on. */
-  html { background-color: var(--color-ink); }
-  body { background-color: transparent; }
-}
-
-/* On a phone the footer is most of a screen tall; reserving that much space
-   under every page would mean scrolling through a hole to reach it. The
-   corners still round, the reveal does not run. */
-.shell__stack {
-  border-bottom-left-radius: var(--radius-slab);
-  border-bottom-right-radius: var(--radius-slab);
-  overflow: clip;
-}
-
-/* --------------------------------------------------------------------------
-   Announcement ticker
-   The track holds the message twice and travels exactly half its own width, so
-   copy two lands where copy one began and the loop has no seam.
-   -------------------------------------------------------------------------- */
-
-.announce {
-  overflow: hidden;
-  background: var(--color-ink);
-  color: var(--color-white);
-  font-size: var(--text-meta);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.announce__track {
-  display: flex;
-  width: max-content;
-  animation: announce-roll 46s linear infinite;
-}
-
-.announce__half { display: flex; flex: none; }
-
-.announce__item {
-  display: inline-flex;
-  align-items: center;
-  padding-block: 0.55rem;
-  white-space: nowrap;
-}
-
-.announce__dot { padding-inline: var(--space-4); opacity: 0.5; }
-
-@keyframes announce-roll {
-  from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(-50%, 0, 0); }
-}
-
-/* A line of type sliding forever is exactly what this media query is for. */
-@media (prefers-reduced-motion: reduce) {
-  .announce__track { animation: none; }
-  .announce__half:nth-child(2) { display: none; }
-}
-
-/* --------------------------------------------------------------------------
-   Masthead
-   Three states, and they are independent: `--over` is transparency (homepage,
-   at rest, over the campaign); `--compact` is the shorter bar that arrives on
-   the first scroll; `--panel` forces the solid ground while a menu is down.
-   -------------------------------------------------------------------------- */
-
-.masthead {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  background: var(--color-paper);
-  border-bottom: var(--spacing-rule) solid var(--color-muted);
-  transition:
-    background-color var(--dur-2) var(--ease-out),
-    border-color var(--dur-2) var(--ease-out),
-    color var(--dur-2) var(--ease-out);
-}
-
-.masthead--over {
-  background: transparent;
-  border-bottom-color: transparent;
-  color: var(--color-white);
-}
-
-/* An open panel always needs the solid ground, whatever the hero says. */
-.masthead--panel {
-  background: var(--color-paper);
-  border-bottom-color: var(--color-muted);
-  color: var(--color-ink);
-}
-
-.masthead__inner {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  min-height: 5.25rem;
-  transition: min-height var(--dur-2) var(--ease-out);
-}
-
-/* Spec §11: the bar tightens on the first scroll rather than at the foot of
-   the hero, so the change is something you cause rather than something you
-   wait for. */
-.masthead--compact .masthead__inner { min-height: 4rem; }
-
-.wordmark {
-  font-size: 1.0625rem;
-  font-weight: 600;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-/* Phone: burger left, wordmark centred, utilities right. */
-.masthead__toggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  margin-left: -0.75rem;
-  border: 0;
-  background: none;
-  color: inherit;
-  cursor: pointer;
-}
-
-.masthead__bars {
-  position: relative;
-  display: block;
-  width: 1.25rem;
-  height: 0.625rem;
-}
-
-.masthead__bars::before,
-.masthead__bars::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  width: 100%;
-  height: var(--spacing-rule);
-  background: currentColor;
-}
-
-.masthead__bars::before { top: 0; }
-.masthead__bars::after { bottom: 0; }
-
-.mainnav { display: none; }
-
-.mainnav ul {
-  display: flex;
-  align-items: center;
-  gap: var(--space-5);
-}
-
-.mainnav__item { position: relative; display: flex; align-items: center; }
-
-.mainnav__trigger {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  border: 0;
-  background: none;
-  padding: 0;
-  color: inherit;
-  font: inherit;
-  font-size: var(--text-meta);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
-.mainnav__chevron {
-  width: 0.4rem;
-  height: 0.4rem;
-  border-right: var(--spacing-rule) solid currentColor;
-  border-bottom: var(--spacing-rule) solid currentColor;
-  transform: translateY(-0.1rem) rotate(45deg);
-  transition: transform var(--dur-2) var(--ease-out);
-}
-
-.mainnav__trigger[aria-expanded="true"] .mainnav__chevron {
-  transform: translateY(0.05rem) rotate(-135deg);
-}
-
-.masthead__utils {
-  display: flex;
-  align-items: center;
-  gap: 0.15rem;
-  margin-left: auto;
-  margin-right: -0.6rem;
-}
-
-/* One target size for every utility, text or not: 44px is the smallest thing
-   a thumb can reliably hit, and the icons are 20px inside that. */
-.iconbtn {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  border: 0;
-  background: none;
-  padding: 0;
-  color: inherit;
-  text-decoration: none;
-  cursor: pointer;
-  transition: opacity var(--dur-1) var(--ease-out);
-}
-
-.iconbtn svg { width: 1.25rem; height: 1.25rem; }
-
-.iconbtn:hover { opacity: 0.6; }
-
-.iconbtn[aria-expanded="true"] { opacity: 0.6; }
-
-/* Sits on the bag rather than beside it, so the row keeps its rhythm whether
-   the cart is empty or not. */
-.iconbtn__count {
-  position: absolute;
-  top: 0.3rem;
-  right: 0.2rem;
-  min-width: 1.05rem;
-  height: 1.05rem;
-  padding-inline: 0.2rem;
-  border-radius: 999px;
-  background: var(--color-ink);
-  color: var(--color-paper);
-  font-size: 0.625rem;
-  font-weight: 600;
-  line-height: 1.05rem;
-  letter-spacing: 0;
-  text-align: center;
-}
-
-.masthead--over .iconbtn__count {
-  background: var(--color-white);
-  color: var(--color-ink);
-}
-
-/* Below the desktop breakpoint the wordmark centres itself between the burger
-   and the utilities, which is why it takes the free space rather than the nav. */
-.wordmark { margin-right: auto; }
-
-@media (max-width: 61.9375rem) {
-  .masthead__inner { justify-content: space-between; }
-  .wordmark { margin-inline: auto; }
-  .masthead__account { display: none; }
-}
-
-@media (min-width: 62rem) {
-  .mainnav { display: block; margin-left: var(--space-6); }
-  .masthead__toggle { display: none; }
-  .wordmark { margin-right: 0; }
-}
-
-/* --------------------------------------------------------------------------
-   Site search
-   -------------------------------------------------------------------------- */
-
-.sitesearch {
-  display: grid;
-  grid-template-rows: 0fr;
-  background: var(--color-paper);
-  transition: grid-template-rows var(--dur-3) var(--ease-out);
-}
-
-.sitesearch--open { grid-template-rows: 1fr; }
-
-.sitesearch__inner {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  min-height: 0;
-  overflow: hidden;
-  padding-block: 0;
-  transition: padding-block var(--dur-3) var(--ease-out);
-}
-
-.sitesearch--open .sitesearch__inner { padding-block: var(--space-4); }
-
-.sitesearch__input {
-  flex: 1;
-  min-width: 0;
-  min-height: 3rem;
-  padding: 0.5rem 0;
-  border: 0;
-  border-bottom: var(--spacing-rule) solid var(--color-muted);
-  border-radius: 0;
-  background: transparent;
-  color: var(--color-ink);
-  font-size: var(--text-sub);
-  font-family: inherit;
-  letter-spacing: -0.02em;
-}
-
-.sitesearch__input::placeholder { color: var(--color-muted); }
-.sitesearch__input:focus-visible { outline: 0; border-bottom-color: var(--color-ink); }
-
-.sitesearch__go { flex: none; }
-.sitesearch__close { flex: none; border: 0; background: none; padding: 0; color: inherit; cursor: pointer; }
-
-@media (max-width: 40rem) {
-  .sitesearch__go span,
-  .sitesearch__close { display: none; }
-}
-
-/* --------------------------------------------------------------------------
-   Desktop mega menu
-   Spec §12–13: a full-width editorial panel, not a dropdown. Hidden outright
-   below the desktop breakpoint — the drawer covers that job.
-   -------------------------------------------------------------------------- */
-
-.mega {
-  display: none;
-  grid-template-rows: 0fr;
-  background: var(--color-paper);
-  transition: grid-template-rows var(--dur-3) var(--ease-out);
-}
-
-@media (min-width: 62rem) { .mega { display: grid; } }
-
-.mega--open {
-  grid-template-rows: 1fr;
-  box-shadow: inset 0 var(--spacing-rule) 0 var(--color-muted);
-}
-
-.mega__inner {
-  display: grid;
-  grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
-  gap: var(--space-6);
-  align-items: start;
-  min-height: 0;
-  overflow: hidden;
-  padding-block: 0;
-  transition: padding-block var(--dur-3) var(--ease-out);
-}
-
-.mega--open .mega__inner { padding-block: var(--space-6); }
-
-.mega__columns {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-5);
-}
-
-.mega__coltitle {
-  display: block;
-  padding-bottom: var(--space-3);
-  border-bottom: var(--spacing-rule) solid var(--color-muted);
-  font-size: var(--text-meta);
-  font-weight: 500;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  text-decoration: none;
-}
-
-.mega__links { display: grid; gap: var(--space-2); padding-top: var(--space-3); }
-
-.mega__link {
-  display: inline-block;
-  font-size: 1.0625rem;
-  letter-spacing: -0.01em;
-  text-decoration: none;
-  color: var(--color-muted-text);
-  transition: color var(--dur-1) var(--ease-out), transform var(--dur-1) var(--ease-out);
-}
-
-.mega__link:hover,
-.mega__link:focus-visible {
-  color: var(--color-ink);
-  transform: translateX(0.2rem);
-}
-
-.mega__features { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
-
-.mega__feature { display: grid; gap: var(--space-2); text-decoration: none; }
-
-.mega__frame { background: var(--color-paper-deep); }
-
-.mega__featurefoot { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2); }
-
-.mega__featurelabel {
-  font-size: var(--text-meta);
-  font-weight: 500;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
-/* The rows drift in a beat behind the panel so the eye lands on the first
-   column rather than on everything at once. */
-.mega__col,
-.mega__feature {
-  opacity: 0;
-  transform: translateY(0.75rem);
-  transition: opacity var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-out);
-}
-
-.mega--open .mega__col,
-.mega--open .mega__feature { opacity: 1; transform: none; }
-
-.mega--open .mega__col:nth-child(1) { transition-delay: 80ms; }
-.mega--open .mega__col:nth-child(2) { transition-delay: 130ms; }
-.mega--open .mega__col:nth-child(3) { transition-delay: 180ms; }
-.mega--open .mega__feature:nth-child(1) { transition-delay: 200ms; }
-.mega--open .mega__feature:nth-child(2) { transition-delay: 240ms; }
-
-/* --------------------------------------------------------------------------
-   Mobile drawer
-   Spec §14: enters from the right, covers the viewport, dims the page behind
-   it and scrolls inside itself.
-   -------------------------------------------------------------------------- */
-
-.drawer {
-  position: fixed;
-  inset: 0;
-  z-index: 80;
-  pointer-events: none;
-  visibility: hidden;
-  transition: visibility 0s linear var(--dur-3);
-}
-
-.drawer--open { pointer-events: auto; visibility: visible; transition-delay: 0s; }
-
-.drawer__scrim {
-  position: absolute;
-  inset: 0;
-  border: 0;
-  padding: 0;
-  background: rgba(10, 10, 10, 0.5);
-  opacity: 0;
-  cursor: pointer;
-  transition: opacity var(--dur-3) var(--ease-out);
-}
-
-.drawer--open .drawer__scrim { opacity: 1; }
-
-.drawer__panel {
-  position: absolute;
-  inset-block: 0;
-  right: 0;
-  display: flex;
-  flex-direction: column;
-  width: min(26rem, 100%);
-  background: var(--color-paper);
-  color: var(--color-ink);
-  transform: translateX(100%);
-  transition: transform var(--dur-3) var(--ease-out);
-}
-
-.drawer--open .drawer__panel { transform: none; }
-
-.drawer__bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  min-height: 5.25rem;
-  padding-inline: var(--space-4);
-  border-bottom: var(--spacing-rule) solid var(--color-muted);
-}
-
-.drawer__title { margin: 0; }
-
-.drawer__close {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  border: 0;
-  background: none;
-  padding: 0.5rem 0;
-  color: inherit;
-  font-size: var(--text-meta);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
-.drawer__closemark { position: relative; width: 0.75rem; height: 0.75rem; }
-
-.drawer__closemark::before,
-.drawer__closemark::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 0;
-  width: 100%;
-  height: var(--spacing-rule);
-  background: currentColor;
-}
-
-.drawer__closemark::before { transform: rotate(45deg); }
-.drawer__closemark::after { transform: rotate(-45deg); }
-
-/* The panel is fixed to the viewport, so this is the only scroller. */
-.drawer__scroll {
-  flex: 1;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: var(--space-4) var(--space-4) var(--space-6);
-}
-
-.drawer__list { display: grid; }
-
-.drawer__item { border-bottom: var(--spacing-rule) solid var(--color-muted); }
-
-.drawer__row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
-
-.drawer__link {
-  flex: 1;
-  padding-block: var(--space-3);
-  font-size: var(--text-sub);
-  font-weight: 500;
-  letter-spacing: -0.02em;
-  text-transform: uppercase;
-  text-decoration: none;
-}
-
-.drawer__expand {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  margin-right: -0.75rem;
-  border: 0;
-  background: none;
-  color: var(--color-muted-text);
-  cursor: pointer;
-}
-
-.drawer__plus { position: relative; width: 0.75rem; height: 0.75rem; }
-
-.drawer__plus::before,
-.drawer__plus::after {
-  content: "";
-  position: absolute;
-  background: currentColor;
-  transition: transform var(--dur-2) var(--ease-out);
-}
-
-.drawer__plus::before { top: 50%; left: 0; width: 100%; height: var(--spacing-rule); }
-.drawer__plus::after { left: 50%; top: 0; width: var(--spacing-rule); height: 100%; }
-
-.drawer__expand[aria-expanded="true"] .drawer__plus::after { transform: scaleY(0); }
-
-.drawer__sub {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows var(--dur-2) var(--ease-out);
-}
-
-.drawer__sub--open { grid-template-rows: 1fr; }
-
-.drawer__subinner {
-  display: grid;
-  gap: var(--space-2);
-  min-height: 0;
-  overflow: hidden;
-  padding-left: var(--space-3);
-}
-
-.drawer__sub--open .drawer__subinner { padding-bottom: var(--space-4); }
-
-.drawer__sublink {
-  display: inline-block;
-  padding-block: 0.35rem;
-  color: var(--color-muted-text);
-  text-decoration: none;
-}
-
-.drawer__sublink:hover { color: var(--color-ink); }
-
-.drawer__foot { display: flex; flex-wrap: wrap; gap: var(--space-4); padding-top: var(--space-5); }
-
-/* --------------------------------------------------------------------------
-   Hero — campaign slider
-   -------------------------------------------------------------------------- */
-
-.hero {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  min-height: 92svh;
-  margin-top: -5.25rem; /* sits under the transparent masthead */
-  padding-block: var(--space-8) var(--space-4);
-  color: var(--color-white);
-  overflow: hidden;
-}
-
-/* Wide windows crop a portrait frame hardest: `cover` scales to the width and
-   throws away everything above and below the band that fits. Letting the
-   height track the width — capped at the viewport so the hero never runs off
-   the screen, floored so a short laptop window still has room for the type —
-   keeps far more of the photograph visible. Below 48rem the frame is already
-   taller than it is wide and the phone treatment stands. */
-@media (min-width: 48rem) {
-  .hero { min-height: max(36rem, min(100svh, 62.5vw)); }
-}
-
-/* z-index:0 is load-bearing: it makes the stack its own stacking context, so
-   the rail cannot paint over the scrim and the headline. */
-.hero__stack {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-}
-
-/* One row of full-width frames that slides sideways, phone-carousel style.
-   The rail carries a clone of the first frame after the last, so running off
-   the end slides forward onto the clone instead of rewinding; the component
-   then swaps back to the real first frame under `--silent`. */
-.hero__rail {
-  display: flex;
-  height: 100%;
-  will-change: transform;
-  transition: transform var(--hero-slide) var(--ease-out);
-}
-
-/* The jump home. No transition, or the rail visibly scrolls backwards. */
-.hero__rail--silent { transition: none; }
-
-.hero__slide { position: relative; flex: 0 0 100%; height: 100%; }
-
-.hero__image {
-  object-fit: cover;
-  /* Bias above centre: the subject is in the upper half and the type occupies
-     the lower half of the frame anyway. Per-frame values in the manifest
-     override this. */
-  object-position: 50% 35%;
-}
-
-.hero__scrim {
-  position: absolute;
-  inset: 0;
-  /* Weighted to the foot of the frame, where the type is. A flat tint strong
-     enough for white text over pale concrete would grey out the whole
-     photograph; this keeps the top of the image clean and buys ~5:1 behind
-     the headline and ~8:1 behind the caption. */
-  background: linear-gradient(
-    to top,
-    rgba(10, 10, 10, 0.78) 0%,
-    rgba(10, 10, 10, 0.62) 34%,
-    rgba(10, 10, 10, 0.34) 62%,
-    rgba(10, 10, 10, 0.16) 100%
-  );
-}
-
-.hero__inner { position: relative; width: 100%; }
-
-.hero__eyebrow { color: var(--color-white); opacity: 0.9; }
-
-.hero__head { margin-top: var(--space-3); max-width: 16ch; }
-
-.hero__lede {
-  margin-top: var(--space-4);
-  color: var(--color-white);
-  max-width: 34ch;
-}
-
-.hero__actions {
-  display: grid;
-  gap: var(--space-2);
-  margin-top: var(--space-5);
-}
-
-@media (min-width: 30rem) {
-  .hero__actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-3);
-  }
-}
-
-.hero__foot {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  margin-top: var(--space-6);
-}
-
-.hero__caption {
-  margin: 0;
-  min-width: 0;
-  min-height: 1.25rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: var(--text-meta);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--color-white);
-}
-
-.hero__captiontext { display: inline-block; }
-
-.hero__dots { display: flex; align-items: center; gap: var(--space-2); }
-
-.hero__dot {
-  position: relative;
-  display: block;
-  width: 2.5rem;
-  height: 2.75rem;
-  border: 0;
-  background: none;
-  padding: 0;
-  cursor: pointer;
-}
-
-/* The track. The fill on top of it doubles as the hold timer. */
-.hero__dot::before {
-  content: "";
-  position: absolute;
-  inset-inline: 0;
-  top: 50%;
-  height: var(--spacing-rule);
-  background: rgba(255, 255, 255, 0.4);
-}
-
-.hero__dotfill {
-  position: absolute;
-  inset-inline: 0;
-  top: 50%;
-  height: var(--spacing-rule);
-  background: var(--color-white);
-  transform: scaleX(0);
-  transform-origin: left;
-}
-
-.hero__dot--on .hero__dotfill { animation: hero-hold linear forwards; }
-
-@keyframes hero-hold {
-  from { transform: scaleX(0); }
-  to { transform: scaleX(1); }
-}
-
-/* Reduced motion holds one frame: no cross-dissolve, no drift, no timer bar. */
-@media (prefers-reduced-motion: reduce) {
-  .hero__rail { transition: none; }
-  .hero__dot--on .hero__dotfill { animation: none; transform: scaleX(1); }
-}
-
-.hero__sentinel { position: absolute; bottom: 0; left: 0; height: 1px; width: 100%; }
-
-/* --------------------------------------------------------------------------
-   Category gateways
-   Spec §9: two campaign blocks, side by side, the whole tile clickable.
-   -------------------------------------------------------------------------- */
-
-.gateway { background: var(--color-paper); }
-
-.gateway__grid { display: grid; }
-
-@media (min-width: 48rem) {
-  .gateway__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-
-.gateway__tile {
-  position: relative;
-  display: block;
-  text-decoration: none;
-  color: var(--color-white);
-}
-
-.gateway__frame {
-  position: relative;
-  aspect-ratio: 4 / 5;
-  overflow: hidden;
-  background: var(--color-paper-deep);
-}
-
-@media (min-width: 48rem) {
-  .gateway__frame { aspect-ratio: 3 / 4; }
-}
-
-@media (min-width: 75rem) {
-  .gateway__frame { aspect-ratio: 4 / 5; }
-}
-
-.gateway__image {
-  object-fit: cover;
-  transition: transform var(--dur-4) var(--ease-out);
-}
-
-.gateway__tile:hover .gateway__image,
-.gateway__tile:focus-visible .gateway__image { transform: scale(1.04); }
-
-/* Same reasoning as the hero: the label and its "3 styles" caption sit at the
-   bottom of the frame, so that is where the weight goes. */
-.gateway__wash {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to top,
-    rgba(10, 10, 10, 0.74) 0%,
-    rgba(10, 10, 10, 0.42) 38%,
-    rgba(10, 10, 10, 0.12) 72%,
-    rgba(10, 10, 10, 0.08) 100%
-  );
-  transition: opacity var(--dur-2) var(--ease-out);
-}
-
-.gateway__tile:hover .gateway__wash { opacity: 0.82; }
-
-.gateway__body {
-  position: absolute;
-  inset-inline: 0;
-  bottom: 0;
-  display: grid;
-  gap: var(--space-2);
-  justify-items: start;
-  padding: clamp(1.25rem, 4vw, 3rem);
-}
-
-.gateway__label { color: var(--color-white); }
-.gateway__meta { color: rgba(255, 255, 255, 0.92); }
-
-.gateway__cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding-bottom: 0.2rem;
-  border-bottom: var(--spacing-rule) solid currentColor;
-  font-size: var(--text-meta);
-  font-weight: 500;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
-.gateway__arrow { transition: transform var(--dur-2) var(--ease-out); }
-
-.gateway__tile:hover .gateway__arrow,
-.gateway__tile:focus-visible .gateway__arrow { transform: translateX(0.3rem); }
-
-/* --------------------------------------------------------------------------
-   Product rails
-   -------------------------------------------------------------------------- */
-
-.rail__head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding-bottom: var(--space-5);
-}
-
-.rail__more { flex: none; }
-
-/* --------------------------------------------------------------------------
-   Product grid and cards
-   Spec §15–18: the image is the card. Name and price are captions under it.
-   -------------------------------------------------------------------------- */
-
-/* Bigger frames, quieter captions. The grid gives the photography every pixel
-   it can: tighter gutters than the rest of the page, a taller 3:4 crop, and
-   only three across even on a wide monitor. */
-.pgrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-4) var(--space-2);
-}
-
-@media (min-width: 48rem) {
-  .pgrid { gap: var(--space-5) var(--space-3); }
-}
-
-@media (min-width: 75rem) {
-  .pgrid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .pgrid--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-}
-
-.pcard { position: relative; display: grid; gap: var(--space-2); }
-
-.pcard__media { position: relative; }
-
-.pcard__plate { display: block; text-decoration: none; }
-
-.pcard__media .frame { background: var(--color-paper-deep); }
-
-.pcard__media .frame img { transition: transform var(--dur-4) var(--ease-out); }
-
-.pcard:hover .frame img { transform: scale(1.03); }
-
-.pcard__flag {
-  position: absolute;
-  top: var(--space-2);
-  left: var(--space-2);
-  padding: 0.3rem 0.6rem;
-  background: var(--color-paper);
-  font-size: var(--text-meta);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-/* A word, not a glyph. The icon version was a 40px circle that read as a
-   decoration rather than an offer. Above the card's full-bleed link overlay,
-   or it cannot be clicked. */
-.pcard__preview {
-  position: absolute;
-  z-index: 2;
-  top: var(--space-2);
-  right: var(--space-2);
-  padding: 0.6rem 1rem;
-  border: var(--spacing-rule) solid var(--color-ink);
-  background: var(--color-paper);
-  color: var(--color-ink);
-  font-size: var(--text-meta);
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition:
-    opacity var(--dur-2) var(--ease-out),
-    transform var(--dur-2) var(--ease-out),
-    background-color var(--dur-1) var(--ease-out),
-    color var(--dur-1) var(--ease-out);
-}
-
-.pcard__preview:hover { background: var(--color-ink); color: var(--color-paper); }
-
-/* Step through the product's other angles without leaving the grid. */
-.pcard__step {
-  position: absolute;
-  z-index: 2;
-  top: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  margin-top: -1.375rem;
-  border: 0;
-  background: rgba(245, 244, 240, 0.9);
-  color: var(--color-ink);
-  cursor: pointer;
-  transition: opacity var(--dur-2) var(--ease-out), background-color var(--dur-1) var(--ease-out);
-}
-
-.pcard__step:hover { background: var(--color-paper); }
-.pcard__step--prev { left: var(--space-2); }
-.pcard__step--next { right: var(--space-2); }
-
-.pcard__chev {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-top: var(--spacing-rule) solid currentColor;
-  border-right: var(--spacing-rule) solid currentColor;
-}
-
-.pcard__step--prev .pcard__chev { transform: translateX(0.12rem) rotate(-135deg); }
-.pcard__step--next .pcard__chev { transform: translateX(-0.12rem) rotate(45deg); }
-
-.pcard__ticks {
-  position: absolute;
-  z-index: 2;
-  left: 50%;
-  bottom: var(--space-2);
-  display: flex;
-  gap: 0.25rem;
-  transform: translateX(-50%);
-}
-
-.pcard__tick {
-  width: 1.25rem;
-  height: 2px;
-  background: rgba(245, 244, 240, 0.55);
-  transition: background-color var(--dur-1) var(--ease-out);
-}
-
-.pcard__tick--on { background: var(--color-paper); }
-
-/* Hover reveals the controls on a pointer device; where there is no hover to
-   reveal them, they simply stay. */
-@media (hover: hover) {
-  .pcard__preview { opacity: 0; transform: translateY(-0.4rem); }
-  .pcard__step { opacity: 0; }
-
-  .pcard:hover .pcard__preview,
-  .pcard:focus-within .pcard__preview { opacity: 1; transform: none; }
-
-  .pcard:hover .pcard__step,
-  .pcard:focus-within .pcard__step { opacity: 1; }
-}
-
-.pcard__foot {
-  display: grid;
-  gap: 0.2rem;
-  min-width: 0;
-}
-
-@media (min-width: 62rem) {
-  .pcard__foot {
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: var(--space-2);
-    align-items: baseline;
-  }
-}
-
-/* Deliberately quiet. The photograph is doing the selling. */
-.pcard__title {
-  min-width: 0;
-  font-size: var(--text-meta);
-  font-weight: 500;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  overflow-wrap: anywhere;
-}
-
-.pcard__link { text-decoration: none; }
-
-.pcard__link::after {
-  /* The whole plate is the target; the visible link is just the label. */
-  content: "";
-  position: absolute;
-  inset: 0;
-}
-
-.pcard__price {
-  font-size: var(--text-meta);
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  color: var(--color-muted-text);
-}
-
-.pcard__colors { display: flex; flex-wrap: wrap; gap: var(--space-1); }
-
-.swatchdot {
-  position: relative;
-  z-index: 2;
-  display: block;
-  width: 0.875rem;
-  height: 0.875rem;
-  padding: 0;
-  border: var(--spacing-rule) solid var(--color-muted);
-  background: var(--dot, var(--color-paper-deep));
-  cursor: pointer;
-  transition: box-shadow var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out);
-}
-
-.swatchdot--on {
-  border-color: var(--color-ink);
-  box-shadow: 0 0 0 2px var(--color-paper), 0 0 0 3px var(--color-ink);
-}
-
-/* One palette, shared by the card dots, the picker swatches and quick view.
-   Colour is never the only carrier: every dot sits beside or is labelled by
-   the colour name. */
-.dot--black    { --dot: #0a0a0a; }
-.dot--white    { --dot: #ffffff; }
-.dot--bone     { --dot: #e8e4da; }
-.dot--charcoal { --dot: #4a4a48; }
-.dot--heather  { --dot: #b6b8ba; }
-.dot--olive    { --dot: #6b6a4f; }
-.dot--teal     { --dot: #2f4f52; }
-
-/* --------------------------------------------------------------------------
-   Quick view
-   Spec §19: a miniature product page. Backdrop fades, panel scales 96% → 100%.
-   -------------------------------------------------------------------------- */
-
-.quick {
-  position: fixed;
-  inset: 0;
-  z-index: 90;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-3);
-}
-
-.quick__scrim {
-  position: absolute;
-  inset: 0;
-  border: 0;
-  padding: 0;
-  background: rgba(10, 10, 10, 0.55);
-  cursor: pointer;
-}
-
-.quick__panel {
-  position: relative;
-  display: grid;
-  width: min(64rem, 100%);
-  max-height: min(92svh, 56rem);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  background: var(--color-paper);
-  color: var(--color-ink);
-}
-
-@media (min-width: 48rem) {
-  .quick__panel { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); }
-}
-
-.quick__close {
-  position: absolute;
-  top: var(--space-3);
-  right: var(--space-3);
-  z-index: 2;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  border: var(--spacing-rule) solid var(--color-ink);
-  background: var(--color-paper);
-  color: var(--color-ink);
-  cursor: pointer;
-  transition: background-color var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out);
-}
-
-.quick__close:hover { background: var(--color-ink); color: var(--color-paper); }
-
-.quick__closemark { position: relative; width: 0.8rem; height: 0.8rem; }
-
-.quick__closemark::before,
-.quick__closemark::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 0;
-  width: 100%;
-  height: var(--spacing-rule);
-  background: currentColor;
-}
-
-.quick__closemark::before { transform: rotate(45deg); }
-.quick__closemark::after { transform: rotate(-45deg); }
-
-.quick__media { position: relative; }
-.quick__media .frame { background: var(--color-paper-deep); }
-
-/* Side by side, the purchase column is the taller of the two, so a fixed 4:5
-   frame leaves a slab of empty paper under the photograph. Let the media
-   column take the panel's height and crop to fit it instead. */
-@media (min-width: 48rem) {
-  .quick__media .frame { height: 100%; aspect-ratio: auto; }
-}
-
-.quick__body {
-  display: grid;
-  gap: var(--space-4);
-  align-content: start;
-  padding: clamp(1.25rem, 3vw, 2.5rem);
-}
-
-.quick__title { text-transform: uppercase; }
-.quick__price { font-size: var(--text-sub); font-weight: 500; }
-.quick__copy { max-width: 44ch; color: var(--color-muted-text); }
-
-.quick__group { display: grid; gap: var(--space-2); }
-.quick__legend { display: block; }
-
-.quick__actions { display: grid; gap: var(--space-2); }
-.quick__status { min-height: 1.25rem; }
-.quick__full { justify-self: start; }
-
-/* --------------------------------------------------------------------------
    Overlay tiles
    Photographs carrying their own text. Replaced a statement band and a
    numbered-points band that were both mostly empty ground.
@@ -1369,6 +179,90 @@
 .quotes__name { display: block; padding-top: var(--space-4); }
 
 /* --------------------------------------------------------------------------
+   Lookbook rail
+   Landscape frames, endlessly. Wider than the Instagram tiles on purpose: a
+   post has to be square, a lookbook frame does not, and the extra width is
+   what makes the band read as a campaign reel rather than a contact sheet.
+   -------------------------------------------------------------------------- */
+
+.lookbook {
+  padding-block: var(--space-7);
+  background: var(--color-paper);
+  overflow: hidden;
+}
+
+.lookbook__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-bottom: var(--space-5);
+}
+
+.lookbook__title { padding-top: var(--space-2); }
+.lookbook__more { flex: none; }
+
+.lookbook__rail {
+  display: flex;
+  width: max-content;
+  animation: lookbook-roll 72s linear infinite;
+}
+
+.lookbook__rail:hover { animation-play-state: paused; }
+
+.lookbook__half {
+  display: flex;
+  flex: none;
+  gap: var(--spacing-rule);
+  padding-right: var(--spacing-rule);
+}
+
+.lookbook__tile {
+  position: relative;
+  flex: none;
+  width: clamp(17rem, 52vw, 38rem);
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  background: var(--color-paper-deep);
+  text-decoration: none;
+}
+
+.lookbook__image {
+  object-fit: cover;
+  transition: transform var(--dur-4) var(--ease-out);
+}
+
+.lookbook__tile:hover .lookbook__image { transform: scale(1.04); }
+
+/* The label sits on the photograph, so it carries its own ground rather than
+   relying on whatever happens to be in the bottom left of the frame. */
+.lookbook__label {
+  position: absolute;
+  left: var(--space-3);
+  bottom: var(--space-3);
+  padding: 0.35rem 0.7rem;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-size: var(--text-meta);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+@keyframes lookbook-roll {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-50%, 0, 0); }
+}
+
+/* A rail that travels on its own is exactly what this query is for. Stopped,
+   it becomes an ordinary horizontal scroller and the clone comes out. */
+@media (prefers-reduced-motion: reduce) {
+  .lookbook__rail { animation: none; overflow-x: auto; width: 100%; }
+  .lookbook__half:nth-child(2) { display: none; }
+}
+
+/* --------------------------------------------------------------------------
    Instagram rail
    -------------------------------------------------------------------------- */
 
@@ -1416,11 +310,22 @@
 .iglane__tile {
   position: relative;
   flex: none;
-  width: clamp(9rem, 20vw, 15rem);
+  width: clamp(13rem, 26vw, 21rem);
   aspect-ratio: 1 / 1;
   overflow: hidden;
   background: var(--color-paper-deep);
 }
+
+/* No token, no posts. A band with a real invitation in it, rather than a band
+   of stock photography captioned as somebody's Instagram. */
+.iglane__empty {
+  display: grid;
+  gap: var(--space-4);
+  justify-items: start;
+  max-width: 44rem;
+}
+
+.iglane__emptylede { color: var(--color-muted-text); }
 
 .iglane__image {
   width: 100%;
@@ -1492,12 +397,34 @@
 }
 
 /* On a phone the footer is most of a screen tall; reserving that much space
-   under every page would mean scrolling through a hole to reach it. The
-   corners still round, the reveal does not run. */
+   under every page would mean scrolling through a hole to reach it, so the
+   reveal does not run and the footer is simply the last thing on the page.
+   The corners keep their radius on the off chance a wide phone lands in the
+   desktop branch mid-rotate. */
 .shell__stack {
   border-bottom-left-radius: var(--radius-slab);
   border-bottom-right-radius: var(--radius-slab);
   overflow: clip;
+}
+
+/* ...and on a phone the stack stops being a box at all.
+   `position: sticky` is bounded by the element's own parent, and the masthead's
+   parent was this stack — which ends where the footer begins. Scroll into the
+   footer and the header simply ran out of parent and slid away, exactly where
+   a shopper is most likely to want the cart back.
+   `display: contents` promotes the stack's children to children of `.shell`,
+   which does span the footer, so the header sticks the whole way down. The box
+   this drops is not missed: the radius clipped paper against a paper canvas
+   (the ink canvas below is desktop-only), and the flexbox that kept short
+   pages full height simply moves up one level. */
+@media (max-width: 61.9375rem) {
+  .shell {
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+  }
+
+  .shell__stack { display: contents; }
 }
 
 /* --------------------------------------------------------------------------
@@ -1611,11 +538,18 @@
   cursor: pointer;
 }
 
+/* Three rules, not two. The outer pair are the pseudo-elements; the middle one
+   is a background gradient sized to the same rule weight and centred, which
+   avoids inventing a third element for a shape that is already only lines. */
 .masthead__bars {
   position: relative;
   display: block;
   width: 1.25rem;
-  height: 0.625rem;
+  height: 0.8125rem;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 100% var(--spacing-rule);
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .masthead__bars::before,
@@ -2162,26 +1096,46 @@
   }
 }
 
+/* Phone: caption over dots, on two rows. Side by side there is roughly 190px
+   left for the caption once four dots have taken their 10rem, and the longer
+   frame names ("Heavyweight Tee - Black") were being cut off at the ellipsis
+   on exactly the third and fourth slides. Stacking gives the caption the full
+   measure; the row returns as soon as there is width for it. */
 .hero__foot {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
   gap: var(--space-3);
-  margin-top: var(--space-6);
+  justify-items: start;
+  margin-top: var(--space-5);
+}
+
+@media (min-width: 30rem) {
+  .hero__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: var(--space-6);
+  }
 }
 
 .hero__caption {
   margin: 0;
   min-width: 0;
   min-height: 1.25rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   font-size: var(--text-meta);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--color-white);
+}
+
+/* Only once the row can hold it: on one line, clipped rather than wrapping
+   the foot open to two rows mid-transition. */
+@media (min-width: 30rem) {
+  .hero__caption {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 
 .hero__captiontext { display: inline-block; }
@@ -2345,16 +1299,16 @@
    -------------------------------------------------------------------------- */
 
 /* Bigger frames, quieter captions. The grid gives the photography every pixel
-   it can: tighter gutters than the rest of the page, a taller 3:4 crop, and
+   it can: tighter gutters than the rest of the page, a taller 2:3 crop, and
    only three across even on a wide monitor. */
 .pgrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-4) var(--space-2);
+  gap: var(--space-4) var(--space-1);
 }
 
 @media (min-width: 48rem) {
-  .pgrid { gap: var(--space-5) var(--space-3); }
+  .pgrid { gap: var(--space-5) var(--space-2); }
 }
 
 @media (min-width: 75rem) {
@@ -2374,16 +1328,27 @@
 
 .pcard:hover .frame img { transform: scale(1.03); }
 
+/* Status, top left, opposite the preview. Small on purpose: it is a label on
+   the photograph, not a sticker over it. */
 .pcard__flag {
   position: absolute;
+  z-index: 2;
   top: var(--space-2);
   left: var(--space-2);
-  padding: 0.3rem 0.6rem;
+  padding: 0.28rem 0.5rem;
   background: var(--color-paper);
-  font-size: var(--text-meta);
+  color: var(--color-ink);
+  font-size: 0.6875rem;
+  font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
+
+/* New arrivals get the ink treatment so the two flags never read as the same
+   kind of news. Sold out keeps the pale ground — it is an absence. */
+.pcard__flag--new { background: var(--color-ink); color: var(--color-white); }
+
+.pcard__flag--sold { color: var(--color-muted-text); }
 
 /* A word, not a glyph. The icon version was a 40px circle that read as a
    decoration rather than an offer. Above the card's full-bleed link overlay,
@@ -2393,13 +1358,13 @@
   z-index: 2;
   top: var(--space-2);
   right: var(--space-2);
-  padding: 0.6rem 1rem;
+  padding: 0.3rem 0.55rem;
   border: var(--spacing-rule) solid var(--color-ink);
   background: var(--color-paper);
   color: var(--color-ink);
-  font-size: var(--text-meta);
+  font-size: 0.6875rem;
   font-weight: 500;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   cursor: pointer;
   transition:
@@ -2412,6 +1377,9 @@
 .pcard__preview:hover { background: var(--color-ink); color: var(--color-paper); }
 
 /* Step through the product's other angles without leaving the grid. */
+/* The plate is 1.75rem. It used to be 2.75rem, which on a card this size read
+   as two buttons parked on the photograph rather than as a way through it.
+   The hit area is kept honest separately, below. */
 .pcard__step {
   position: absolute;
   z-index: 2;
@@ -2419,23 +1387,37 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  margin-top: -1.375rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-top: -0.875rem;
   border: 0;
-  background: rgba(245, 244, 240, 0.9);
+  background: rgba(245, 244, 240, 0.88);
   color: var(--color-ink);
   cursor: pointer;
   transition: opacity var(--dur-2) var(--ease-out), background-color var(--dur-1) var(--ease-out);
 }
 
+/* Touch has no hover to enlarge the target, so the plate stays small and the
+   tappable box grows past it instead. */
+@media (pointer: coarse) {
+  .pcard__step::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 2.75rem;
+    height: 2.75rem;
+    transform: translate(-50%, -50%);
+  }
+}
+
 .pcard__step:hover { background: var(--color-paper); }
-.pcard__step--prev { left: var(--space-2); }
-.pcard__step--next { right: var(--space-2); }
+.pcard__step--prev { left: var(--space-1); }
+.pcard__step--next { right: var(--space-1); }
 
 .pcard__chev {
-  width: 0.5rem;
-  height: 0.5rem;
+  width: 0.375rem;
+  height: 0.375rem;
   border-top: var(--spacing-rule) solid currentColor;
   border-right: var(--spacing-rule) solid currentColor;
 }
@@ -2454,7 +1436,7 @@
 }
 
 .pcard__tick {
-  width: 1.25rem;
+  width: 0.875rem;
   height: 2px;
   background: rgba(245, 244, 240, 0.55);
   transition: background-color var(--dur-1) var(--ease-out);
@@ -2777,7 +1759,35 @@
    Footer
    -------------------------------------------------------------------------- */
 
-.colophon { margin-top: auto; }
+/* A photograph under the ink rather than a flat black. It is held at a low
+   enough opacity to read as texture, and the ink layer over it is what the
+   contrast ratios are calculated against — the type never sits on the picture
+   directly. */
+.colophon {
+  position: relative;
+  isolation: isolate;
+  margin-top: auto;
+  overflow: hidden;
+}
+
+.colophon__bg {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  object-fit: cover;
+}
+
+.colophon__veil {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    to bottom,
+    rgba(10, 10, 10, 0.9) 0%,
+    rgba(10, 10, 10, 0.84) 45%,
+    rgba(10, 10, 10, 0.93) 100%
+  );
+}
 
 .colophon__signup { display: grid; gap: var(--space-5); }
 
@@ -2872,32 +1882,113 @@
    row of products most of the way down the page.
    -------------------------------------------------------------------------- */
 
-.shoplayout {
-  display: grid;
-  grid-template-rows: 1fr auto;
-  gap: var(--space-4);
-  align-items: start;
-  transition: grid-template-rows var(--dur-3) var(--ease-out);
+.shoplayout { display: block; }
+
+.shoplayout__main { min-width: 0; }
+
+/* Phone: the filters are a sheet, not a column.
+
+   Stacked into the flow they put a search box, five size chips, a colour list
+   and a price slider above the first photograph, so a collection opened onto a
+   form. Out of flow, the only thing left above the grid is the word
+   "Filters", and the controls arrive over the page when they are asked for. */
+@media (max-width: 61.9375rem) {
+  .shoplayout__scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    border: 0;
+    padding: 0;
+    background: var(--color-scrim);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--dur-3) var(--ease-out), visibility 0s linear var(--dur-3);
+  }
+
+  .shoplayout--sheet .shoplayout__scrim {
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0s;
+  }
+
+  .shoplayout__aside {
+    position: fixed;
+    z-index: 61;
+    inset-inline: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    max-height: 88dvh;
+    background: var(--color-paper);
+    border-top-left-radius: var(--radius-slab);
+    border-top-right-radius: var(--radius-slab);
+    box-shadow: 0 -1rem 3rem rgba(10, 10, 10, 0.3);
+    transform: translate3d(0, 100%, 0);
+    visibility: hidden;
+    transition:
+      transform var(--dur-3) var(--ease-out),
+      visibility 0s linear var(--dur-3);
+  }
+
+  .shoplayout--sheet .shoplayout__aside {
+    transform: none;
+    visibility: visible;
+    transition-delay: 0s;
+  }
+
+  .shoplayout__sheetbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-4) clamp(1.25rem, 4vw, 4.5rem) var(--space-3);
+    border-bottom: var(--spacing-rule) solid var(--color-muted);
+  }
+
+  .shoplayout__asidescroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--space-5) clamp(1.25rem, 4vw, 4.5rem);
+  }
+
+  .shoplayout__sheetfoot {
+    padding: var(--space-3) clamp(1.25rem, 4vw, 4.5rem)
+      calc(var(--space-4) + env(safe-area-inset-bottom));
+    border-top: var(--spacing-rule) solid var(--color-muted);
+  }
+
+  /* The sheet is the full width of the phone; the column's fixed measure is a
+     desktop constraint. */
+  .filters__inner { width: 100%; }
+
+  .filters__wide { display: none; }
 }
 
-/* Phone: the column stacks above the grid and collapses by height. */
-.shoplayout--shut { grid-template-rows: 0fr auto; gap: 0; }
-
+/* Desktop: back to a column beside the grid, and back to collapsing it. */
 @media (min-width: 62rem) {
   .shoplayout {
-    grid-template-rows: auto;
+    display: grid;
     grid-template-columns: 15rem minmax(0, 1fr);
     gap: var(--space-6);
-    transition: grid-template-columns var(--dur-3) var(--ease-out), gap var(--dur-3) var(--ease-out);
+    align-items: start;
+    transition:
+      grid-template-columns var(--dur-3) var(--ease-out),
+      gap var(--dur-3) var(--ease-out);
   }
 
   /* Shutting the column hands every pixel of it to the grid. */
   .shoplayout--shut { grid-template-columns: 0 minmax(0, 1fr); gap: 0; }
+
+  .shoplayout__aside { min-height: 0; min-width: 0; overflow: hidden; }
+
+  .shoplayout__scrim,
+  .shoplayout__sheetbar,
+  .shoplayout__sheetfoot { display: none; }
+
+  .filters__narrow { display: none; }
 }
-
-.shoplayout__aside { min-height: 0; min-width: 0; overflow: hidden; }
-
-.shoplayout__main { min-width: 0; }
 
 .shoplayout__bar {
   display: flex;
@@ -3304,6 +2395,319 @@
 .summary__back { display: inline-block; margin-top: var(--space-4); }
 
 /* --------------------------------------------------------------------------
+   Cart sheet
+   A surface of its own, on purpose. The rest of the storefront is ink on
+   paper; this is a warm near-black with sand type, so the sheet reads as
+   something laid over the shop rather than as another panel of it — and so
+   its one primary action cannot be confused with the page's own buttons.
+   The palette is declared once, here, and used nowhere else.
+   -------------------------------------------------------------------------- */
+
+.cartsheet {
+  --cart-ground: #16150f;
+  --cart-raised: #211f17;
+  --cart-line:   #38352a;
+  --cart-type:   #f3efe3;
+  --cart-dim:    #a8a08c;
+  --cart-spot:   #d8d2c7;
+
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  pointer-events: none;
+  visibility: hidden;
+  transition: visibility 0s linear var(--dur-3);
+}
+
+.cartsheet--open { pointer-events: auto; visibility: visible; transition-delay: 0s; }
+
+.cartsheet__scrim {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: rgba(10, 10, 10, 0.55);
+  opacity: 0;
+  transition: opacity var(--dur-3) var(--ease-out);
+}
+
+.cartsheet--open .cartsheet__scrim { opacity: 1; }
+
+/* Rises from the foot of the window at every width. On a wide screen it stops
+   at a readable measure and stays against the right edge, under the cart icon
+   that opened it, rather than stretching a five-line list across a metre of
+   monitor. */
+.cartsheet__panel {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  max-height: 92dvh;
+  background: var(--cart-ground);
+  color: var(--cart-type);
+  border-top-left-radius: var(--radius-slab);
+  border-top-right-radius: var(--radius-slab);
+  box-shadow: 0 -1.5rem 4rem rgba(10, 10, 10, 0.55);
+  transform: translate3d(0, 100%, 0);
+  transition: transform var(--dur-3) var(--ease-out);
+}
+
+.cartsheet--open .cartsheet__panel { transform: none; }
+
+@media (min-width: 48rem) {
+  .cartsheet__panel {
+    inset-inline: auto 0;
+    width: min(30rem, 100%);
+    margin-inline-end: var(--space-4);
+    max-height: min(46rem, 88dvh);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cartsheet__panel { transition: none; }
+}
+
+/* The handle. Says "this came up and can go back down" before anything else in
+   the sheet has been read. */
+.cartsheet__grip {
+  width: 2.5rem;
+  height: 0.25rem;
+  margin: var(--space-2) auto 0;
+  border-radius: 999px;
+  background: var(--cart-line);
+}
+
+.cartsheet__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5) var(--space-3);
+  border-bottom: var(--spacing-rule) solid var(--cart-line);
+}
+
+.cartsheet__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-meta);
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.cartsheet__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding-inline: 0.4rem;
+  border-radius: 999px;
+  background: var(--cart-spot);
+  color: var(--cart-ground);
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+}
+
+.cartsheet__close {
+  flex: none;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--cart-dim);
+  font: inherit;
+  font-size: var(--text-meta);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color var(--dur-1) var(--ease-out);
+}
+
+.cartsheet__close:hover { color: var(--cart-type); }
+
+.cartsheet__lines {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-inline: var(--space-5);
+}
+
+.cartsheet__line {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr) auto;
+  gap: var(--space-3);
+  padding-block: var(--space-4);
+  border-bottom: var(--spacing-rule) solid var(--cart-line);
+}
+
+.cartsheet__lines > .cartsheet__line:last-child { border-bottom: 0; }
+
+.cartsheet__plate { display: block; background: var(--cart-raised); }
+
+.cartsheet__thumb { width: 100%; height: auto; object-fit: cover; }
+
+.cartsheet__body { display: grid; gap: 0.3rem; align-content: start; min-width: 0; }
+
+.cartsheet__name {
+  font-size: var(--text-meta);
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.cartsheet__name a { color: inherit; text-decoration: none; }
+.cartsheet__name a:hover { text-decoration: underline; }
+
+.cartsheet__spec {
+  font-size: var(--text-meta);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--cart-dim);
+}
+
+.cartsheet__stepper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-top: var(--space-2);
+}
+
+.cartsheet__stepper button {
+  min-width: 2rem;
+  height: 2rem;
+  border: var(--spacing-rule) solid var(--cart-line);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: border-color var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out);
+}
+
+.cartsheet__stepper button:hover:not(:disabled) { border-color: var(--cart-spot); }
+.cartsheet__stepper button:disabled { color: var(--cart-dim); cursor: not-allowed; }
+
+/* Not a stepper control, so it drops the box the three beside it wear. */
+.cartsheet__stepper .cartsheet__remove {
+  min-width: 0;
+  height: auto;
+  border: 0;
+  padding: 0 0 0 var(--space-2);
+  color: var(--cart-dim);
+  font-size: var(--text-meta);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+.cartsheet__stepper .cartsheet__remove:hover:not(:disabled) { color: var(--cart-type); }
+
+.cartsheet__linetotal { align-self: start; font-weight: 500; }
+
+.cartsheet__foot {
+  flex: none;
+  padding: var(--space-4) var(--space-5)
+    calc(var(--space-5) + env(safe-area-inset-bottom));
+  border-top: var(--spacing-rule) solid var(--cart-line);
+  background: var(--cart-raised);
+}
+
+.cartsheet__error {
+  min-height: 1.25rem;
+  font-size: var(--text-meta);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cart-spot);
+}
+
+.cartsheet__total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: var(--text-sub);
+  font-weight: 500;
+}
+
+.cartsheet__note {
+  padding-top: var(--space-1);
+  font-size: var(--text-meta);
+  letter-spacing: 0.08em;
+  color: var(--cart-dim);
+}
+
+/* The sheet's own button, not the storefront's — inverted against the dark
+   ground the way .btn is inverted against paper. */
+.cartsheet__cta {
+  display: block;
+  margin-top: var(--space-4);
+  padding: 1rem var(--space-4);
+  background: var(--cart-spot);
+  color: var(--cart-ground);
+  font-size: var(--text-meta);
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-align: center;
+  text-decoration: none;
+  transition: background-color var(--dur-1) var(--ease-out);
+}
+
+.cartsheet__cta:hover { background: var(--cart-type); }
+
+.cartsheet__keep {
+  display: block;
+  width: 100%;
+  margin-top: var(--space-3);
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--cart-dim);
+  font: inherit;
+  font-size: var(--text-meta);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color var(--dur-1) var(--ease-out);
+}
+
+.cartsheet__keep:hover { color: var(--cart-type); }
+
+.cartsheet__empty {
+  padding: var(--space-6) var(--space-5)
+    calc(var(--space-6) + env(safe-area-inset-bottom));
+  text-align: center;
+}
+
+.cartsheet__emptyhead { font-size: var(--text-sub); font-weight: 500; }
+
+.cartsheet__emptylede {
+  padding-top: var(--space-2);
+  margin-inline: auto;
+  max-width: 30ch;
+  color: var(--cart-dim);
+}
+
+.cartsheet__empty .cartsheet__cta { margin-top: var(--space-5); }
+
+/* The global focus ring is ink, which is invisible here. */
+.cartsheet :focus-visible { outline: 2px solid var(--cart-spot); outline-offset: 2px; }
+
+/* The drawer's cart row is a button now rather than a link to /cart. */
+.drawer__cart {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+/* --------------------------------------------------------------------------
    FAQ
    -------------------------------------------------------------------------- */
 
@@ -3433,10 +2837,13 @@
 
 .checkfield input { margin-top: 0.3rem; width: 1rem; height: 1rem; flex: none; }
 
-.checkfield small {
+.checkfield small,
+.admin label > small {
   display: block;
   color: var(--color-muted-text);
   font-size: var(--text-meta);
   text-transform: none;
   letter-spacing: 0;
 }
+
+.admin label > small { padding-top: 0.3rem; }

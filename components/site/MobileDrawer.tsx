@@ -11,6 +11,8 @@ type Props = {
   itemCount: number;
   signedIn: boolean;
   storeEmail: string;
+  /** Closes the drawer and raises the cart sheet over it. */
+  onOpenCart: () => void;
 };
 
 /**
@@ -30,6 +32,7 @@ export function MobileDrawer({
   itemCount,
   signedIn,
   storeEmail,
+  onOpenCart,
 }: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
@@ -184,9 +187,9 @@ export function MobileDrawer({
             >
               {signedIn ? 'Account' : 'Sign in'}
             </Link>
-            <Link href="/cart" className="ulink" onClick={onClose}>
+            <button type="button" className="ulink drawer__cart" onClick={onOpenCart}>
               Cart<span className="tnum"> ({itemCount})</span>
-            </Link>
+            </button>
             <a href={`mailto:${storeEmail}`} className="ulink">Contact</a>
           </div>
         </div>

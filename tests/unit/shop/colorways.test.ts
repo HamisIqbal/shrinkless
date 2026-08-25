@@ -22,6 +22,7 @@ const product: ProductDTO = {
   category: 'tees',
   status: 'published',
   featured: false,
+  badge: 'none',
   images: [
     { publicId: 'https://img/black.jpg', width: 1400, height: 1750, alt: 'Black tee' },
     { publicId: 'https://img/white.jpg', width: 1400, height: 1750, alt: 'White tee' },

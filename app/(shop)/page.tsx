@@ -13,6 +13,7 @@ import { OverlayTiles, type Tile } from '@/components/editorial/OverlayTiles';
 import { ImageBand } from '@/components/editorial/ImageBand';
 import { FullBleedType } from '@/components/editorial/FullBleedType';
 import { QuoteRow, type Quote } from '@/components/editorial/QuoteRow';
+import { LookbookRail } from '@/components/site/LookbookRail';
 import { Reveal } from '@/components/ui/Reveal';
 
 /** Captions ride with the frames, so the campaign reads as a sequence. */
@@ -134,6 +135,10 @@ export default async function HomePage() {
           )}
         </div>
       </section>
+
+      {/* Photography between two grids of product cards, so the page does not
+          read as three shops in a row. */}
+      <LookbookRail />
 
       <OverlayTiles tiles={STATEMENT} columns={2} tall />
 

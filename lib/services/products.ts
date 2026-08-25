@@ -33,6 +33,7 @@ function toProductDTO(product: WithId<ProductDoc>, variants: WithId<VariantDoc>[
     category: product.category,
     status: product.status as 'draft' | 'published',
     featured: Boolean(product.featured),
+    badge: (product.badge as 'none' | 'new') ?? 'none',
     images: product.images.map((image) => ({
       publicId: image.publicId,
       width: image.width,
@@ -210,7 +211,11 @@ export class SlugTakenError extends Error {
 }
 
 export async function saveProduct(
-  input: Omit<ProductInput, 'featured'> & { featured?: boolean; id?: string },
+  input: Omit<ProductInput, 'featured' | 'badge'> & {
+    featured?: boolean;
+    badge?: 'none' | 'new';
+    id?: string;
+  },
 ): Promise<string> {
   await connectToDatabase();
 
@@ -226,6 +231,7 @@ export async function saveProduct(
     category: input.category,
     status: input.status,
     featured: input.featured ?? false,
+    badge: input.badge ?? 'none',
     images: input.images,
     optionSets: { sizes: input.sizes, colors: input.colors },
   };

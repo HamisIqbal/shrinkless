@@ -32,10 +32,17 @@ type Seed = {
   colors: string[];
   sizes: string[];
   featured: boolean;
+  /** Editorial flag drawn on the card. Sold out is worked out from stock. */
+  badge?: 'new';
   description: string;
   /** `${color}:${size}` pairs that should read as sold out. */
   soldOut?: string[];
 };
+
+/** Every pair, for a style that is out across the board. */
+function everyPair(colors: string[], sizes: string[]): string[] {
+  return colors.flatMap((color) => sizes.map((size) => `${color}:${size}`));
+}
 
 const CATALOGUE: Seed[] = [
   {
@@ -74,6 +81,7 @@ const CATALOGUE: Seed[] = [
     colors: ['teal', 'white'],
     sizes: MENS_SIZES,
     featured: false,
+    badge: 'new',
     description:
       'The Organic Tee body with a set-in long sleeve and a ribbed cuff that ' +
       'stays put. Garment dyed organic cotton, made in USA.',
@@ -103,6 +111,10 @@ const CATALOGUE: Seed[] = [
     description:
       'A wide, square body with a dropped shoulder and a cropped length. Meant ' +
       'to sit away from the body. Garment dyed organic cotton, made in USA.',
+    // Out in every colour and every size, so the catalogue has one style that
+    // exercises the sold-out treatment on the card rather than only the
+    // struck-through size chip on the product page.
+    soldOut: everyPair(['olive', 'bone'], WOMENS_SIZES),
   },
   {
     slug: 'womens-everyday-tee',
@@ -150,6 +162,7 @@ async function main() {
       category: seed.category,
       status: 'published',
       featured: seed.featured,
+      badge: seed.badge ?? 'none',
       images: frames.map((frame) => ({
         publicId: frame.url,
         ...ASPECT_SIZES[frame.aspect],

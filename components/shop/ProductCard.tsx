@@ -19,7 +19,7 @@ type Props = {
  * Image, name, price — in that order of weight, and by a wide margin. The
  * frame is most of the card; the name and price are captions under it.
  *
- * Every card crops to the same 3:4 regardless of the source photograph's
+ * Every card crops to the same 2:3 regardless of the source photograph's
  * shape, because a grid where one product is taller than its neighbours reads
  * as broken rather than as editorial.
  *
@@ -52,10 +52,10 @@ export function ProductCard({ product, index = 0, onQuickView }: Props) {
     <article className="pcard">
       <div className="pcard__media">
         <Link href={href} className="pcard__plate" tabIndex={-1} aria-hidden="true">
-          <div className="frame frame--34">
+          <div className="frame frame--23">
             {hasFrames ? (
               <Image
-                src={imageUrl(image.publicId, 'c_fill,w_1200,h_1600,q_auto,f_auto')}
+                src={imageUrl(image.publicId, 'c_fill,w_1200,h_1800,q_auto,f_auto')}
                 alt=""
                 fill
                 loading={index < 2 ? undefined : 'lazy'}
@@ -66,7 +66,14 @@ export function ProductCard({ product, index = 0, onQuickView }: Props) {
           </div>
         </Link>
 
-        {soldOut ? <p className="pcard__flag">Sold out</p> : null}
+        {/* One flag at a time, and sold out outranks new: a shopper who
+            cannot buy it needs to know that before they need to know it is
+            recent. */}
+        {soldOut ? (
+          <p className="pcard__flag pcard__flag--sold">Sold out</p>
+        ) : product.badge === 'new' ? (
+          <p className="pcard__flag pcard__flag--new">New arrival</p>
+        ) : null}
 
         <button type="button" className="pcard__preview" onClick={() => onQuickView(product)}>
           Preview

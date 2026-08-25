@@ -30,6 +30,7 @@ export function ProductEditor({ product }: { product: ProductDTO | null }) {
   const [category, setCategory] = useState(product?.category ?? '');
   const [status, setStatus] = useState<'draft' | 'published'>(product?.status ?? 'draft');
   const [featured, setFeatured] = useState(product?.featured ?? false);
+  const [badge, setBadge] = useState<'none' | 'new'>(product?.badge ?? 'none');
   const [sizesText, setSizesText] = useState((product?.sizes ?? []).join(', '));
   const [colorsText, setColorsText] = useState((product?.colors ?? []).join(', '));
   const [edited, setEdited] = useState<Record<string, MatrixRow>>({});
@@ -83,7 +84,7 @@ export function ProductEditor({ product }: { product: ProductDTO | null }) {
     startTransition(async () => {
       const result = await saveProductAction({
         id: product?.id,
-        title, slug, description, category, status, featured,
+        title, slug, description, category, status, featured, badge,
         images,
         sizes, colors,
         variants: rows.map((row) => ({
@@ -142,6 +143,14 @@ export function ProductEditor({ product }: { product: ProductDTO | null }) {
           Featured
           <small>Shows in the Featured band on the homepage.</small>
         </span>
+      </label>
+
+      <label>Badge
+        <select value={badge} onChange={(e) => setBadge(e.target.value as 'none' | 'new')}>
+          <option value="none">None</option>
+          <option value="new">New arrival</option>
+        </select>
+        <small>Drawn on the product card. Sold out is worked out from stock.</small>
       </label>
 
       <label>Sizes (comma separated)

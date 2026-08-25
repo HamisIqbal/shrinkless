@@ -453,6 +453,8 @@
   .frame--45 { aspect-ratio: 4 / 5; }
   .frame--34 { aspect-ratio: 3 / 4; }
   .frame--11 { aspect-ratio: 1 / 1; }
+  .frame--23 { aspect-ratio: 2 / 3; }
+  .frame--169 { aspect-ratio: 16 / 9; }
 
   a:hover > .frame > img,
   .zoom:hover .frame > img { transform: scale(1.03); }

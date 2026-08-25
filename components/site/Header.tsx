@@ -7,10 +7,12 @@ import { PRIMARY_NAV, type ShopMenu } from '@/lib/shop/navigation';
 import { MegaMenu } from '@/components/site/MegaMenu';
 import { SearchIcon, AccountIcon, CartIcon } from '@/components/site/icons';
 import { MobileDrawer } from '@/components/site/MobileDrawer';
+import { CartSheet } from '@/components/shop/CartSheet';
+import type { CartViewDTO } from '@/types/dto';
 
 type Props = {
   menu: ShopMenu;
-  itemCount: number;
+  cart: CartViewDTO | null;
   signedIn: boolean;
   storeEmail: string;
 };
@@ -18,13 +20,24 @@ type Props = {
 /** How far you have to move before the compact bar takes over. */
 const COMPACT_AT = 16;
 
+/** Hover grace, in and out. Short enough to feel immediate, long enough that
+ *  a pointer passing through the bar never opens anything. */
+const HOVER_IN = 120;
+const HOVER_OUT = 220;
+
 /**
  * Sits over the campaign hero on the homepage and takes a solid ground the
  * moment the page moves.
  *
- * The shop panel is a click-only disclosure. It used to open on hover, which
- * meant it dropped over the page whenever the pointer merely crossed the bar on
- * its way somewhere else.
+ * The shop panel opens on hover on a pointer device and on click everywhere.
+ * The hover is deliberately lazy in both directions: it waits `HOVER_IN` before
+ * opening, so merely crossing the bar on the way to the cart does not drop a
+ * full-width panel over the page, and `HOVER_OUT` before closing, so the
+ * diagonal from the trigger down into the panel does not shut it en route.
+ *
+ * Clicking pins the panel. A pinned panel ignores hover entirely until it is
+ * clicked shut or the route changes — otherwise a shopper who deliberately
+ * opened it would lose it the moment their pointer drifted.
  *
  * Spec §11: the compact bar has to arrive on the *first* meaningful scroll,
  * so the trigger is scroll position, not the foot of the hero. Sixteen pixels
@@ -32,9 +45,11 @@ const COMPACT_AT = 16;
  * near enough that the bar feels like it was waiting for you. Scrolling back
  * to the top hands the transparent treatment back.
  */
-export function Header({ menu, itemCount, signedIn, storeEmail }: Props) {
+export function Header({ menu, cart, signedIn, storeEmail }: Props) {
   const pathname = usePathname();
   const router = useRouter();
+
+  const itemCount = cart?.itemCount ?? 0;
 
   const canOverlay = pathname === '/';
 
@@ -42,9 +57,14 @@ export function Header({ menu, itemCount, signedIn, storeEmail }: Props) {
   const [megaOpen, setMegaOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
   const [query, setQuery] = useState('');
 
   const searchInput = useRef<HTMLInputElement>(null);
+  const hoverTimer = useRef(0);
+  /** Set by a click. State rather than a ref because the hover handlers read
+   *  it and have to be rebuilt when it changes. */
+  const [pinned, setPinned] = useState(false);
 
   const overlaid = canOverlay && !scrolled && !megaOpen && !searchOpen;
 
@@ -78,9 +98,11 @@ export function Header({ menu, itemCount, signedIn, storeEmail }: Props) {
 
   if (routeMark !== pathname) {
     setRouteMark(pathname);
+    setPinned(false);
     setMegaOpen(false);
     setDrawerOpen(false);
     setSearchOpen(false);
+    setCartOpen(false);
   }
 
   useEffect(() => {
@@ -88,6 +110,7 @@ export function Header({ menu, itemCount, signedIn, storeEmail }: Props) {
 
     function onKey(event: KeyboardEvent) {
       if (event.key !== 'Escape') return;
+      setPinned(false);
       setMegaOpen(false);
       setSearchOpen(false);
     }
@@ -100,7 +123,48 @@ export function Header({ menu, itemCount, signedIn, storeEmail }: Props) {
     if (searchOpen) searchInput.current?.focus();
   }, [searchOpen]);
 
-  const closeMega = useCallback(() => setMegaOpen(false), []);
+  const closeMega = useCallback(() => {
+    setPinned(false);
+    setMegaOpen(false);
+  }, []);
+
+  // Hover only where hovering is a real gesture. A touch device reports a
+  // synthetic mouseenter on tap, which would race the click handler and leave
+  // the panel opening and closing in the same gesture.
+  const canHover = useCallback(
+    () =>
+      typeof window !== 'undefined' &&
+      window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 62rem)').matches,
+    [],
+  );
+
+  const clearHover = useCallback(() => {
+    if (hoverTimer.current) {
+      window.clearTimeout(hoverTimer.current);
+      hoverTimer.current = 0;
+    }
+  }, []);
+
+  useEffect(() => clearHover, [clearHover]);
+
+  const hoverOpen = useCallback(() => {
+    if (!canHover()) return;
+    clearHover();
+    hoverTimer.current = window.setTimeout(() => setMegaOpen(true), HOVER_IN);
+  }, [canHover, clearHover]);
+
+  const hoverClose = useCallback(() => {
+    if (!canHover() || pinned) return;
+    clearHover();
+    hoverTimer.current = window.setTimeout(() => setMegaOpen(false), HOVER_OUT);
+  }, [canHover, clearHover, pinned]);
+
+  function toggleMega() {
+    clearHover();
+    const next = !megaOpen;
+    setPinned(next);
+    setMegaOpen(next);
+  }
 
   function submitSearch(event: React.FormEvent) {
     event.preventDefault();
@@ -119,7 +183,10 @@ export function Header({ menu, itemCount, signedIn, storeEmail }: Props) {
 
   return (
     <>
-      <header className={classes}>
+      {/* The panel is inside the header, so leaving the header is the one
+          event that reliably means "the pointer has abandoned the menu" —
+          leaving the trigger alone would fire on the way into the panel. */}
+      <header className={classes} onMouseLeave={hoverClose}>
         <div className="wrap masthead__inner">
           <button
             type="button"
@@ -150,7 +217,9 @@ export function Header({ menu, itemCount, signedIn, storeEmail }: Props) {
                         className="ulink mainnav__trigger"
                         aria-expanded={megaOpen}
                         aria-controls="shop-mega"
-                        onClick={() => setMegaOpen((value) => !value)}
+                        onClick={toggleMega}
+                        onMouseEnter={hoverOpen}
+                        onFocus={hoverOpen}
                       >
                         {item.label}
                         <span className="mainnav__chevron" aria-hidden="true" />
@@ -190,7 +259,17 @@ export function Header({ menu, itemCount, signedIn, storeEmail }: Props) {
               <span className="visually-hidden">{signedIn ? 'Account' : 'Sign in'}</span>
             </Link>
 
-            <Link href="/cart" className="iconbtn iconbtn--cart">
+            {/* Opens the sheet rather than navigating. /cart is still a real
+                page — a bookmark, a shared link and a JavaScript-less browser
+                all land on it — but nothing here sends a shopper away from
+                what they were looking at to see a list. */}
+            <button
+              type="button"
+              className="iconbtn iconbtn--cart"
+              aria-expanded={cartOpen}
+              aria-haspopup="dialog"
+              onClick={() => setCartOpen(true)}
+            >
               <CartIcon />
               {itemCount > 0 ? (
                 <span className="iconbtn__count tnum" aria-hidden="true">{itemCount}</span>
@@ -198,7 +277,7 @@ export function Header({ menu, itemCount, signedIn, storeEmail }: Props) {
               <span className="visually-hidden">
                 Cart, {itemCount} {itemCount === 1 ? 'item' : 'items'}
               </span>
-            </Link>
+            </button>
           </div>
         </div>
 
@@ -242,8 +321,14 @@ export function Header({ menu, itemCount, signedIn, storeEmail }: Props) {
           itemCount={itemCount}
           signedIn={signedIn}
           storeEmail={storeEmail}
+          onOpenCart={() => {
+            setDrawerOpen(false);
+            setCartOpen(true);
+          }}
         />
       </div>
+
+      <CartSheet cart={cart} open={cartOpen} onClose={() => setCartOpen(false)} />
     </>
   );
 }

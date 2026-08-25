@@ -24,6 +24,8 @@ export type ProductDTO = {
   category: string;
   status: 'draft' | 'published';
   featured: boolean;
+  /** Editorial flag drawn on the card. Sold out is derived from stock. */
+  badge: 'none' | 'new';
   images: ImageDTO[];
   sizes: string[];
   colors: string[];

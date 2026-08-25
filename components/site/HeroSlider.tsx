@@ -150,12 +150,23 @@ export function HeroSlider({
               key={index}
               aria-hidden={index !== active || undefined}
             >
+              {/* Every frame loads up front, and that is deliberate.
+                  Lazy-loading them was the reason slides two onward arrived
+                  blank and then snapped in: the rail is `overflow: hidden` and
+                  the frames sit off to the side of it, so the intersection
+                  observer never fired until the slide had already moved into
+                  view — the fetch started at the moment the shopper needed the
+                  picture. Four frames is a small enough set to simply fetch.
+                  The first is `priority` so it competes for bandwidth as LCP;
+                  the rest are eager but low priority, so they fill in behind
+                  it rather than racing it. */}
               <Image
                 src={slide.image.url}
                 alt={index === count ? '' : slide.image.alt}
                 fill
                 priority={index === 0}
-                loading={index === 0 ? undefined : 'lazy'}
+                loading="eager"
+                fetchPriority={index === 0 ? 'high' : 'low'}
                 sizes="100vw"
                 className="hero__image"
                 style={slide.image.focus ? { objectPosition: slide.image.focus } : undefined}

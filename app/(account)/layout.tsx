@@ -27,7 +27,7 @@ export default async function AccountLayout({ children }: LayoutProps<'/'>) {
 
       <Header
         menu={menu}
-        itemCount={cart?.itemCount ?? 0}
+        cart={cart}
         signedIn={Boolean(session?.user)}
         storeEmail={settings.storeEmail}
       />

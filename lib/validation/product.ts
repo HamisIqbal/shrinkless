@@ -28,6 +28,7 @@ export const productInputSchema = z.object({
   category: z.string().trim().toLowerCase().min(1, 'Category is required'),
   status: z.enum(['draft', 'published']),
   featured: z.boolean().default(false),
+  badge: z.enum(['none', 'new']).default('none'),
   images: z.array(imageSchema).default([]),
   sizes: z.array(optionValue).default([]),
   colors: z.array(optionValue).default([]),
