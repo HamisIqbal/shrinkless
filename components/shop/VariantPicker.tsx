@@ -3,12 +3,16 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { addToCartAction } from '@/app/actions/cart';
+import { ProductStory } from '@/components/shop/ProductStory';
+import { RestockForm } from '@/components/shop/RestockForm';
 import { useToast } from '@/components/ui/Toast';
 import { formatCents } from '@/lib/money';
 import { sizeOrder } from '@/lib/shop/colorways';
 import type { VariantDTO } from '@/types/dto';
 
 type Props = {
+  /** For the back-in-stock record, which is per product and per colourway. */
+  slug: string;
   sizes: string[];
   colors: string[];
   variants: VariantDTO[];
@@ -19,6 +23,7 @@ type Props = {
 };
 
 export function VariantPicker({
+  slug,
   sizes,
   colors,
   variants,
@@ -82,7 +87,7 @@ export function VariantPicker({
         {priced ? formatCents(priced.priceCents) : 'Unavailable'}
       </p>
 
-      {description ? <p className="picker__desc">{description}</p> : null}
+      <ProductStory description={description} />
 
       <ul className="picker__spec">
         <li>Garment Dyed Organic Cotton</li>
@@ -116,6 +121,10 @@ export function VariantPicker({
         </div>
       </fieldset>
 
+      {soldOut ? (
+        <RestockForm slug={slug} color={color} />
+      ) : (
+        <>
       <fieldset className="picker__group">
         <legend className="meta picker__legend">Size</legend>
         <div className="chiprow">
@@ -155,7 +164,7 @@ export function VariantPicker({
           <button
             type="button"
             className="stepper__button"
-            disabled={soldOut || capped <= 1}
+            disabled={capped <= 1}
             aria-label="Decrease quantity"
             onClick={() => setQuantity(Math.max(capped - 1, 1))}
           >
@@ -167,7 +176,7 @@ export function VariantPicker({
           <button
             type="button"
             className="stepper__button"
-            disabled={soldOut || capped >= ceiling}
+            disabled={capped >= ceiling}
             aria-label="Increase quantity"
             onClick={() => setQuantity(Math.min(capped + 1, ceiling))}
           >
@@ -187,9 +196,9 @@ export function VariantPicker({
           type="button"
           className="btn btn--lg btn--block"
           onClick={() => add()}
-          disabled={pending || soldOut}
+          disabled={pending}
         >
-          {soldOut ? 'Sold out' : pending ? 'Adding' : 'Add to cart'}
+          {pending ? 'Adding' : 'Add to cart'}
         </button>
 
         {/* /checkout does not exist until Phase 5, so Buy now adds and goes to
@@ -198,17 +207,13 @@ export function VariantPicker({
           type="button"
           className="btn btn--accent btn--lg btn--block"
           onClick={() => add(() => router.push('/cart'))}
-          disabled={pending || soldOut}
+          disabled={pending}
         >
           Buy now
         </button>
-
-        {soldOut ? (
-          <p className="picker__note">
-            Every size in this colour is sold out. Try another colour.
-          </p>
-        ) : null}
       </div>
+        </>
+      )}
     </div>
   );
 }

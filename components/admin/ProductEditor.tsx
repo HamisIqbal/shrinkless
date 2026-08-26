@@ -125,7 +125,16 @@ export function ProductEditor({ product }: { product: ProductDTO | null }) {
       </label>
 
       <label>Description
-        <textarea value={description} onChange={(e) => setDescription(e.target.value)} />
+        <textarea
+          rows={14}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+        <small>
+          Blank lines separate blocks; a line starting with a dash is a bullet.
+          The storefront reads a lead paragraph, five to seven bullets and a
+          closing line.
+        </small>
       </label>
 
       <label>Status

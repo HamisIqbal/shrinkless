@@ -112,6 +112,7 @@ export default async function ProductPage(props: PageProps<'/product/[slug]'>) {
                 price, rather than below the buttons where it was read after
                 the decision had already been made. */}
             <VariantPicker
+              slug={product.slug}
               sizes={product.sizes}
               colors={product.colors}
               variants={product.variants}

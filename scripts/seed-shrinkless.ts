@@ -1,3 +1,4 @@
+import { PRODUCT_COPY } from './product-copy';
 import { connectToDatabase, disconnectFromDatabase } from '@/lib/db/connection';
 import { Product } from '@/lib/db/models/product';
 import { Variant } from '@/lib/db/models/variant';
@@ -58,10 +59,7 @@ const CATALOGUE: Seed[] = [
     sizes: MENS_SIZES,
     featured: true,
     rating: 4.9,
-    description:
-      'The one everything else is measured against. Garment dyed organic cotton, ' +
-      'a true crew neck, and a body cut straight enough to wear on its own or ' +
-      'under something else. Made in USA.',
+    description: PRODUCT_COPY['mens-organic-tee'],
     soldOut: ['bone:xxl'],
   },
   {
@@ -73,10 +71,7 @@ const CATALOGUE: Seed[] = [
     sizes: MENS_SIZES,
     featured: true,
     rating: 4.8,
-    description:
-      'A denser knit with more weight in the hand and a shoulder that holds its ' +
-      'line. Cut slightly longer and wider than the Organic Tee. Garment dyed, ' +
-      'made in USA.',
+    description: PRODUCT_COPY['mens-heavyweight-tee'],
     soldOut: ['charcoal:s'],
   },
   {
@@ -89,9 +84,7 @@ const CATALOGUE: Seed[] = [
     featured: false,
     rating: 5,
     badge: 'new',
-    description:
-      'The Organic Tee body with a set-in long sleeve and a ribbed cuff that ' +
-      'stays put. Garment dyed organic cotton, made in USA.',
+    description: PRODUCT_COPY['mens-long-sleeve-tee'],
   },
   {
     slug: 'womens-organic-tee',
@@ -102,10 +95,7 @@ const CATALOGUE: Seed[] = [
     sizes: WOMENS_SIZES,
     featured: true,
     rating: 4.9,
-    description:
-      'The same cotton and the same dye process, cut for a shorter body and a ' +
-      'narrower shoulder. Holds its length and its neckline wash after wash. ' +
-      'Made in USA.',
+    description: PRODUCT_COPY['womens-organic-tee'],
     soldOut: ['heather:xs'],
   },
   {
@@ -117,9 +107,7 @@ const CATALOGUE: Seed[] = [
     sizes: WOMENS_SIZES,
     featured: false,
     rating: 4.7,
-    description:
-      'A wide, square body with a dropped shoulder and a cropped length. Meant ' +
-      'to sit away from the body. Garment dyed organic cotton, made in USA.',
+    description: PRODUCT_COPY['womens-boxy-tee'],
     // Out in every colour and every size, so the catalogue has one style that
     // exercises the sold-out treatment on the card rather than only the
     // struck-through size chip on the product page.
@@ -134,9 +122,7 @@ const CATALOGUE: Seed[] = [
     sizes: WOMENS_SIZES,
     featured: false,
     rating: 4.8,
-    description:
-      'The lightest weight we make, in the two colours that go with everything. ' +
-      'Garment dyed organic cotton, made in USA.',
+    description: PRODUCT_COPY['womens-everyday-tee'],
     soldOut: ['charcoal:l'],
   },
 ];
