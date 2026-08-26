@@ -98,16 +98,28 @@ export function ProductCard({ product, index = 0, onQuickView }: Props) {
     // off before the first `scrollLeft` write of the drag, and a re-render is
     // both a frame too late and a repaint the drag does not need.
     reel.classList.add('pcard__reel--drag');
-    reel.setPointerCapture(event.pointerId);
   }
 
   function onPointerMove(event: React.PointerEvent<HTMLDivElement>) {
     if (!dragging.current) return;
 
+    const reel = event.currentTarget;
     const distance = event.clientX - origin.current.x;
-    if (Math.abs(distance) > DRAG_SLOP) travelled.current = true;
 
-    event.currentTarget.scrollLeft = origin.current.scroll - distance;
+    // Capture is claimed here rather than on pointerdown, and only once the
+    // pointer has actually travelled. While capture is set the browser retargets
+    // the click to the capturing element, so capturing on press meant every
+    // plain click landed on the reel instead of the frame's link — the card
+    // simply would not open on a mouse. A drag still captures, and a drag's
+    // click is swallowed below anyway.
+    if (!travelled.current && Math.abs(distance) > DRAG_SLOP) {
+      travelled.current = true;
+      reel.setPointerCapture(event.pointerId);
+    }
+
+    if (!travelled.current) return;
+
+    reel.scrollLeft = origin.current.scroll - distance;
   }
 
   function onPointerUp(event: React.PointerEvent<HTMLDivElement>) {
@@ -124,6 +136,16 @@ export function ProductCard({ product, index = 0, onQuickView }: Props) {
     if (travelled.current && reel.clientWidth > 0) {
       show(Math.round(reel.scrollLeft / reel.clientWidth));
     }
+  }
+
+  // Capture is what normally guarantees a pointerup, and it is not claimed
+  // until the drag has actually started — so a press that leaves the card
+  // before travelling has to be closed out by hand.
+  function onPointerLeave(event: React.PointerEvent<HTMLDivElement>) {
+    if (!dragging.current) return;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) return;
+
+    onPointerUp(event);
   }
 
   // A drag that ends over a photograph would otherwise navigate on release.
@@ -149,6 +171,7 @@ export function ProductCard({ product, index = 0, onQuickView }: Props) {
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerUp}
+          onPointerLeave={onPointerLeave}
           onClickCapture={onClickCapture}
         >
           {hasFrames ? (

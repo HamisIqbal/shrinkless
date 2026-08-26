@@ -108,16 +108,16 @@ export default async function ProductPage(props: PageProps<'/product/[slug]'>) {
             <p className="eyebrow">{categoryLabel}</p>
             <h1 className="head pdp__title">{product.title}</h1>
 
+            {/* The description rides inside the picker, directly under the
+                price, rather than below the buttons where it was read after
+                the decision had already been made. */}
             <VariantPicker
               sizes={product.sizes}
               colors={product.colors}
               variants={product.variants}
+              description={product.description}
               initialColor={requestedColor}
             />
-
-            {product.description ? (
-              <p className="pdp__description">{product.description}</p>
-            ) : null}
 
             <ul className="accordion pdp__accordion">
               {SECTIONS.map((section) => (

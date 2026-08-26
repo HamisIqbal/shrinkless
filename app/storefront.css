@@ -388,6 +388,22 @@
     z-index: 0;
   }
 
+  /* A pinned footer can only ever show its last viewport-worth of itself, so
+     one taller than the window loses its head permanently — the signup and the
+     heading sat above the top edge with no way to scroll to them. FooterReveal
+     measures for that and the footer falls back to an ordinary block. */
+  :root[data-footer='static'] .shell__stack {
+    margin-bottom: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  :root[data-footer='static'] .footerdock { position: static; }
+
+  /* The ink canvas exists to be seen through the cut corners. Without them it
+     is just a dark band under a short page. */
+  :root[data-footer='static'] { background-color: var(--color-paper); }
+
   /* The cut corners have to reveal something. Behind the slab is the page
      canvas, and paper-on-paper made a 40px radius invisible — so the canvas
      goes ink and `body` stops painting over it. Overscrolling at the top of
@@ -1005,9 +1021,11 @@
   justify-content: flex-end;
   min-height: 92svh;
   margin-top: -5.25rem; /* sits under the transparent masthead */
-  padding-block: var(--space-8) var(--space-4);
+  /* Height-relative rather than fixed. The content is bottom-aligned, so on a
+     short laptop window an 8rem top pad pushed the eyebrow and the top of the
+     headline off the top of the section. */
+  padding-block: clamp(var(--space-6), 14vh, var(--space-8)) var(--space-4);
   color: var(--color-white);
-  overflow: hidden;
 }
 
 /* Wide windows crop a portrait frame hardest: `cover` scales to the width and
@@ -1073,10 +1091,18 @@
 
 .hero__eyebrow { color: var(--color-white); opacity: 0.9; }
 
-.hero__head { margin-top: var(--space-3); max-width: 16ch; }
+/* Capped against the viewport height as well as its width. A 120px headline
+   over two lines plus a lede, two buttons and the caption row is taller than a
+   768px laptop window, and the section is bottom-aligned, so the overflow came
+   off the top where the eyebrow and the first line live. */
+.hero__head {
+  margin-top: var(--space-3);
+  max-width: 16ch;
+  font-size: min(var(--text-display), 11.5vh);
+}
 
 .hero__lede {
-  margin-top: var(--space-4);
+  margin-top: clamp(var(--space-2), 2vh, var(--space-4));
   color: var(--color-white);
   max-width: 34ch;
 }
@@ -1084,7 +1110,7 @@
 .hero__actions {
   display: grid;
   gap: var(--space-2);
-  margin-top: var(--space-5);
+  margin-top: clamp(var(--space-3), 3vh, var(--space-5));
 }
 
 @media (min-width: 30rem) {
@@ -1106,7 +1132,7 @@
   display: grid;
   gap: var(--space-3);
   justify-items: start;
-  margin-top: var(--space-5);
+  margin-top: clamp(var(--space-3), 3vh, var(--space-5));
 }
 
 @media (min-width: 30rem) {
@@ -1114,7 +1140,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-top: var(--space-6);
+    margin-top: clamp(var(--space-4), 4vh, var(--space-6));
   }
 }
 
@@ -1507,18 +1533,15 @@
 
 /* --- captions ------------------------------------------------------------ */
 
+/* Name left, price right, at every width. Stacking them on a phone put the
+   price under the name where it read as a second line of the title rather than
+   as the number you are looking for. */
 .pcard__foot {
   display: grid;
-  gap: 0.2rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-2);
+  align-items: baseline;
   min-width: 0;
-}
-
-@media (min-width: 62rem) {
-  .pcard__foot {
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: var(--space-2);
-    align-items: baseline;
-  }
 }
 
 /* Deliberately quiet. The photograph is doing the selling. */
@@ -1535,6 +1558,9 @@
 .pcard__link:hover { text-decoration: underline; text-underline-offset: 0.3em; }
 
 .pcard__price {
+  justify-self: end;
+  text-align: right;
+  white-space: nowrap;
   font-size: var(--text-meta);
   font-weight: 500;
   letter-spacing: 0.06em;
@@ -1812,6 +1838,16 @@
   isolation: isolate;
   margin-top: auto;
   overflow: hidden;
+}
+
+/* Short windows first: trimming the footer's own vertical rhythm is worth more
+   than falling back to a static footer, because the reveal is the nicer of the
+   two and this is often all that stands between the two states. */
+@media (min-width: 62rem) and (max-height: 56rem) {
+  .colophon { padding-block: var(--space-5); }
+  .colophon__rule { margin-block: var(--space-4); }
+  .colophon__grid { gap: var(--space-4); }
+  .colophon__signup { gap: var(--space-3); }
 }
 
 .colophon__bg {
@@ -2195,16 +2231,28 @@
     background-color var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out);
 }
 
-.chip:hover { border-color: var(--color-ink); }
+/* Hover only where there is a pointer to hover with. On a touchscreen the
+   hover state latches after a tap, so a sold-out size that could not be
+   selected still lit up as though it had been — then Add to cart answered
+   "choose a size" and the whole thing read as a glitch. */
+@media (hover: hover) {
+  .chip:hover:not(.chip--sold) { border-color: var(--color-ink); }
+}
 .chip--on { background: var(--color-ink); border-color: var(--color-ink); color: var(--color-white); }
 
 /* Sold out stays visible and struck through — a size run with holes in it
    still reads as a complete run. */
 .chip--sold {
+  border-style: dashed;
+  border-color: var(--color-muted);
+  background: var(--color-paper-deep);
   color: var(--color-muted-text);
   text-decoration: line-through;
   cursor: not-allowed;
 }
+
+/* Nothing about a sold-out chip should move under a finger or a cursor. */
+.chip--sold:active { border-color: var(--color-muted); }
 
 .chip:has(:focus-visible) { outline: 2px solid var(--color-ink); outline-offset: 2px; }
 
@@ -2247,6 +2295,14 @@
 
 .picker__price { font-size: var(--text-sub); font-weight: 500; }
 
+/* Directly under the price, before the spec list and the controls. */
+.picker__desc {
+  padding-top: var(--space-2);
+  max-width: 46ch;
+  line-height: 1.6;
+  color: var(--color-muted-text);
+}
+
 .picker__spec {
   display: grid;
   gap: 0.35rem;
@@ -2287,7 +2343,25 @@
 
 .swatch:has(:focus-visible) { outline: 2px solid var(--color-ink); outline-offset: 2px; }
 
+/* The stepper's own rule pads its top for the cart lines; inside a labelled
+   group here the legend has already done that. */
+.picker__qty { padding-top: 0; }
+
+.picker__stock {
+  padding-left: var(--space-2);
+  font-size: var(--text-meta);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted-text);
+}
+
 .picker__actions { display: grid; gap: var(--space-2); padding-top: var(--space-2); }
+
+.picker__note {
+  font-size: var(--text-meta);
+  line-height: 1.5;
+  color: var(--color-muted-text);
+}
 
 
 .pdp__detail { padding-top: var(--space-7); }

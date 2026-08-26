@@ -12,11 +12,19 @@ type Props = {
   sizes: string[];
   colors: string[];
   variants: VariantDTO[];
+  /** Sits under the price: the first thing read after the number. */
+  description?: string;
   /** From `?color=` on the collection tiles, so the tile you clicked is selected. */
   initialColor?: string;
 };
 
-export function VariantPicker({ sizes, colors, variants, initialColor }: Props) {
+export function VariantPicker({
+  sizes,
+  colors,
+  variants,
+  description,
+  initialColor,
+}: Props) {
   const router = useRouter();
   const toast = useToast();
 
@@ -24,6 +32,7 @@ export function VariantPicker({ sizes, colors, variants, initialColor }: Props) 
     initialColor && colors.includes(initialColor) ? initialColor : (colors[0] ?? ''),
   );
   const [size, setSize] = useState('');
+  const [quantity, setQuantity] = useState(1);
   const [pending, startTransition] = useTransition();
 
   const ordered = [...sizes].sort((a, b) => sizeOrder(a) - sizeOrder(b));
@@ -37,6 +46,19 @@ export function VariantPicker({ sizes, colors, variants, initialColor }: Props) 
   const selected = size ? findVariant(size, color) : undefined;
   const priced = selected ?? findVariant(ordered[0] ?? '', color);
 
+  // Nothing in this colourway can be bought. The buttons say so rather than
+  // sending a shopper round the "choose a size" loop with no size to choose:
+  // every chip is disabled, so the error had no way to be acted on.
+  const soldOut = ordered.every((option) => {
+    const variant = findVariant(option, color);
+    return !variant || !variant.inStock;
+  });
+
+  // The stepper cannot offer more than the shelf holds. Before a size is
+  // picked there is no stock figure to cap against, so it opens at ten.
+  const ceiling = Math.max(selected?.stock ?? 10, 1);
+  const capped = Math.min(quantity, ceiling);
+
   function add(then?: () => void) {
     if (!selected) {
       toast('Choose a size first', 'error');
@@ -44,7 +66,7 @@ export function VariantPicker({ sizes, colors, variants, initialColor }: Props) 
     }
 
     startTransition(async () => {
-      const result = await addToCartAction(selected.id, 1);
+      const result = await addToCartAction(selected.id, capped);
       toast(result.ok ? 'Added to cart' : result.error, result.ok ? 'ok' : 'error');
 
       if (result.ok) {
@@ -59,6 +81,8 @@ export function VariantPicker({ sizes, colors, variants, initialColor }: Props) 
       <p className="picker__price tnum">
         {priced ? formatCents(priced.priceCents) : 'Unavailable'}
       </p>
+
+      {description ? <p className="picker__desc">{description}</p> : null}
 
       <ul className="picker__spec">
         <li>Garment Dyed Organic Cotton</li>
@@ -77,7 +101,13 @@ export function VariantPicker({ sizes, colors, variants, initialColor }: Props) 
                 value={option}
                 className="visually-hidden"
                 checked={color === option}
-                onChange={() => setColor(option)}
+                onChange={() => {
+                  setColor(option);
+                  // A size the new colourway does not stock would otherwise stay
+                  // lit while nothing was actually selected underneath it.
+                  const carried = findVariant(size, option);
+                  if (!carried || !carried.inStock) setSize('');
+                }}
               />
               <span className={`swatch__dot dot--${option}`} aria-hidden="true" />
               <span className="swatch__name">{option}</span>
@@ -91,12 +121,16 @@ export function VariantPicker({ sizes, colors, variants, initialColor }: Props) 
         <div className="chiprow">
           {ordered.map((option) => {
             const variant = findVariant(option, color);
-            const soldOut = !variant || !variant.inStock;
+            const unavailable = !variant || !variant.inStock;
 
             return (
               <label
                 key={option}
-                className={`chip${size === option ? ' chip--on' : ''}${soldOut ? ' chip--sold' : ''}`}
+                className={`chip${size === option ? ' chip--on' : ''}${
+                  unavailable ? ' chip--sold' : ''
+                }`}
+                aria-disabled={unavailable || undefined}
+                title={unavailable ? `${option.toUpperCase()} is sold out` : undefined}
               >
                 <input
                   type="radio"
@@ -104,37 +138,76 @@ export function VariantPicker({ sizes, colors, variants, initialColor }: Props) 
                   value={option}
                   className="visually-hidden"
                   checked={size === option}
-                  disabled={soldOut}
+                  disabled={unavailable}
                   onChange={() => setSize(option)}
                 />
                 {option.toUpperCase()}
-                {soldOut ? <span className="visually-hidden"> (sold out)</span> : null}
+                {unavailable ? <span className="visually-hidden"> (sold out)</span> : null}
               </label>
             );
           })}
         </div>
       </fieldset>
 
+      <div className="picker__group">
+        <p className="meta picker__legend" id="qty-label">Quantity</p>
+        <div className="stepper picker__qty" role="group" aria-labelledby="qty-label">
+          <button
+            type="button"
+            className="stepper__button"
+            disabled={soldOut || capped <= 1}
+            aria-label="Decrease quantity"
+            onClick={() => setQuantity(Math.max(capped - 1, 1))}
+          >
+            &minus;
+          </button>
+
+          <span className="stepper__value tnum" aria-live="polite">{capped}</span>
+
+          <button
+            type="button"
+            className="stepper__button"
+            disabled={soldOut || capped >= ceiling}
+            aria-label="Increase quantity"
+            onClick={() => setQuantity(Math.min(capped + 1, ceiling))}
+          >
+            +
+          </button>
+
+          {selected ? (
+            <span className="picker__stock">
+              {selected.stock <= 5 ? `Only ${selected.stock} left` : 'In stock'}
+            </span>
+          ) : null}
+        </div>
+      </div>
+
       <div className="picker__actions">
         <button
           type="button"
           className="btn btn--lg btn--block"
           onClick={() => add()}
-          disabled={pending}
+          disabled={pending || soldOut}
         >
-          {pending ? 'Adding' : 'Add to cart'}
+          {soldOut ? 'Sold out' : pending ? 'Adding' : 'Add to cart'}
         </button>
 
         {/* /checkout does not exist until Phase 5, so Buy now adds and goes to
             the cart rather than pretending to be an express checkout. */}
         <button
           type="button"
-          className="btn btn--outline btn--lg btn--block"
+          className="btn btn--accent btn--lg btn--block"
           onClick={() => add(() => router.push('/cart'))}
-          disabled={pending}
+          disabled={pending || soldOut}
         >
           Buy now
         </button>
+
+        {soldOut ? (
+          <p className="picker__note">
+            Every size in this colour is sold out. Try another colour.
+          </p>
+        ) : null}
       </div>
     </div>
   );

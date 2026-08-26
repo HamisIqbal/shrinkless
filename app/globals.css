@@ -37,6 +37,15 @@
   --color-muted:      #a5a5a0;
   --color-muted-text: #6b6b66;
 
+  /* --- Accent ------------------------------------------------------------
+     The palette is monochrome by design and the storefront stays that way.
+     This one colour exists for a single job: the Buy now button, which was
+     asked to stand apart from Add to cart rather than mirror it in outline.
+     A garment-dye rust rather than a UI blue — it belongs to the product.
+     5.9:1 on white, so the label is legible at the size the button sets it. */
+  --color-accent:      #a8432a;
+  --color-accent-deep: #8a3520;
+
   /* A flat wash, not a gradient ramp: white hero type has to stay legible
      over light frames and this is the least visible way to buy the contrast. */
   --color-scrim:      rgba(10, 10, 10, 0.28);
@@ -370,6 +379,17 @@
     color: var(--color-ink);
 
     --btn-fill: var(--color-ink);
+    --btn-fill-ink: var(--color-white);
+  }
+
+  /* The one coloured control on the storefront: Buy now, which has to be
+     distinguishable from Add to cart at a glance rather than by reading it. */
+  .btn--accent {
+    border-color: var(--color-accent);
+    background: var(--color-accent);
+    color: var(--color-white);
+
+    --btn-fill: var(--color-accent-deep);
     --btn-fill-ink: var(--color-white);
   }
 
