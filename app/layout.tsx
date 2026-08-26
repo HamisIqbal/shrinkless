@@ -1,11 +1,5 @@
 import type { Metadata } from "next";
-import {
-  Inter_Tight,
-  Cormorant_Garamond,
-  Geist,
-  Geist_Mono,
-  Geist_Pixel,
-} from "next/font/google";
+import { Inter_Tight, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
 
 // Neue Haas Grotesk is licensed and Helvetica Neue cannot be served as a
@@ -26,29 +20,6 @@ const cormorant = Cormorant_Garamond({
   display: "swap",
 });
 
-// --- Home page only ------------------------------------------------------
-// The storefront at large stays on Inter Tight. The home page mixes Geist
-// (headlines, body and UI), Geist Mono (labels, counts, captions) and Geist
-// Pixel (the numbered tile indices).
-const geist = Geist({
-  subsets: ["latin"],
-  variable: "--font-geist",
-  display: "swap",
-});
-
-const geistMono = Geist_Mono({
-  subsets: ["latin"],
-  variable: "--font-geist-mono",
-  display: "swap",
-});
-
-const geistPixel = Geist_Pixel({
-  subsets: ["latin"],
-  weight: "400",
-  variable: "--font-geist-pixel",
-  display: "swap",
-});
-
 export const metadata: Metadata = {
   title: {
     default: "Shrinkless — Organic Tees That Don't Shrink",
@@ -60,10 +31,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="en"
-      className={`${interTight.variable} ${cormorant.variable} ${geist.variable} ${geistMono.variable} ${geistPixel.variable}`}
-    >
+    <html lang="en" className={`${interTight.variable} ${cormorant.variable}`}>
       <body>{children}</body>
     </html>
   );
