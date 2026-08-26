@@ -2990,3 +2990,80 @@
 }
 
 .admin label > small { padding-top: 0.3rem; }
+
+
+/* --------------------------------------------------------------------------
+   Home page type
+   The rest of the storefront stays on Inter Tight. The home page runs four
+   faces: Humane for every headline, Geist for body and UI, Geist Mono for the
+   tracked labels, and Geist Pixel for the numbered tile indices. Scoped to
+   `.hometype`, which the home page wraps around itself; `display: contents`
+   keeps the bands full-bleed exactly as before.
+   -------------------------------------------------------------------------- */
+
+.hometype {
+  display: contents;
+  /* `display: contents` still passes inherited values down, so setting the
+     family here is what actually moves the page off Inter Tight. */
+  font-family: var(--font-sans);
+
+  /* Body and UI. Geist has a taller x-height than Inter Tight, so the sizes
+     below are unchanged — it reads a shade larger at the same measure. */
+  --font-sans: var(--font-geist), "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono-label: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-display: var(--font-humane), "Haettenschweiler", "Arial Narrow", sans-serif;
+  --font-pixel: var(--font-geist-pixel), ui-monospace, monospace;
+
+  /* Humane is an ultra-condensed face: it sets roughly half the width and
+     two-thirds the apparent height of Inter Tight at the same size, so the
+     display steps are pushed up rather than left to look undersized. */
+  --text-display: clamp(4.5rem, 16vw, 13rem);
+  --text-head: clamp(3.25rem, 8vw, 6rem);
+}
+
+.hometype .display,
+.hometype .head {
+  font-family: var(--font-display);
+  font-weight: 600;
+  /* Condensed faces want air between letters, not less of it. */
+  letter-spacing: 0.005em;
+}
+
+.hometype .display { line-height: 0.8; }
+.hometype .head { line-height: 0.84; }
+
+/* The headline measures were set in Inter Tight ems; Humane fits far more
+   characters per line, so the caps come back down to something readable. */
+.hometype .hero__head { max-width: 11ch; }
+.hometype .promise__head { max-width: 11ch; }
+.hometype .quotes__title { max-width: 13ch; }
+
+/* Labels, counts and captions — the tracked uppercase furniture. Mono gives
+   the page its second voice without touching a headline or a paragraph. */
+.hometype .eyebrow,
+.hometype .meta,
+.hometype .btn,
+.hometype .gateway__cta,
+.hometype .hero__caption,
+.hometype .rail__more {
+  font-family: var(--font-mono-label);
+  font-weight: 400;
+}
+
+/* Mono sets wider than Geist, so the tracking comes off a little to keep the
+   labels the same length they were. */
+.hometype .eyebrow { letter-spacing: 0.1em; }
+.hometype .meta { letter-spacing: 0.08em; }
+.hometype .btn { letter-spacing: 0.1em; }
+.hometype .gateway__cta { letter-spacing: 0.12em; }
+
+/* Pixel, used once: the 01–04 indices on the Why Shrinkless tiles. */
+.hometype .tiles__index {
+  font-family: var(--font-pixel);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+}
+
+/* The category labels sit inside a tile, not across the page, so they take a
+   step below the hero rather than the full display size. */
+.hometype .gateway__label { font-size: clamp(3rem, 7vw, 6.5rem); }

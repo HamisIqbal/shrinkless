@@ -103,7 +103,9 @@ export default async function HomePage() {
   }));
 
   return (
-    <>
+    /* The mixed-type treatment (Geist / Geist Mono / Geist Pixel / Humane) is
+       scoped to the home page. `display: contents` keeps the bands full-bleed. */
+    <div className="hometype">
       <HeroSlider
         slides={slides}
         eyebrow="Made in USA"
@@ -181,6 +183,6 @@ export default async function HomePage() {
         support="Six styles, two fits, and a tee that comes out of the wash the same size it went in."
         cta={{ href: '/shop', label: 'Shop the collection' }}
       />
-    </>
+    </div>
   );
 }
