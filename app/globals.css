@@ -46,6 +46,13 @@
   --color-accent:      #ff7a00;
   --color-accent-deep: #ff9433;
 
+  /* In stock, once a size is chosen. Two greens rather than one: the dot is
+     decorative and can be as bright as it likes, while the words have to stay
+     readable at 13px uppercase — green goes pale fast, and a brighter text
+     green than this drops under 4.5:1 on paper. */
+  --color-instock:     #0b7a34;
+  --color-instock-dot: #22c55e;
+
   /* A flat wash, not a gradient ramp: white hero type has to stay legible
      over light frames and this is the least visible way to buy the contrast. */
   --color-scrim:      rgba(10, 10, 10, 0.28);

@@ -184,7 +184,9 @@ export function VariantPicker({
           </button>
 
           {selected ? (
-            <span className="picker__stock">
+            <span
+              className={`picker__stock${selected.stock > 5 ? ' picker__stock--in' : ''}`}
+            >
               {selected.stock <= 5 ? `Only ${selected.stock} left` : 'In stock'}
             </span>
           ) : null}
