@@ -2,6 +2,7 @@ import { getStoreSettings } from '@/lib/services/settings';
 import { readCartView } from '@/lib/cart-session';
 import { buildShopMenu } from '@/lib/shop/menu.server';
 import { auth } from '@/auth';
+import { isAdminSession } from '@/lib/auth/guards';
 import { SmoothScroll } from '@/components/ui/SmoothScroll';
 import { Motion } from '@/components/ui/Motion';
 import { ToastProvider } from '@/components/ui/Toast';
@@ -34,6 +35,7 @@ export default async function ShopLayout({ children }: LayoutProps<'/'>) {
         menu={menu}
         cart={cart}
         signedIn={Boolean(session?.user)}
+        isAdmin={isAdminSession(session)}
         storeEmail={settings.storeEmail}
       />
 

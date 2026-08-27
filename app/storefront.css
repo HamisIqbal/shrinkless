@@ -635,6 +635,30 @@
 
 .iconbtn[aria-expanded="true"] { opacity: 0.6; }
 
+/* The one text control in a row of icons. It reads as a label rather than
+   another glyph on purpose — it is a staff door, not a shopper's tool, and it
+   only ever renders for a signed-in admin. */
+.adminlink {
+  display: inline-flex;
+  align-items: center;
+  height: 1.9rem;
+  padding-inline: 0.6rem;
+  border: var(--spacing-rule) solid currentColor;
+  border-radius: 999px;
+  color: inherit;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: opacity var(--dur-1) var(--ease-out);
+}
+
+.adminlink:hover { opacity: 0.6; }
+
+.masthead__admin { margin-right: 0.4rem; }
+
 /* Sits on the bag rather than beside it, so the row keeps its rhythm whether
    the cart is empty or not. */
 .iconbtn__count {
@@ -667,6 +691,9 @@
   .masthead__inner { justify-content: space-between; }
   .wordmark { margin-inline: auto; }
   .masthead__account { display: none; }
+  /* The drawer carries the admin door below this width, so the bar does not
+     have to squeeze a text pill in beside the wordmark. */
+  .masthead__admin { display: none; }
 }
 
 @media (min-width: 62rem) {

@@ -2,6 +2,7 @@ import { getStoreSettings } from '@/lib/services/settings';
 import { readCartView } from '@/lib/cart-session';
 import { buildShopMenu } from '@/lib/shop/menu.server';
 import { auth } from '@/auth';
+import { isAdminSession } from '@/lib/auth/guards';
 import { Motion } from '@/components/ui/Motion';
 import { ToastProvider } from '@/components/ui/Toast';
 import { AnnounceBar } from '@/components/site/AnnounceBar';
@@ -31,6 +32,7 @@ export default async function AccountLayout({ children }: LayoutProps<'/'>) {
         menu={menu}
         cart={cart}
         signedIn={Boolean(session?.user)}
+        isAdmin={isAdminSession(session)}
         storeEmail={settings.storeEmail}
       />
 

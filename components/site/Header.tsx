@@ -14,6 +14,9 @@ type Props = {
   menu: ShopMenu;
   cart: CartViewDTO | null;
   signedIn: boolean;
+  /** Shows the way back into the admin panel. Display only — every admin
+   *  route re-checks the session server-side. */
+  isAdmin: boolean;
   storeEmail: string;
 };
 
@@ -45,7 +48,7 @@ const HOVER_OUT = 220;
  * near enough that the bar feels like it was waiting for you. Scrolling back
  * to the top hands the transparent treatment back.
  */
-export function Header({ menu, cart, signedIn, storeEmail }: Props) {
+export function Header({ menu, cart, signedIn, isAdmin, storeEmail }: Props) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -240,6 +243,12 @@ export function Header({ menu, cart, signedIn, storeEmail }: Props) {
           </nav>
 
           <div className="masthead__utils">
+            {isAdmin ? (
+              <Link href="/admin" className="adminlink masthead__admin">
+                Admin
+              </Link>
+            ) : null}
+
             <button
               type="button"
               className="iconbtn masthead__search"
@@ -320,6 +329,7 @@ export function Header({ menu, cart, signedIn, storeEmail }: Props) {
           onClose={() => setDrawerOpen(false)}
           itemCount={itemCount}
           signedIn={signedIn}
+          isAdmin={isAdmin}
           storeEmail={storeEmail}
           onOpenCart={() => {
             setDrawerOpen(false);

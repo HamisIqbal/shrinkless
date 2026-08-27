@@ -10,6 +10,7 @@ type Props = {
   onClose: () => void;
   itemCount: number;
   signedIn: boolean;
+  isAdmin: boolean;
   storeEmail: string;
   /** Closes the drawer and raises the cart sheet over it. */
   onOpenCart: () => void;
@@ -31,6 +32,7 @@ export function MobileDrawer({
   onClose,
   itemCount,
   signedIn,
+  isAdmin,
   storeEmail,
   onOpenCart,
 }: Props) {
@@ -180,6 +182,11 @@ export function MobileDrawer({
           </ul>
 
           <div className="drawer__foot">
+            {isAdmin ? (
+              <Link href="/admin" className="adminlink" onClick={onClose}>
+                Admin
+              </Link>
+            ) : null}
             <Link
               href={signedIn ? '/account' : '/login'}
               className="ulink"

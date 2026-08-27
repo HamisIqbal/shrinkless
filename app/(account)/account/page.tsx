@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
+import { isAdminSession } from '@/lib/auth/guards';
 import { LogoutButton } from '@/components/account/LogoutButton';
 import { formatCents } from '@/lib/money';
 import { listOrdersForUser } from '@/lib/services/orders';
@@ -52,6 +53,9 @@ export default async function AccountPage() {
 
       <div className="accountfoot">
         <Link href="/shop" className="btn">Shop all</Link>
+        {isAdminSession(session) ? (
+          <Link href="/admin" className="btn">Admin panel</Link>
+        ) : null}
         <LogoutButton />
       </div>
     </div>
