@@ -96,6 +96,9 @@ export default async function HomePage() {
     caption: HERO_CAPTIONS[index] ?? 'Shrinkless',
   }));
 
+  // Deliberately still the curated pair rather than every category in the
+  // database: these are art-directed frames with their own photography, not a
+  // menu. The navigation and /shop routes read the real category list.
   const gateways: Gateway[] = SHOPPABLE.map(({ slug, label }, index) => ({
     slug,
     label,
