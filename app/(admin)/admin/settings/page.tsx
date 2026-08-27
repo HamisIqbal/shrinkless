@@ -3,7 +3,7 @@ import { requireAdminPage } from '@/lib/auth/guards';
 import { getStoreSettings } from '@/lib/services/settings';
 
 export default async function AdminSettingsPage() {
-  await requireAdminPage();
+  await requireAdminPage('settings:read');
   const settings = await getStoreSettings();
 
   return (

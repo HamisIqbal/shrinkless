@@ -37,6 +37,18 @@ export function ProductEditor({ product }: { product: ProductDTO | null }) {
   const [edited, setEdited] = useState<Record<string, MatrixRow>>({});
   const [prunedFor, setPrunedFor] = useState<MatrixRow[] | null>(null);
   const [images, setImages] = useState<ImageDTO[]>(product?.images ?? []);
+  const [tagsText, setTagsText] = useState((product?.tags ?? []).join(', '));
+  const [baseSku, setBaseSku] = useState(product?.baseSku ?? '');
+  const [seoTitle, setSeoTitle] = useState(product?.seo?.title ?? '');
+  const [seoDescription, setSeoDescription] = useState(product?.seo?.description ?? '');
+  const [seoKeywords, setSeoKeywords] = useState((product?.seo?.keywords ?? []).join(', '));
+  const [qtyMin, setQtyMin] = useState(String(product?.quantityRule?.min ?? 1));
+  const [qtyStep, setQtyStep] = useState(String(product?.quantityRule?.step ?? 1));
+  const [qtyMax, setQtyMax] = useState(
+    product?.quantityRule?.max === null || product?.quantityRule?.max === undefined
+      ? ''
+      : String(product.quantityRule.max),
+  );
 
   const sizes = useMemo(() => toList(sizesText), [sizesText]);
   const colors = useMemo(() => toList(colorsText), [colorsText]);
@@ -87,6 +99,18 @@ export function ProductEditor({ product }: { product: ProductDTO | null }) {
         id: product?.id,
         title, slug, description, category, status, featured, badge,
         rating: Number(rating) || 0,
+        tags: toList(tagsText),
+        baseSku,
+        seo: {
+          title: seoTitle,
+          description: seoDescription,
+          keywords: toList(seoKeywords),
+        },
+        quantityRule: {
+          min: Number(qtyMin) || 1,
+          step: Number(qtyStep) || 1,
+          max: qtyMax.trim() === '' ? null : Number(qtyMax),
+        },
         images,
         sizes, colors,
         variants: rows.map((row) => ({
@@ -97,6 +121,8 @@ export function ProductEditor({ product }: { product: ProductDTO | null }) {
           priceCents: row.priceCents,
           stock: row.stock,
           enabled: row.enabled,
+          lowStockThreshold: null,
+          imagePublicId: '',
         })),
       });
 
@@ -175,6 +201,58 @@ export function ProductEditor({ product }: { product: ProductDTO | null }) {
         />
         <small>Out of 5, drawn on the card. Leave at 0 for no rating.</small>
       </label>
+
+      <label>Tags (comma separated)
+        <input value={tagsText} onChange={(e) => setTagsText(e.target.value)} />
+        <small>Merchandising labels. Searchable in the admin product list.</small>
+      </label>
+
+      <label>Base SKU
+        <input value={baseSku} onChange={(e) => setBaseSku(e.target.value.toUpperCase())} />
+        <small>The family code. Each variant still carries its own SKU below.</small>
+      </label>
+
+      <fieldset>
+        <legend>How it is sold</legend>
+
+        <label>Minimum quantity
+          <input type="number" min={1} value={qtyMin} onChange={(e) => setQtyMin(e.target.value)} />
+        </label>
+
+        <label>Sold in multiples of
+          <input type="number" min={1} value={qtyStep} onChange={(e) => setQtyStep(e.target.value)} />
+        </label>
+
+        <label>Maximum per order (blank for none)
+          <input type="number" min={1} value={qtyMax} onChange={(e) => setQtyMax(e.target.value)} />
+        </label>
+
+        <small>
+          Minimum 12 with a step of 12 sells in 12, 24, 36. The product page
+          offers only these quantities and the server refuses anything else.
+        </small>
+      </fieldset>
+
+      <fieldset>
+        <legend>SEO</legend>
+
+        <label>Title
+          <input value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} maxLength={70} />
+        </label>
+
+        <label>Description
+          <textarea
+            value={seoDescription}
+            onChange={(e) => setSeoDescription(e.target.value)}
+            maxLength={160}
+            rows={2}
+          />
+        </label>
+
+        <label>Keywords (comma separated)
+          <input value={seoKeywords} onChange={(e) => setSeoKeywords(e.target.value)} />
+        </label>
+      </fieldset>
 
       <label>Sizes (comma separated)
         <input value={sizesText} onChange={(e) => setSizesText(e.target.value)} />

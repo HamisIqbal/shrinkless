@@ -11,6 +11,8 @@ import { adminCodeMail, adminCodeRecipient, maskEmail } from '@/lib/email/admin-
 import { sendMail } from '@/lib/email/send';
 import { mergeGuestCartIntoUserCart } from '@/lib/services/cart';
 import { persistCartId, readCartId } from '@/lib/cart-session';
+import { LIMITS, consume, reset, retryAfterMinutes } from '@/lib/security/rate-limit';
+import { headers } from 'next/headers';
 
 export type AuthResult =
   | { ok: true }
@@ -20,6 +22,23 @@ export type AuthResult =
   | { step: 'code'; sentTo: string; error?: string };
 
 const GENERIC_LOGIN_ERROR = 'That email and password combination is not correct.';
+const THROTTLED_ERROR = (minutes: number) =>
+  `Too many attempts. Try again in ${minutes} ${minutes === 1 ? 'minute' : 'minutes'}.`;
+
+/**
+ * Best-effort client address, for the per-address limit.
+ *
+ * A forwarded header can be spoofed, which is exactly why it is only ever the
+ * *second* limit — the per-email one does the real work and cannot be dodged
+ * by lying about where you are, because the account being attacked is the
+ * account named in the form.
+ */
+async function clientAddress(): Promise<string> {
+  const store = await headers();
+  const forwarded = store.get('x-forwarded-for') ?? '';
+
+  return forwarded.split(',')[0]?.trim() || 'unknown';
+}
 const BAD_CODE_ERROR = 'That code is not right, or it has expired. Send a new one.';
 const MAIL_FAILED_ERROR =
   'Your password was right, but the code could not be emailed. Check the mail settings and try again.';
@@ -136,6 +155,26 @@ export async function loginAction(formData: FormData): Promise<AuthResult> {
   const rawCode = formData.get('code');
   const code = typeof rawCode === 'string' ? rawCode.trim() : '';
 
+  // Two budgets: one for the account under attack, one for the source. Both
+  // are consumed before any password is verified, so a throttled attacker
+  // cannot even measure whether an email exists.
+  const byEmail = await consume(
+    `login:${parsed.data.email}`,
+    LIMITS.login.limit,
+    LIMITS.login.windowMs,
+  );
+
+  const byIp = await consume(
+    `login-ip:${await clientAddress()}`,
+    LIMITS.loginByIp.limit,
+    LIMITS.loginByIp.windowMs,
+  );
+
+  if (!byEmail.allowed || !byIp.allowed) {
+    const worst = byEmail.allowed ? byIp : byEmail;
+    return { ok: false, error: THROTTLED_ERROR(retryAfterMinutes(worst)) };
+  }
+
   if (!code) {
     // Check the password here so a non-admin never pays for a second round
     // trip, and so an admin's code is only ever mailed on a *correct*
@@ -144,6 +183,18 @@ export async function loginAction(formData: FormData): Promise<AuthResult> {
     if (!user) return { ok: false, error: GENERIC_LOGIN_ERROR };
 
     if (user.role === 'admin') {
+      // Mailing a code costs money and fills an inbox, so it gets its own
+      // budget on top of the password one.
+      const sends = await consume(
+        `2fa:${user.id}`,
+        LIMITS.twoFactorSend.limit,
+        LIMITS.twoFactorSend.windowMs,
+      );
+
+      if (!sends.allowed) {
+        return { ok: false, error: THROTTLED_ERROR(retryAfterMinutes(sends)) };
+      }
+
       return startAdminChallenge(user.id, user.email);
     }
   }
@@ -167,6 +218,10 @@ export async function loginAction(formData: FormData): Promise<AuthResult> {
     }
     throw error;
   }
+
+  // A completed sign-in hands the budget back, so a shared address does not
+  // accumulate a debt from its own successful logins.
+  await reset(`login:${parsed.data.email}`);
 
   await mergeCartForCurrentUser();
   revalidatePath('/', 'layout');

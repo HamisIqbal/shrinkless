@@ -8,7 +8,8 @@ import { RestockForm } from '@/components/shop/RestockForm';
 import { useToast } from '@/components/ui/Toast';
 import { formatCents } from '@/lib/money';
 import { sizeOrder } from '@/lib/shop/colorways';
-import type { VariantDTO } from '@/types/dto';
+import { snapQuantity } from '@/lib/validation/product';
+import type { QuantityRuleDTO, VariantDTO } from '@/types/dto';
 
 type Props = {
   /** For the back-in-stock record, which is per product and per colourway. */
@@ -20,7 +21,12 @@ type Props = {
   description?: string;
   /** From `?color=` on the collection tiles, so the tile you clicked is selected. */
   initialColor?: string;
+  /** How this product is sold: a minimum, a step, and an optional ceiling.
+   *  The stepper offers only legal values; the server enforces the same rule. */
+  quantityRule?: QuantityRuleDTO;
 };
+
+const SINGLES: QuantityRuleDTO = { min: 1, step: 1, max: null };
 
 export function VariantPicker({
   slug,
@@ -29,6 +35,7 @@ export function VariantPicker({
   variants,
   description,
   initialColor,
+  quantityRule = SINGLES,
 }: Props) {
   const router = useRouter();
   const toast = useToast();
@@ -37,7 +44,7 @@ export function VariantPicker({
     initialColor && colors.includes(initialColor) ? initialColor : (colors[0] ?? ''),
   );
   const [size, setSize] = useState('');
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState(quantityRule.min);
   const [pending, startTransition] = useTransition();
 
   const ordered = [...sizes].sort((a, b) => sizeOrder(a) - sizeOrder(b));
@@ -59,10 +66,23 @@ export function VariantPicker({
     return !variant || !variant.inStock;
   });
 
-  // The stepper cannot offer more than the shelf holds. Before a size is
-  // picked there is no stock figure to cap against, so it opens at ten.
-  const ceiling = Math.max(selected?.stock ?? 10, 1);
-  const capped = Math.min(quantity, ceiling);
+  // The stepper cannot offer more than the shelf holds, and cannot offer a
+  // quantity the product is not sold in. Before a size is picked there is no
+  // stock figure to cap against, so it opens at ten steps' worth.
+  const stockCeiling = selected?.stock ?? quantityRule.min + quantityRule.step * 9;
+  const ruleCeiling = quantityRule.max ?? Number.POSITIVE_INFINITY;
+  const ceiling = Math.max(Math.min(stockCeiling, ruleCeiling), quantityRule.min);
+
+  // The largest legal quantity at or below the ceiling. With a step of one and
+  // a minimum of one this is just the ceiling, which is the common case.
+  const highest =
+    quantityRule.min +
+    Math.floor((ceiling - quantityRule.min) / quantityRule.step) * quantityRule.step;
+
+  const capped = Math.min(Math.max(quantity, quantityRule.min), Math.max(highest, quantityRule.min));
+
+  /** True when the shelf cannot even cover one legal purchase. */
+  const belowMinimum = Boolean(selected) && stockCeiling < quantityRule.min;
 
   function add(then?: () => void) {
     if (!selected) {
@@ -159,14 +179,20 @@ export function VariantPicker({
       </fieldset>
 
       <div className="picker__group">
-        <p className="meta picker__legend" id="qty-label">Quantity</p>
+        <p className="meta picker__legend" id="qty-label">
+          Quantity
+          {quantityRule.step > 1 ? ` — sold in ${quantityRule.step}s` : ''}
+          {quantityRule.step === 1 && quantityRule.min > 1
+            ? ` — minimum ${quantityRule.min}`
+            : ''}
+        </p>
         <div className="stepper picker__qty" role="group" aria-labelledby="qty-label">
           <button
             type="button"
             className="stepper__button"
-            disabled={capped <= 1}
+            disabled={capped <= quantityRule.min}
             aria-label="Decrease quantity"
-            onClick={() => setQuantity(Math.max(capped - 1, 1))}
+            onClick={() => setQuantity(Math.max(capped - quantityRule.step, quantityRule.min))}
           >
             &minus;
           </button>
@@ -176,18 +202,22 @@ export function VariantPicker({
           <button
             type="button"
             className="stepper__button"
-            disabled={capped >= ceiling}
+            disabled={capped >= highest}
             aria-label="Increase quantity"
-            onClick={() => setQuantity(Math.min(capped + 1, ceiling))}
+            onClick={() => setQuantity(snapQuantity(Math.min(capped + quantityRule.step, highest), quantityRule))}
           >
             +
           </button>
 
           {selected ? (
             <span
-              className={`picker__stock${selected.stock > 5 ? ' picker__stock--in' : ''}`}
+              className={`picker__stock${selected.stock > 5 && !belowMinimum ? ' picker__stock--in' : ''}`}
             >
-              {selected.stock <= 5 ? `Only ${selected.stock} left` : 'In stock'}
+              {belowMinimum
+                ? `Fewer than ${quantityRule.min} left`
+                : selected.stock <= 5
+                  ? `Only ${selected.stock} left`
+                  : 'In stock'}
             </span>
           ) : null}
         </div>

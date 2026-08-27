@@ -68,6 +68,9 @@ export type CartLineDTO = {
   quantity: number;
   lineTotalCents: number;
   availableStock: number;
+  /** The product's own rule, carried on the line so the cart can offer legal
+   *  quantities without re-fetching the product. */
+  quantityRule: QuantityRuleDTO;
 };
 
 export type CartViewDTO = {

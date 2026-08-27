@@ -4,7 +4,7 @@ import { requireAdminPage } from '@/lib/auth/guards';
 import { getProductForAdmin } from '@/lib/services/products';
 
 export default async function EditProductPage({ params }: PageProps<'/admin/products/[id]'>) {
-  await requireAdminPage();
+  await requireAdminPage('products:write');
 
   const { id } = await params;
   const product = await getProductForAdmin(id);

@@ -2,7 +2,7 @@ import { ProductEditor } from '@/components/admin/ProductEditor';
 import { requireAdminPage } from '@/lib/auth/guards';
 
 export default async function NewProductPage() {
-  await requireAdminPage();
+  await requireAdminPage('products:write');
 
   return (
     <section>

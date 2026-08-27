@@ -3,7 +3,38 @@ import { connectToDatabase } from '@/lib/db/connection';
 import { Cart } from '@/lib/db/models/cart';
 import { Product } from '@/lib/db/models/product';
 import { Variant } from '@/lib/db/models/variant';
-import type { CartLineDTO, CartViewDTO } from '@/types/dto';
+import { isAllowedQuantity, snapQuantity } from '@/lib/validation/product';
+import type { CartLineDTO, CartViewDTO, QuantityRuleDTO } from '@/types/dto';
+
+export class QuantityRuleError extends Error {
+  constructor(readonly rule: QuantityRuleDTO, readonly wanted: number) {
+    super(describeRule(rule, wanted));
+    this.name = 'QuantityRuleError';
+  }
+}
+
+/** Says what is wrong in the shop's own terms — "sold in pairs", not
+ *  "quantity must satisfy (q - min) % step === 0". */
+function describeRule(rule: QuantityRuleDTO, wanted: number): string {
+  if (rule.max !== null && wanted > rule.max) {
+    return `You can order at most ${rule.max} of this at a time.`;
+  }
+  if (wanted < rule.min) {
+    return `This is sold in minimums of ${rule.min}.`;
+  }
+  if (rule.step > 1) {
+    return `This is sold in multiples of ${rule.step}, starting at ${rule.min}.`;
+  }
+  return `That is not a quantity this product is sold in.`;
+}
+
+function ruleOf(product: { quantityRule?: { min?: number; step?: number; max?: number | null } } | null): QuantityRuleDTO {
+  return {
+    min: product?.quantityRule?.min ?? 1,
+    step: product?.quantityRule?.step ?? 1,
+    max: product?.quantityRule?.max ?? null,
+  };
+}
 
 function toObjectId(id: string): Types.ObjectId {
   if (!Types.ObjectId.isValid(id)) throw new Error(`Invalid id: ${id}`);
@@ -48,6 +79,7 @@ export async function getCartView(cartId: string): Promise<CartViewDTO | null> {
       quantity: item.quantity,
       lineTotalCents: variant.priceCents * item.quantity,
       availableStock: variant.stock,
+      quantityRule: ruleOf(product),
     });
   }
 
@@ -65,6 +97,24 @@ async function requireVariant(variantId: string) {
   return variant;
 }
 
+/**
+ * The quantity rule, enforced server-side.
+ *
+ * The picker in the browser only offers legal values, but a picker is a
+ * convenience. This is the rule — every path that changes a line quantity goes
+ * through it, so a hand-crafted request cannot buy one of something sold in
+ * twelves.
+ */
+async function assertQuantityAllowed(
+  productId: Types.ObjectId,
+  quantity: number,
+): Promise<void> {
+  const product = await Product.findById(productId).select('quantityRule').lean();
+  const rule = ruleOf(product);
+
+  if (!isAllowedQuantity(quantity, rule)) throw new QuantityRuleError(rule, quantity);
+}
+
 export async function addItemToCart(
   cartId: string,
   variantId: string,
@@ -78,6 +128,8 @@ export async function addItemToCart(
 
   const existing = cart.items.find((item) => String(item.variantId) === variantId);
   const desired = (existing?.quantity ?? 0) + quantity;
+
+  await assertQuantityAllowed(variant.productId, desired);
 
   if (desired > variant.stock) {
     throw new Error(`Insufficient stock: only ${variant.stock} available`);
@@ -110,6 +162,9 @@ export async function updateCartItemQuantity(
     if (index !== -1) cart.items.splice(index, 1);
   } else {
     const variant = await requireVariant(variantId);
+
+    await assertQuantityAllowed(variant.productId, quantity);
+
     if (quantity > variant.stock) {
       throw new Error(`Insufficient stock: only ${variant.stock} available`);
     }
@@ -148,10 +203,18 @@ export async function mergeGuestCartIntoUserCart(
     const capped = Math.min(combined, variant.stock);
     if (capped <= 0) continue;
 
+    // A merge must not produce a quantity the product does not sell in. Snap
+    // down to the nearest legal value rather than dropping the line: losing a
+    // shopper's basket at sign-in is worse than rounding it.
+    const product = await Product.findById(variant.productId).select('quantityRule').lean();
+    const rule = ruleOf(product);
+    const legal = isAllowedQuantity(capped, rule) ? capped : snapQuantity(capped, rule);
+    if (legal > variant.stock || legal <= 0) continue;
+
     if (existing) {
-      existing.quantity = capped;
+      existing.quantity = legal;
     } else {
-      userCart.items.push({ variantId: guestItem.variantId, quantity: capped });
+      userCart.items.push({ variantId: guestItem.variantId, quantity: legal });
     }
   }
 

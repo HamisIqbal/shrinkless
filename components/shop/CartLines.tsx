@@ -53,7 +53,16 @@ export function CartLines({ lines }: { lines: CartLineDTO[] }) {
                   className="stepper__button"
                   disabled={pending}
                   aria-label="Decrease quantity"
-                  onClick={() => change(line.variantId, line.quantity - 1)}
+                  onClick={() =>
+                    /* Stepping below the minimum removes the line: a product
+                       sold in twelves has no "eleven" to fall back to. */
+                    change(
+                      line.variantId,
+                      line.quantity - line.quantityRule.step < line.quantityRule.min
+                        ? 0
+                        : line.quantity - line.quantityRule.step,
+                    )
+                  }
                 >
                   &minus;
                 </button>
@@ -63,9 +72,14 @@ export function CartLines({ lines }: { lines: CartLineDTO[] }) {
                 <button
                   type="button"
                   className="stepper__button"
-                  disabled={pending || line.quantity >= line.availableStock}
+                  disabled={
+                    pending ||
+                    line.quantity + line.quantityRule.step > line.availableStock ||
+                    (line.quantityRule.max !== null &&
+                      line.quantity + line.quantityRule.step > line.quantityRule.max)
+                  }
                   aria-label="Increase quantity"
-                  onClick={() => change(line.variantId, line.quantity + 1)}
+                  onClick={() => change(line.variantId, line.quantity + line.quantityRule.step)}
                 >
                   +
                 </button>

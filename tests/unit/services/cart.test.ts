@@ -99,3 +99,85 @@ describe('mergeGuestCartIntoUserCart', () => {
     expect(await Cart.findById(guestCartId)).toBeNull();
   });
 });
+
+describe('quantity rules', () => {
+  it('refuses a quantity the product is not sold in', async () => {
+    const product = await Product.create({
+      title: 'Bulk Tee',
+      slug: 'bulk-tee',
+      category: 'tees',
+      quantityRule: { min: 12, step: 12, max: 36 },
+    });
+
+    const variant = await Variant.create({
+      productId: product._id,
+      size: 's',
+      color: 'sand',
+      sku: 'BULK-S-SAND',
+      priceCents: 1000,
+      stock: 100,
+    });
+
+    const cartId = await createCart();
+
+    await expect(addItemToCart(cartId, String(variant._id), 1)).rejects.toThrow(
+      /minimums of 12/i,
+    );
+    await expect(addItemToCart(cartId, String(variant._id), 13)).rejects.toThrow(
+      /multiples of 12/i,
+    );
+    await expect(addItemToCart(cartId, String(variant._id), 48)).rejects.toThrow(
+      /at most 36/i,
+    );
+
+    const view = await addItemToCart(cartId, String(variant._id), 24);
+    expect(view.lines[0].quantity).toBe(24);
+    expect(view.lines[0].quantityRule).toEqual({ min: 12, step: 12, max: 36 });
+  });
+
+  it('applies the rule to a quantity change as well as an add', async () => {
+    const product = await Product.create({
+      title: 'Pair Socks',
+      slug: 'pair-socks',
+      category: 'socks',
+      quantityRule: { min: 2, step: 2, max: null },
+    });
+
+    const variant = await Variant.create({
+      productId: product._id,
+      size: 'm',
+      color: 'black',
+      sku: 'PAIR-M-BLACK',
+      priceCents: 800,
+      stock: 50,
+    });
+
+    const cartId = await createCart();
+    await addItemToCart(cartId, String(variant._id), 2);
+
+    await expect(
+      updateCartItemQuantity(cartId, String(variant._id), 3),
+    ).rejects.toThrow(/multiples of 2/i);
+
+    const view = await updateCartItemQuantity(cartId, String(variant._id), 4);
+    expect(view.lines[0].quantity).toBe(4);
+  });
+
+  it('leaves ordinary products alone', async () => {
+    const product = await Product.create({ title: 'Tee', slug: 'plain-tee', category: 'tees' });
+    const variant = await Variant.create({
+      productId: product._id,
+      size: 's',
+      color: 'sand',
+      sku: 'PLAIN-S-SAND',
+      priceCents: 4200,
+      stock: 10,
+    });
+
+    const cartId = await createCart();
+    const view = await addItemToCart(cartId, String(variant._id), 1);
+
+    expect(view.lines[0].quantity).toBe(1);
+    expect(view.lines[0].quantityRule).toEqual({ min: 1, step: 1, max: null });
+  });
+});

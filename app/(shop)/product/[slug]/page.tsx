@@ -118,6 +118,7 @@ export default async function ProductPage(props: PageProps<'/product/[slug]'>) {
               variants={product.variants}
               description={product.description}
               initialColor={requestedColor}
+              quantityRule={product.quantityRule}
             />
 
             <ul className="accordion pdp__accordion">
