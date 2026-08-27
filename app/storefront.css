@@ -3085,6 +3085,39 @@
 
 .authform__submit { margin-top: var(--space-2); }
 
+/* The second factor. The prompt has to explain itself — an unexpected code
+   field is how people decide a site is broken. */
+.authform__step {
+  font-size: var(--text-meta);
+  line-height: 1.6;
+  color: var(--color-muted-text);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.authform__step strong { color: var(--color-ink); font-weight: 600; }
+
+/* Six digits, spaced like the mail shows them, at a size you can check
+   against a phone without leaning in. */
+.codeinput {
+  font-size: 1.5rem;
+  letter-spacing: 0.35em;
+  text-align: center;
+  padding-block: 0.6rem;
+}
+
+.codeinput::placeholder { color: var(--color-muted); letter-spacing: 0.35em; }
+
+.authform__aside {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: var(--text-meta);
+}
+
+.authform__aside button { background: none; border: 0; padding: 0; cursor: pointer; }
+.authform__aside button[disabled] { opacity: 0.4; cursor: default; }
+
 /* The swap is a separate offer, not the last line of the form: it gets a rule
    and real space above it so it reads as one. */
 .authswap {

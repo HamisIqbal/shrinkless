@@ -2,6 +2,7 @@ import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import { loginSchema } from '@/lib/validation/auth';
 import { verifyCredentials } from '@/lib/services/users';
+import { consumeAdminChallenge } from '@/lib/services/two-factor';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: 'jwt' },
@@ -11,6 +12,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
+        /* Second factor. Only an admin is ever asked for one, and only the
+           sign-in's second pass carries it. */
+        code: { label: 'Code', type: 'text' },
       },
       async authorize(raw) {
         const parsed = loginSchema.safeParse(raw);
@@ -18,6 +22,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const user = await verifyCredentials(parsed.data.email, parsed.data.password);
         if (!user) return null;
+
+        // The password alone is never enough for an admin. This is the check
+        // that enforces it: a Server Action calling signIn() directly, a
+        // replayed POST, or any other path all land here.
+        if (user.role === 'admin') {
+          const supplied = (raw as { code?: unknown }).code;
+          const code = typeof supplied === 'string' ? supplied : '';
+
+          const passed = await consumeAdminChallenge(user.id, code);
+          if (!passed) return null;
+        }
 
         return { id: user.id, email: user.email, name: user.name, role: user.role };
       },
