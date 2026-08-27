@@ -103,7 +103,7 @@ export function ImageUploader({ images, onChange }: Props) {
                 </div>
               </div>
 
-              <label className="field" style={{ marginTop: '0.5rem' }}>
+              <label className="adfield" style={{ marginTop: '0.5rem' }}>
                 <span className="visually-hidden">Alt text</span>
                 <input
                   value={image.alt}
@@ -126,7 +126,7 @@ export function ImageUploader({ images, onChange }: Props) {
         </p>
       )}
 
-      <label className="field">
+      <label className="adfield">
         Add image
         <input
           type="file"

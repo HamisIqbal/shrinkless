@@ -67,14 +67,14 @@ export function FulfillmentPanel({ orderId, status, trackingNumber, allowed }: P
       <p className="alabel" id="fulfillment-heading">Fulfilment</p>
 
       {allowed.includes('shipped') ? (
-        <label className="field">
+        <label className="adfield">
           Tracking number
           <input value={tracking} onChange={(event) => setTracking(event.target.value)} />
         </label>
       ) : null}
 
       {allowed.length ? (
-        <label className="field">
+        <label className="adfield">
           Note
           <input
             value={note}

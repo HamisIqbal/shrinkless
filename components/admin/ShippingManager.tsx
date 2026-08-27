@@ -205,7 +205,7 @@ export function ShippingManager({ methods }: { methods: ShippingMethodDTO[] }) {
         </h2>
 
         <div className="fieldrow">
-          <label className="field">
+          <label className="adfield">
             Name
             <input
               value={draft.name}
@@ -214,7 +214,7 @@ export function ShippingManager({ methods }: { methods: ShippingMethodDTO[] }) {
             />
           </label>
 
-          <label className="field">
+          <label className="adfield">
             Code
             <input
               value={draft.code}
@@ -225,7 +225,7 @@ export function ShippingManager({ methods }: { methods: ShippingMethodDTO[] }) {
         </div>
 
         <div className="fieldrow">
-          <label className="field">
+          <label className="adfield">
             Rate, in dollars
             <input
               type="number"
@@ -237,7 +237,7 @@ export function ShippingManager({ methods }: { methods: ShippingMethodDTO[] }) {
             />
           </label>
 
-          <label className="field">
+          <label className="adfield">
             Free over
             <input
               type="number"
@@ -251,7 +251,7 @@ export function ShippingManager({ methods }: { methods: ShippingMethodDTO[] }) {
         </div>
 
         <div className="fieldrow">
-          <label className="field">
+          <label className="adfield">
             Countries
             <input
               value={draft.countries}
@@ -260,7 +260,7 @@ export function ShippingManager({ methods }: { methods: ShippingMethodDTO[] }) {
             />
           </label>
 
-          <label className="field">
+          <label className="adfield">
             States
             <input
               value={draft.states}
@@ -270,11 +270,11 @@ export function ShippingManager({ methods }: { methods: ShippingMethodDTO[] }) {
           </label>
         </div>
 
-        <p className="field__hint" style={{ marginBottom: 'var(--ad-s-3)' }}>
+        <p className="adfield__hint" style={{ marginBottom: 'var(--ad-s-3)' }}>
           Two-letter codes, comma separated. Leave both blank to apply everywhere.
         </p>
 
-        <label className="field">
+        <label className="adfield">
           Delivery estimate
           <input
             value={draft.estimate}

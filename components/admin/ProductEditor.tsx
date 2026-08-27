@@ -151,18 +151,18 @@ export function ProductEditor({ product }: { product: ProductDTO | null }) {
         </div>
 
         <div className="fieldrow">
-          <label className="field">
+          <label className="adfield">
             Title
             <input value={title} onChange={(e) => setTitle(e.target.value)} required />
           </label>
 
-          <label className="field">
+          <label className="adfield">
             Slug
             <input value={slug} onChange={(e) => setSlug(e.target.value)} required />
           </label>
         </div>
 
-        <label className="field">
+        <label className="adfield">
           Description
           <textarea
             rows={12}
@@ -199,13 +199,13 @@ export function ProductEditor({ product }: { product: ProductDTO | null }) {
         </div>
 
         <div className="fieldrow">
-          <label className="field">
+          <label className="adfield">
             Collection
             <input value={category} onChange={(e) => setCategory(e.target.value)} required />
             <small>The collection slug, as it appears in the URL.</small>
           </label>
 
-          <label className="field">
+          <label className="adfield">
             Status
             <select
               value={status}
@@ -218,7 +218,7 @@ export function ProductEditor({ product }: { product: ProductDTO | null }) {
         </div>
 
         <div className="fieldrow">
-          <label className="field">
+          <label className="adfield">
             Badge
             <select value={badge} onChange={(e) => setBadge(e.target.value as 'none' | 'new')}>
               <option value="none">None</option>
@@ -227,7 +227,7 @@ export function ProductEditor({ product }: { product: ProductDTO | null }) {
             <small>Drawn on the card. Sold out is worked out from stock.</small>
           </label>
 
-          <label className="field">
+          <label className="adfield">
             Rating
             <input
               type="number"
@@ -241,7 +241,7 @@ export function ProductEditor({ product }: { product: ProductDTO | null }) {
           </label>
         </div>
 
-        <label className="field">
+        <label className="adfield">
           Tags
           <input value={tagsText} onChange={(e) => setTagsText(e.target.value)} />
           <small>Comma separated. Searchable in the product list.</small>
@@ -268,7 +268,7 @@ export function ProductEditor({ product }: { product: ProductDTO | null }) {
         </div>
 
         <div className="fieldrow fieldrow--three">
-          <label className="field">
+          <label className="adfield">
             Minimum quantity
             <input
               type="number"
@@ -278,7 +278,7 @@ export function ProductEditor({ product }: { product: ProductDTO | null }) {
             />
           </label>
 
-          <label className="field">
+          <label className="adfield">
             Sold in multiples of
             <input
               type="number"
@@ -288,7 +288,7 @@ export function ProductEditor({ product }: { product: ProductDTO | null }) {
             />
           </label>
 
-          <label className="field">
+          <label className="adfield">
             Maximum per order
             <input
               type="number"
@@ -312,20 +312,20 @@ export function ProductEditor({ product }: { product: ProductDTO | null }) {
         </div>
 
         <div className="fieldrow">
-          <label className="field">
+          <label className="adfield">
             Sizes
             <input value={sizesText} onChange={(e) => setSizesText(e.target.value)} />
             <small>Comma separated.</small>
           </label>
 
-          <label className="field">
+          <label className="adfield">
             Colours
             <input value={colorsText} onChange={(e) => setColorsText(e.target.value)} />
             <small>Comma separated.</small>
           </label>
         </div>
 
-        <label className="field">
+        <label className="adfield">
           Base SKU
           <input value={baseSku} onChange={(e) => setBaseSku(e.target.value.toUpperCase())} />
           <small>The family code. Each variant carries its own SKU below.</small>
@@ -343,13 +343,13 @@ export function ProductEditor({ product }: { product: ProductDTO | null }) {
           </p>
         </div>
 
-        <label className="field">
+        <label className="adfield">
           SEO title
           <input value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} maxLength={70} />
           <small>Up to 70 characters.</small>
         </label>
 
-        <label className="field">
+        <label className="adfield">
           SEO description
           <textarea
             value={seoDescription}
@@ -360,7 +360,7 @@ export function ProductEditor({ product }: { product: ProductDTO | null }) {
           <small>Up to 160 characters.</small>
         </label>
 
-        <label className="field">
+        <label className="adfield">
           Keywords
           <input value={seoKeywords} onChange={(e) => setSeoKeywords(e.target.value)} />
           <small>Comma separated.</small>

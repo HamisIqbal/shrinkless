@@ -33,7 +33,7 @@ export function ListControls({
 }: Props) {
   return (
     <form method="get" action={action} className="toolbar">
-      <label className="field toolbar__search">
+      <label className="adfield toolbar__search">
         <span className="visually-hidden">Search</span>
         <input
           type="search"
@@ -44,7 +44,7 @@ export function ListControls({
       </label>
 
       {filters.map((filter) => (
-        <label key={filter.name} className="field">
+        <label key={filter.name} className="adfield">
           {filter.label}
           <select name={filter.name} defaultValue={params.filters[filter.name] ?? ''}>
             <option value="">All</option>
@@ -58,7 +58,7 @@ export function ListControls({
       ))}
 
       {sorts.length ? (
-        <label className="field">
+        <label className="adfield">
           Sort
           <select name="sort" defaultValue={params.sort}>
             {sorts.map((sort) => (
@@ -70,7 +70,7 @@ export function ListControls({
         </label>
       ) : null}
 
-      <label className="field">
+      <label className="adfield">
         Order
         <select name="direction" defaultValue={params.direction}>
           <option value="desc">Newest first</option>

@@ -48,8 +48,8 @@ export default async function AdminOrderPage({ params }: PageProps<'/admin/order
         }
       />
 
-      <div className="split">
-        <div className="split__col">
+      <div className="adsplit">
+        <div className="adsplit__col">
           <section className="panel">
             <p className="alabel">Items</p>
 
@@ -74,7 +74,7 @@ export default async function AdminOrderPage({ params }: PageProps<'/admin/order
           <section className="panel">
             <p className="alabel">Totals</p>
 
-            <dl className="deflist">
+            <dl className="adlist">
               <div>
                 <dt>Subtotal</dt>
                 <dd>{formatCents(order.subtotalCents)}</dd>
@@ -97,7 +97,7 @@ export default async function AdminOrderPage({ params }: PageProps<'/admin/order
                 <dd>{formatCents(order.taxCents)}</dd>
               </div>
 
-              <div className="deflist__total">
+              <div className="adlist__total">
                 <dt>Total</dt>
                 <dd>{formatCents(order.totalCents)}</dd>
               </div>
@@ -174,7 +174,7 @@ export default async function AdminOrderPage({ params }: PageProps<'/admin/order
           </section>
         </div>
 
-        <div className="split__col">
+        <div className="adsplit__col">
           <FulfillmentPanel
             orderId={order.id}
             status={order.status}

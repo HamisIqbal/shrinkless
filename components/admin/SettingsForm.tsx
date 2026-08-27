@@ -61,7 +61,7 @@ export function SettingsForm({ settings }: { settings: SettingsDTO }) {
         </div>
 
         <div className="settings__fields">
-          <label className="field">
+          <label className="adfield">
             Store email
             <input
               type="email"
@@ -71,7 +71,7 @@ export function SettingsForm({ settings }: { settings: SettingsDTO }) {
             />
           </label>
 
-          <label className="field">
+          <label className="adfield">
             Announcement bar
             <input
               value={announcement}
@@ -92,7 +92,7 @@ export function SettingsForm({ settings }: { settings: SettingsDTO }) {
         </div>
 
         <div className="settings__fields">
-          <label className="field">
+          <label className="adfield">
             Low-stock threshold
             <input
               type="number"
@@ -118,7 +118,7 @@ export function SettingsForm({ settings }: { settings: SettingsDTO }) {
           {zones.map((zone, index) => (
             <div key={index} className="panel panel--tight" style={{ marginBottom: 'var(--ad-s-3)' }}>
               <div className="fieldrow">
-                <label className="field">
+                <label className="adfield">
                   Name
                   <input
                     value={zone.name}
@@ -126,7 +126,7 @@ export function SettingsForm({ settings }: { settings: SettingsDTO }) {
                   />
                 </label>
 
-                <label className="field">
+                <label className="adfield">
                   Rate, in cents
                   <input
                     type="number"
@@ -138,7 +138,7 @@ export function SettingsForm({ settings }: { settings: SettingsDTO }) {
                 </label>
               </div>
 
-              <label className="field">
+              <label className="adfield">
                 States
                 <input
                   value={zone.states.join(', ')}
@@ -172,7 +172,7 @@ export function SettingsForm({ settings }: { settings: SettingsDTO }) {
             Add zone
           </button>
 
-          <label className="field" style={{ marginTop: 'var(--ad-s-4)' }}>
+          <label className="adfield" style={{ marginTop: 'var(--ad-s-4)' }}>
             Free shipping threshold, in cents
             <input
               type="number"
@@ -198,7 +198,7 @@ export function SettingsForm({ settings }: { settings: SettingsDTO }) {
 
         <div className="settings__fields">
           <div className="fieldrow">
-            <label className="field">
+            <label className="adfield">
               Tax mode
               <select
                 value={taxMode}
@@ -210,7 +210,7 @@ export function SettingsForm({ settings }: { settings: SettingsDTO }) {
               </select>
             </label>
 
-            <label className="field">
+            <label className="adfield">
               Flat rate, in basis points
               <input
                 type="number"

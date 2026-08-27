@@ -81,11 +81,11 @@ export function StockTakePanel({
   }
 
   return (
-    <div className="split">
+    <div className="adsplit">
       <form onSubmit={submitCount} className="panel">
         <p className="alabel">Stock take</p>
 
-        <label className="field">
+        <label className="adfield">
           Counted
           <input
             type="number"
@@ -96,7 +96,7 @@ export function StockTakePanel({
           />
         </label>
 
-        <label className="field">
+        <label className="adfield">
           Note
           <input
             value={note}
@@ -113,7 +113,7 @@ export function StockTakePanel({
       <form onSubmit={submitThreshold} className="panel">
         <p className="alabel">Low-stock threshold</p>
 
-        <label className="field">
+        <label className="adfield">
           Low at
           <input
             type="number"

@@ -85,8 +85,8 @@ export default async function AdminVariantPage(props: PageProps<'/admin/inventor
         }
       />
 
-      <div className="split">
-        <div className="split__col">
+      <div className="adsplit">
+        <div className="adsplit__col">
           <section className="panel panel--ink">
             <p className="alabel">On hand</p>
             <p className="figure__value figure__value--lg">{variant.stock}</p>
@@ -119,7 +119,7 @@ export default async function AdminVariantPage(props: PageProps<'/admin/inventor
           />
         </div>
 
-        <div className="split__col">
+        <div className="adsplit__col">
           <section className="panel panel--outline">
             <p className="alabel">How stock moves</p>
             <p className="aquiet">

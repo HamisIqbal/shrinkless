@@ -75,7 +75,7 @@ export function NotesPanel({
       )}
 
       <form onSubmit={submit}>
-        <label className="field">
+        <label className="adfield">
           <span className="visually-hidden">New note</span>
           <textarea
             value={body}

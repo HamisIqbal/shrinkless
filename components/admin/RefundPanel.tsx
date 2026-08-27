@@ -78,7 +78,7 @@ export function RefundPanel({
       </p>
 
       <form onSubmit={submit}>
-        <label className="field">
+        <label className="adfield">
           Amount (dollars)
           <input
             type="number"
@@ -91,7 +91,7 @@ export function RefundPanel({
           />
         </label>
 
-        <label className="field">
+        <label className="adfield">
           Reason
           <input value={note} onChange={(event) => setNote(event.target.value)} />
         </label>

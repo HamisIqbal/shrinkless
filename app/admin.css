@@ -137,7 +137,7 @@ body:has(.admin) {
    recomposition, not a squeeze. No JavaScript, so it cannot break.
    -------------------------------------------------------------------------- */
 
-.rail {
+.admin .rail {
   display: flex;
   flex-direction: column;
   gap: var(--ad-s-4);
@@ -147,7 +147,7 @@ body:has(.admin) {
 }
 
 @media (min-width: 64rem) {
-  .rail {
+  .admin .rail {
     position: sticky;
     top: 0;
     height: calc(100dvh - 2 * clamp(0.5rem, 1.4vw, 1.25rem));
@@ -155,7 +155,7 @@ body:has(.admin) {
   }
 }
 
-.rail__brand {
+.admin .rail__brand {
   display: flex;
   align-items: baseline;
   gap: 0.5rem;
@@ -167,7 +167,7 @@ body:has(.admin) {
   letter-spacing: -0.03em;
 }
 
-.rail__brand::after {
+.admin .rail__brand::after {
   content: "";
   width: 5px;
   height: 5px;
@@ -175,14 +175,14 @@ body:has(.admin) {
   background: var(--ad-acid);
 }
 
-.rail__scroll {
+.admin .rail__scroll {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
 
-.rail__nav ul {
+.admin .rail__nav ul {
   display: flex;
   gap: var(--ad-s-1);
   margin: 0;
@@ -191,22 +191,22 @@ body:has(.admin) {
 }
 
 /* Below the desktop breakpoint the nav is one scrolling row of pills. */
-.rail__nav ul {
+.admin .rail__nav ul {
   overflow-x: auto;
   scrollbar-width: none;
   padding-bottom: 2px;
 }
 
-.rail__nav ul::-webkit-scrollbar { display: none; }
+.admin .rail__nav ul::-webkit-scrollbar { display: none; }
 
 @media (min-width: 64rem) {
-  .rail__nav ul {
+  .admin .rail__nav ul {
     flex-direction: column;
     overflow-x: visible;
   }
 }
 
-.rail__link {
+.admin .rail__link {
   display: flex;
   align-items: center;
   gap: 0.625rem;
@@ -222,39 +222,39 @@ body:has(.admin) {
 }
 
 @media (min-width: 64rem) {
-  .rail__link { padding: 0.5rem 0.625rem; }
+  .admin .rail__link { padding: 0.5rem 0.625rem; }
 }
 
-.rail__link:hover {
+.admin .rail__link:hover {
   color: var(--ad-white);
   background: color-mix(in oklab, var(--ad-paper) 8%, transparent);
 }
 
 /* Where you are. One of the three things the acid is allowed to say. */
-.rail__link[aria-current="page"] {
+.admin .rail__link[aria-current="page"] {
   background: var(--ad-acid);
   color: var(--ad-ink);
   font-weight: 600;
 }
 
-.rail__icon {
+.admin .rail__icon {
   flex: none;
   width: 1.0625rem;
   height: 1.0625rem;
   stroke-width: 1.5;
 }
 
-.rail__foot {
+.admin .rail__foot {
   display: none;
   padding-top: var(--ad-s-3);
   border-top: 1px solid var(--ad-onink-line);
 }
 
 @media (min-width: 64rem) {
-  .rail__foot { display: block; }
+  .admin .rail__foot { display: block; }
 }
 
-.rail__actor {
+.admin .rail__actor {
   display: block;
   padding-inline: 0.625rem;
   font-size: var(--ad-t-micro);
@@ -263,7 +263,7 @@ body:has(.admin) {
   color: var(--ad-onink-2);
 }
 
-.rail__email {
+.admin .rail__email {
   display: block;
   padding: 0.125rem 0.625rem var(--ad-s-2);
   font-size: var(--ad-t-small);
@@ -271,7 +271,7 @@ body:has(.admin) {
   overflow-wrap: anywhere;
 }
 
-.rail__back {
+.admin .rail__back {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -283,14 +283,14 @@ body:has(.admin) {
   transition: color var(--ad-fast) var(--ad-ease);
 }
 
-.rail__back:hover { color: var(--ad-white); }
-.rail__back svg { width: 0.875rem; height: 0.875rem; }
+.admin .rail__back:hover { color: var(--ad-white); }
+.admin .rail__back svg { width: 0.875rem; height: 0.875rem; }
 
 /* --------------------------------------------------------------------------
    Page furniture
    -------------------------------------------------------------------------- */
 
-.apage__head {
+.admin .apage__head {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
@@ -301,10 +301,10 @@ body:has(.admin) {
   border-bottom: 1px solid var(--ad-line);
 }
 
-.apage__titles { max-width: 46ch; }
+.admin .apage__titles { max-width: 46ch; }
 
-.apage h1,
-.apage__title {
+.admin .apage h1,
+.admin .apage__title {
   margin: 0;
   font-size: var(--ad-t-h1);
   font-weight: 600;
@@ -313,7 +313,7 @@ body:has(.admin) {
   text-wrap: balance;
 }
 
-.apage__sub {
+.admin .apage__sub {
   margin: var(--ad-s-2) 0 0;
   color: var(--ad-ink-2);
   font-size: var(--ad-t-small);
@@ -321,20 +321,20 @@ body:has(.admin) {
   max-width: 62ch;
 }
 
-.apage__actions {
+.admin .apage__actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--ad-s-2);
 }
 
-.apage__section {
+.admin .apage__section {
   margin-top: var(--ad-s-6);
 }
 
 /* A small uppercase label is how a region announces itself. Never above a
    page title — only over a region inside one. */
-.alabel {
+.admin .alabel {
   margin: 0 0 var(--ad-s-3);
   font-size: var(--ad-t-micro);
   font-weight: 600;
@@ -343,13 +343,13 @@ body:has(.admin) {
   color: var(--ad-ink-3);
 }
 
-.aquiet {
+.admin .aquiet {
   color: var(--ad-ink-2);
   font-size: var(--ad-t-small);
   line-height: 1.6;
 }
 
-.anum { font-variant-numeric: tabular-nums; }
+.admin .anum { font-variant-numeric: tabular-nums; }
 
 /* --------------------------------------------------------------------------
    Panels
@@ -358,37 +358,37 @@ body:has(.admin) {
    a warmer fill, not by another shadow. Nested panels are never correct.
    -------------------------------------------------------------------------- */
 
-.panel {
+.admin .panel {
   padding: var(--ad-s-4);
   border-radius: var(--ad-r-card);
   background: var(--ad-paper);
 }
 
 @media (min-width: 48rem) {
-  .panel { padding: var(--ad-s-5); }
+  .admin .panel { padding: var(--ad-s-5); }
 }
 
-.panel--tight { padding: var(--ad-s-4); }
+.admin .panel--tight { padding: var(--ad-s-4); }
 
-.panel--outline {
+.admin .panel--outline {
   background: var(--ad-white);
   border: 1px solid var(--ad-line);
 }
 
-.panel--ink {
+.admin .panel--ink {
   background: var(--ad-ink);
   color: var(--ad-onink);
 }
 
-.panel--ink .alabel { color: var(--ad-onink-2); }
-.panel--ink a { color: var(--ad-white); }
+.admin .panel--ink .alabel { color: var(--ad-onink-2); }
+.admin .panel--ink a { color: var(--ad-white); }
 
-.panel--acid {
+.admin .panel--acid {
   background: var(--ad-acid);
   color: var(--ad-ink);
 }
 
-.panel__head {
+.admin .panel__head {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -396,7 +396,7 @@ body:has(.admin) {
   gap: var(--ad-s-2);
 }
 
-.panel__head .alabel { margin-bottom: var(--ad-s-3); }
+.admin .panel__head .alabel { margin-bottom: var(--ad-s-3); }
 
 /* --------------------------------------------------------------------------
    Figures
@@ -405,7 +405,7 @@ body:has(.admin) {
    type: tabular, tight, and unencumbered by a supporting stat.
    -------------------------------------------------------------------------- */
 
-.figure__value {
+.admin .figure__value {
   margin: 0;
   font-size: var(--ad-t-figure);
   font-weight: 600;
@@ -414,18 +414,18 @@ body:has(.admin) {
   font-variant-numeric: tabular-nums;
 }
 
-.figure__value--lg { font-size: clamp(2.75rem, 6vw, 4.25rem); }
+.admin .figure__value--lg { font-size: clamp(2.75rem, 6vw, 4.25rem); }
 
-.figure__note {
+.admin .figure__note {
   margin: var(--ad-s-2) 0 0;
   font-size: var(--ad-t-small);
   color: var(--ad-ink-2);
 }
 
-.panel--ink .figure__note { color: var(--ad-onink-2); }
+.admin .panel--ink .figure__note { color: var(--ad-onink-2); }
 
 /* A row of secondary figures inside a panel: hairline-separated, never boxed. */
-.figrow {
+.admin .figrow {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
   gap: var(--ad-s-3) var(--ad-s-4);
@@ -435,18 +435,18 @@ body:has(.admin) {
   border-top: 1px solid var(--ad-line);
 }
 
-.panel--ink .figrow { border-color: var(--ad-onink-line); }
+.admin .panel--ink .figrow { border-color: var(--ad-onink-line); }
 
-.figrow dt {
+.admin .figrow dt {
   font-size: var(--ad-t-micro);
   letter-spacing: var(--ad-track-label);
   text-transform: uppercase;
   color: var(--ad-ink-3);
 }
 
-.panel--ink .figrow dt { color: var(--ad-onink-2); }
+.admin .panel--ink .figrow dt { color: var(--ad-onink-2); }
 
-.figrow dd {
+.admin .figrow dd {
   margin: 0.25rem 0 0;
   font-size: var(--ad-t-h3);
   font-weight: 600;
@@ -461,27 +461,27 @@ body:has(.admin) {
    figure beside it, then an asymmetric pair of operational lists.
    -------------------------------------------------------------------------- */
 
-.dash {
+.admin .dash {
   display: grid;
   gap: var(--ad-s-3);
 }
 
 @media (min-width: 60rem) {
-  .dash { grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--ad-s-4); }
-  .dash__revenue { grid-column: span 8; }
-  .dash__today { grid-column: span 4; }
-  .dash__orders { grid-column: span 5; }
-  .dash__stock { grid-column: span 7; }
-  .dash__recent { grid-column: span 7; }
-  .dash__people { grid-column: span 5; }
-  .dash__wide { grid-column: 1 / -1; }
+  .admin .dash { grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--ad-s-4); }
+  .admin .dash__revenue { grid-column: span 8; }
+  .admin .dash__today { grid-column: span 4; }
+  .admin .dash__orders { grid-column: span 5; }
+  .admin .dash__stock { grid-column: span 7; }
+  .admin .dash__recent { grid-column: span 7; }
+  .admin .dash__people { grid-column: span 5; }
+  .admin .dash__wide { grid-column: 1 / -1; }
 }
 
 /* --------------------------------------------------------------------------
    Stacked lists — the operational half of the dashboard and the detail pages
    -------------------------------------------------------------------------- */
 
-.stack {
+.admin .stack {
   display: flex;
   flex-direction: column;
   margin: 0;
@@ -489,7 +489,7 @@ body:has(.admin) {
   list-style: none;
 }
 
-.stack > li {
+.admin .stack > li {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
@@ -499,13 +499,13 @@ body:has(.admin) {
   font-size: var(--ad-t-small);
 }
 
-.stack > li:first-child { border-top: 0; padding-top: 0; }
+.admin .stack > li:first-child { border-top: 0; padding-top: 0; }
 
-.panel--ink .stack > li { border-color: var(--ad-onink-line); }
+.admin .panel--ink .stack > li { border-color: var(--ad-onink-line); }
 
-.stack__main { min-width: 0; }
+.admin .stack__main { min-width: 0; }
 
-.stack__title {
+.admin .stack__title {
   display: block;
   font-size: var(--ad-t-body);
   font-weight: 500;
@@ -514,18 +514,18 @@ body:has(.admin) {
   text-decoration: none;
 }
 
-a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
+.admin a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
 
-.stack__meta {
+.admin .stack__meta {
   display: block;
   margin-top: 0.15rem;
   font-size: var(--ad-t-small);
   color: var(--ad-ink-2);
 }
 
-.panel--ink .stack__meta { color: var(--ad-onink-2); }
+.admin .panel--ink .stack__meta { color: var(--ad-onink-2); }
 
-.stack__value {
+.admin .stack__value {
   flex: none;
   font-variant-numeric: tabular-nums;
   font-weight: 500;
@@ -538,20 +538,20 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
    header is a small uppercase label, not a heavy bar.
    -------------------------------------------------------------------------- */
 
-.tablewrap {
+.admin .tablewrap {
   overflow-x: auto;
   margin-inline: calc(-1 * var(--ad-s-2));
   padding-inline: var(--ad-s-2);
 }
 
-.atable {
+.admin .atable {
   width: 100%;
   min-width: 40rem;
   border-collapse: collapse;
   font-size: var(--ad-t-small);
 }
 
-.atable thead th {
+.admin .atable thead th {
   padding: 0 var(--ad-s-3) var(--ad-s-2);
   border-bottom: 1px solid var(--ad-line);
   text-align: left;
@@ -563,56 +563,56 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
   white-space: nowrap;
 }
 
-.atable tbody td {
+.admin .atable tbody td {
   padding: var(--ad-s-3);
   border-bottom: 1px solid var(--ad-line-2);
   vertical-align: middle;
 }
 
-.atable tbody tr {
+.admin .atable tbody tr {
   transition: background-color var(--ad-fast) var(--ad-ease);
 }
 
-.atable tbody tr:hover {
+.admin .atable tbody tr:hover {
   background: color-mix(in oklab, var(--ad-paper) 62%, transparent);
 }
 
-.atable tbody tr:last-child td { border-bottom: 0; }
+.admin .atable tbody tr:last-child td { border-bottom: 0; }
 
-.atable th:first-child,
-.atable td:first-child { padding-left: var(--ad-s-2); }
+.admin .atable th:first-child,
+.admin .atable td:first-child { padding-left: var(--ad-s-2); }
 
-.atable th:last-child,
-.atable td:last-child { padding-right: var(--ad-s-2); }
+.admin .atable th:last-child,
+.admin .atable td:last-child { padding-right: var(--ad-s-2); }
 
-.atable a {
+.admin .atable a {
   color: inherit;
   font-weight: 500;
   text-decoration: none;
 }
 
-.atable a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.admin .atable a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
-.atable__num {
+.admin .atable__num {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-.atable__actions {
+.admin .atable__actions {
   text-align: right;
   white-space: nowrap;
 }
 
 /* The product row: the thumbnail is the point, so it is large and the type
    sits beside it rather than under it. */
-.prow {
+.admin .prow {
   display: flex;
   align-items: center;
   gap: var(--ad-s-3);
   min-width: 0;
 }
 
-.prow__thumb {
+.admin .prow__thumb {
   flex: none;
   width: 3.25rem;
   height: 4.0625rem;
@@ -621,7 +621,7 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
   background: var(--ad-paper);
 }
 
-.prow__thumb--empty {
+.admin .prow__thumb--empty {
   display: grid;
   place-items: center;
   font-size: var(--ad-t-micro);
@@ -629,14 +629,14 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
   color: var(--ad-ink-3);
 }
 
-.prow__title {
+.admin .prow__title {
   display: block;
   font-size: var(--ad-t-body);
   font-weight: 500;
   letter-spacing: -0.015em;
 }
 
-.prow__meta {
+.admin .prow__meta {
   display: block;
   margin-top: 0.1rem;
   font-size: var(--ad-t-micro);
@@ -652,7 +652,7 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
    dot is the only place colour is permitted, and only three of them exist.
    -------------------------------------------------------------------------- */
 
-.pill {
+.admin .pill {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -667,7 +667,7 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
   color: var(--ad-ink-2);
 }
 
-.pill::before {
+.admin .pill::before {
   content: "";
   width: 5px;
   height: 5px;
@@ -676,36 +676,36 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
 }
 
 /* Live and selling. */
-.pill--on {
+.admin .pill--on {
   color: var(--ad-ink);
   border-color: color-mix(in oklab, var(--ad-ink) 22%, transparent);
 }
 
-.pill--on::before { background: var(--ad-ink); }
+.admin .pill--on::before { background: var(--ad-ink); }
 
 /* Needs a human today. The second permitted use of the acid — and it earns
    its contrast from the dark ring, not from the fill. */
-.pill--attention {
+.admin .pill--attention {
   color: var(--ad-ink);
   border-color: color-mix(in oklab, var(--ad-ink) 22%, transparent);
   background: var(--ad-acid);
 }
 
-.pill--attention::before { background: var(--ad-ink); }
+.admin .pill--attention::before { background: var(--ad-ink); }
 
 /* Closed, cancelled, out. */
-.pill--off {
+.admin .pill--off {
   color: var(--ad-ink-3);
   border-color: var(--ad-line);
 }
 
-.pill--off::before { background: var(--ad-ink-3); }
+.admin .pill--off::before { background: var(--ad-ink-3); }
 
 /* --------------------------------------------------------------------------
    Toolbar — search, filters, sort
    -------------------------------------------------------------------------- */
 
-.toolbar {
+.admin .toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
@@ -716,11 +716,11 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
   margin-bottom: var(--ad-s-4);
 }
 
-.toolbar__search { flex: 1 1 14rem; min-width: 0; }
+.admin .toolbar__search { flex: 1 1 14rem; min-width: 0; }
 
-.toolbar .field { margin: 0; }
+.admin .toolbar .adfield { margin: 0; }
 
-.toolbar__reset {
+.admin .toolbar__reset {
   padding: 0.55rem 0.75rem;
   color: var(--ad-ink-2);
   font-size: var(--ad-t-small);
@@ -729,13 +729,13 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
   transition: color var(--ad-fast) var(--ad-ease);
 }
 
-.toolbar__reset:hover { color: var(--ad-ink); }
+.admin .toolbar__reset:hover { color: var(--ad-ink); }
 
 /* --------------------------------------------------------------------------
    Forms
    -------------------------------------------------------------------------- */
 
-.field {
+.admin .adfield {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
@@ -747,8 +747,8 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
   color: var(--ad-ink-3);
 }
 
-.field small,
-.field__hint {
+.admin .adfield small,
+.admin .adfield__hint {
   font-size: var(--ad-t-small);
   font-weight: 400;
   letter-spacing: normal;
@@ -810,7 +810,7 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
   background-size: 0.875rem;
 }
 
-.checkline {
+.admin .checkline {
   display: flex;
   align-items: flex-start;
   gap: 0.6rem;
@@ -849,14 +849,14 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
 }
 
 /* Two-up form rows, collapsing to one on narrow screens. */
-.fieldrow {
+.admin .fieldrow {
   display: grid;
   gap: 0 var(--ad-s-3);
 }
 
 @media (min-width: 40rem) {
-  .fieldrow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .fieldrow--three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .admin .fieldrow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .admin .fieldrow--three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 /* --------------------------------------------------------------------------
@@ -866,8 +866,7 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
    compete with the navigation's "you are here", which matters more.
    -------------------------------------------------------------------------- */
 
-.admin .btn,
-.abtn {
+.admin .abtn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -890,57 +889,57 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
     opacity var(--ad-fast) var(--ad-ease);
 }
 
-.abtn:hover {
+.admin .abtn:hover {
   background: color-mix(in oklab, var(--ad-ink) 84%, var(--ad-paper));
   border-color: color-mix(in oklab, var(--ad-ink) 84%, var(--ad-paper));
 }
 
-.abtn:focus-visible {
+.admin .abtn:focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--ad-acid) 70%, transparent);
 }
 
-.abtn[disabled],
-.abtn[aria-disabled="true"] {
+.admin .abtn[disabled],
+.admin .abtn[aria-disabled="true"] {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-.abtn--ghost {
+.admin .abtn--ghost {
   background: transparent;
   color: var(--ad-ink);
   border-color: color-mix(in oklab, var(--ad-ink) 24%, transparent);
 }
 
-.abtn--ghost:hover {
+.admin .abtn--ghost:hover {
   background: var(--ad-paper);
   border-color: var(--ad-ink);
   color: var(--ad-ink);
 }
 
-.abtn--quiet {
+.admin .abtn--quiet {
   padding-inline: 0.6rem;
   background: transparent;
   border-color: transparent;
   color: var(--ad-ink-2);
 }
 
-.abtn--quiet:hover {
+.admin .abtn--quiet:hover {
   background: var(--ad-paper);
   border-color: transparent;
   color: var(--ad-ink);
 }
 
-.abtn--sm {
+.admin .abtn--sm {
   padding: 0.35rem 0.7rem;
   font-size: var(--ad-t-micro);
   letter-spacing: 0.02em;
 }
 
-.abtn--block { width: 100%; }
+.admin .abtn--block { width: 100%; }
 
 /* A row of row-level actions. */
-.rowactions {
+.admin .rowactions {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
@@ -948,7 +947,7 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
   justify-content: flex-end;
 }
 
-.rowactions__error {
+.admin .rowactions__error {
   display: block;
   width: 100%;
   margin-top: 0.3rem;
@@ -962,7 +961,7 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
    Notices
    -------------------------------------------------------------------------- */
 
-.anotice {
+.admin .anotice {
   display: flex;
   align-items: flex-start;
   gap: 0.6rem;
@@ -974,18 +973,18 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
   line-height: 1.55;
 }
 
-.anotice--alert {
+.admin .anotice--alert {
   background: var(--ad-acid);
   color: var(--ad-ink);
   font-weight: 500;
 }
 
-.anotice--error {
+.admin .anotice--error {
   background: var(--ad-ink);
   color: var(--ad-white);
 }
 
-.anotice p { margin: 0; }
+.admin .anotice p { margin: 0; }
 
 /* --------------------------------------------------------------------------
    Empty states
@@ -994,7 +993,7 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
    for, and the action that fills it.
    -------------------------------------------------------------------------- */
 
-.empty {
+.admin .empty {
   display: grid;
   justify-items: start;
   gap: var(--ad-s-2);
@@ -1003,20 +1002,20 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
   background: var(--ad-paper);
 }
 
-.empty--center {
+.admin .empty--center {
   justify-items: center;
   text-align: center;
   padding-block: var(--ad-s-6);
 }
 
-.empty__title {
+.admin .empty__title {
   margin: 0;
   font-size: var(--ad-t-h3);
   font-weight: 600;
   letter-spacing: -0.025em;
 }
 
-.empty__body {
+.admin .empty__body {
   margin: 0;
   max-width: 46ch;
   font-size: var(--ad-t-small);
@@ -1028,7 +1027,7 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
    Pagination
    -------------------------------------------------------------------------- */
 
-.pager {
+.admin .pager {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -1039,7 +1038,7 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
   border-top: 1px solid var(--ad-line);
 }
 
-.pager__count {
+.admin .pager__count {
   margin: 0;
   font-size: var(--ad-t-micro);
   letter-spacing: var(--ad-track-label);
@@ -1047,13 +1046,13 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
   color: var(--ad-ink-3);
 }
 
-.pager__links {
+.admin .pager__links {
   display: flex;
   align-items: center;
   gap: var(--ad-s-2);
 }
 
-.pager__link {
+.admin .pager__link {
   padding: 0.4rem 0.85rem;
   border: 1px solid color-mix(in oklab, var(--ad-ink) 24%, transparent);
   border-radius: var(--ad-r-pill);
@@ -1063,9 +1062,9 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
   transition: background-color var(--ad-fast) var(--ad-ease);
 }
 
-.pager__link:hover { background: var(--ad-paper); }
+.admin .pager__link:hover { background: var(--ad-paper); }
 
-.pager__link[aria-disabled="true"] {
+.admin .pager__link[aria-disabled="true"] {
   color: var(--ad-ink-3);
   border-color: var(--ad-line);
   pointer-events: none;
@@ -1075,14 +1074,14 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
    Detail pages: definition lists and address blocks
    -------------------------------------------------------------------------- */
 
-.deflist {
+.admin .adlist {
   display: grid;
   gap: 0;
   margin: 0;
 }
 
-.deflist > div,
-.deflist__row {
+.admin .adlist > div,
+.admin .deflist__row {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
@@ -1091,30 +1090,30 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
   border-top: 1px solid var(--ad-line-2);
 }
 
-.deflist > div:first-child { border-top: 0; padding-top: 0; }
+.admin .adlist > div:first-child { border-top: 0; padding-top: 0; }
 
-.deflist dt {
+.admin .adlist dt {
   font-size: var(--ad-t-micro);
   letter-spacing: var(--ad-track-label);
   text-transform: uppercase;
   color: var(--ad-ink-3);
 }
 
-.deflist dd {
+.admin .adlist dd {
   margin: 0;
   text-align: right;
   font-size: var(--ad-t-small);
   font-variant-numeric: tabular-nums;
 }
 
-.deflist__total {
+.admin .adlist__total {
   border-top: 1px solid var(--ad-ink) !important;
   padding-top: 0.75rem !important;
   margin-top: 0.25rem;
 }
 
-.deflist__total dt,
-.deflist__total dd {
+.admin .adlist__total dt,
+.admin .adlist__total dd {
   color: var(--ad-ink);
   font-size: var(--ad-t-lead);
   font-weight: 600;
@@ -1122,14 +1121,14 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
   text-transform: none;
 }
 
-.aaddress {
+.admin .aaddress {
   font-style: normal;
   font-size: var(--ad-t-small);
   line-height: 1.7;
   color: var(--ad-ink-2);
 }
 
-.aaddress strong {
+.admin .aaddress strong {
   display: block;
   color: var(--ad-ink);
   font-weight: 500;
@@ -1139,40 +1138,40 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
    Detail layout: content and a narrower operational column
    -------------------------------------------------------------------------- */
 
-.split {
+.admin .adsplit {
   display: grid;
   gap: var(--ad-s-3);
   align-items: start;
 }
 
 @media (min-width: 66rem) {
-  .split {
+  .admin .adsplit {
     grid-template-columns: minmax(0, 1.55fr) minmax(17rem, 1fr);
     gap: var(--ad-s-4);
   }
 }
 
-.split__col {
+.admin .adsplit__col {
   display: grid;
   gap: var(--ad-s-3);
   align-content: start;
 }
 
 @media (min-width: 48rem) {
-  .split__col { gap: var(--ad-s-4); }
+  .admin .adsplit__col { gap: var(--ad-s-4); }
 }
 
 /* --------------------------------------------------------------------------
    Order items
    -------------------------------------------------------------------------- */
 
-.items {
+.admin .items {
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.items > li {
+.admin .items > li {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
@@ -1181,15 +1180,15 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
   border-top: 1px solid var(--ad-line-2);
 }
 
-.items > li:first-child { border-top: 0; padding-top: 0; }
+.admin .items > li:first-child { border-top: 0; padding-top: 0; }
 
-.items__name {
+.admin .items__name {
   font-size: var(--ad-t-body);
   font-weight: 500;
   letter-spacing: -0.015em;
 }
 
-.items__spec {
+.admin .items__spec {
   display: block;
   margin-top: 0.15rem;
   font-size: var(--ad-t-micro);
@@ -1198,7 +1197,7 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
   color: var(--ad-ink-3);
 }
 
-.items__price {
+.admin .items__price {
   flex: none;
   font-variant-numeric: tabular-nums;
   font-weight: 500;
@@ -1208,21 +1207,21 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
    Timeline
    -------------------------------------------------------------------------- */
 
-.timeline {
+.admin .timeline {
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.timeline > li {
+.admin .timeline > li {
   position: relative;
   padding: 0 0 var(--ad-s-4) var(--ad-s-4);
   border-left: 1px solid var(--ad-line);
 }
 
-.timeline > li:last-child { padding-bottom: 0; border-color: transparent; }
+.admin .timeline > li:last-child { padding-bottom: 0; border-color: transparent; }
 
-.timeline > li::before {
+.admin .timeline > li::before {
   content: "";
   position: absolute;
   left: -3.5px;
@@ -1233,21 +1232,21 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
   background: var(--ad-ink-3);
 }
 
-.timeline > li:first-child::before { background: var(--ad-ink); }
+.admin .timeline > li:first-child::before { background: var(--ad-ink); }
 
-.timeline__what {
+.admin .timeline__what {
   font-size: var(--ad-t-small);
   font-weight: 500;
 }
 
-.timeline__meta {
+.admin .timeline__meta {
   display: block;
   margin-top: 0.15rem;
   font-size: var(--ad-t-micro);
   color: var(--ad-ink-3);
 }
 
-.timeline__note {
+.admin .timeline__note {
   margin: 0.35rem 0 0;
   font-size: var(--ad-t-small);
   color: var(--ad-ink-2);
@@ -1258,7 +1257,7 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
    Notes
    -------------------------------------------------------------------------- */
 
-.notes__list {
+.admin .notes__list {
   margin: 0 0 var(--ad-s-4);
   padding: 0;
   list-style: none;
@@ -1266,20 +1265,20 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
   gap: var(--ad-s-2);
 }
 
-.notes__item {
+.admin .notes__item {
   padding: 0.85rem 1rem;
   border-radius: var(--ad-r-inner);
   background: var(--ad-white);
   border: 1px solid var(--ad-line-2);
 }
 
-.notes__item p {
+.admin .notes__item p {
   margin: 0;
   font-size: var(--ad-t-small);
   line-height: 1.55;
 }
 
-.notes__meta {
+.admin .notes__meta {
   display: block;
   margin-top: 0.4rem;
   font-size: var(--ad-t-micro);
@@ -1290,7 +1289,7 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
    Inventory
    -------------------------------------------------------------------------- */
 
-.stockcell {
+.admin .stockcell {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -1298,19 +1297,19 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
   justify-content: flex-end;
 }
 
-.stockcell__value {
+.admin .stockcell__value {
   font-variant-numeric: tabular-nums;
   font-weight: 600;
   font-size: var(--ad-t-lead);
   letter-spacing: -0.02em;
 }
 
-.stockcell input[type="number"] { width: 5rem; }
-.stockcell select { width: auto; min-width: 7rem; }
+.admin .stockcell input[type="number"] { width: 5rem; }
+.admin .stockcell select { width: auto; min-width: 7rem; }
 
 /* A stock bar: a hairline track with the level drawn on it. Reads at a glance
    across a long list in a way a number alone does not. */
-.level {
+.admin .level {
   display: block;
   width: 100%;
   max-width: 6rem;
@@ -1320,46 +1319,46 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
   overflow: hidden;
 }
 
-.level__fill {
+.admin .level__fill {
   display: block;
   height: 100%;
   border-radius: inherit;
   background: var(--ad-ink);
 }
 
-.level--low .level__fill { background: var(--ad-ink); }
-.level--out .level__fill { background: transparent; }
+.admin .level--low .level__fill { background: var(--ad-ink); }
+.admin .level--out .level__fill { background: transparent; }
 
 /* --------------------------------------------------------------------------
    Product editor
    -------------------------------------------------------------------------- */
 
-.editor {
+.admin .editor {
   display: grid;
   gap: var(--ad-s-4);
 }
 
-.editor__section {
+.admin .editor__section {
   padding-top: var(--ad-s-5);
   border-top: 1px solid var(--ad-line);
 }
 
-.editor__section:first-of-type { padding-top: 0; border-top: 0; }
+.admin .editor__section:first-of-type { padding-top: 0; border-top: 0; }
 
-.editor__sectionhead {
+.admin .editor__sectionhead {
   display: grid;
   gap: 0.25rem;
   margin-bottom: var(--ad-s-4);
 }
 
-.editor__sectiontitle {
+.admin .editor__sectiontitle {
   margin: 0;
   font-size: var(--ad-t-h3);
   font-weight: 600;
   letter-spacing: -0.025em;
 }
 
-.editor__sectionnote {
+.admin .editor__sectionnote {
   margin: 0;
   max-width: 60ch;
   font-size: var(--ad-t-small);
@@ -1369,7 +1368,7 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 /* The save bar rides the bottom of the viewport so a long editor never hides
    its own commit. */
-.editor__save {
+.admin .editor__save {
   position: sticky;
   bottom: 0;
   z-index: 2;
@@ -1386,7 +1385,7 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
   border: 1px solid var(--ad-line);
 }
 
-.editor__savemsg {
+.admin .editor__savemsg {
   margin: 0;
   margin-right: auto;
   font-size: var(--ad-t-small);
@@ -1394,16 +1393,16 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
 }
 
 /* Variant matrix and image uploader keep the table and field vocabulary. */
-.matrix { overflow-x: auto; }
+.admin .matrix { overflow-x: auto; }
 
-.matrix table {
+.admin .matrix table {
   width: 100%;
   min-width: 44rem;
   border-collapse: collapse;
   font-size: var(--ad-t-small);
 }
 
-.matrix th {
+.admin .matrix th {
   padding: 0 0.6rem var(--ad-s-2);
   border-bottom: 1px solid var(--ad-line);
   text-align: left;
@@ -1415,15 +1414,15 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
   white-space: nowrap;
 }
 
-.matrix td {
+.admin .matrix td {
   padding: 0.5rem 0.6rem;
   border-bottom: 1px solid var(--ad-line-2);
 }
 
-.matrix input[type="text"],
-.matrix input[type="number"] { min-width: 5rem; }
+.admin .matrix input[type="text"],
+.admin .matrix input[type="number"] { min-width: 5rem; }
 
-.uploader__grid {
+.admin .uploader__grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
   gap: var(--ad-s-3);
@@ -1432,7 +1431,7 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
   list-style: none;
 }
 
-.uploader__item {
+.admin .uploader__item {
   position: relative;
   border-radius: var(--ad-r-inner);
   overflow: hidden;
@@ -1440,7 +1439,7 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
   aspect-ratio: 4 / 5;
 }
 
-.uploader__item img {
+.admin .uploader__item img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -1449,7 +1448,7 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 /* Position one is the featured image everywhere else in the store, so the
    list says so rather than leaving it to be discovered. */
-.uploader__badge {
+.admin .uploader__badge {
   position: absolute;
   top: 0.4rem;
   left: 0.4rem;
@@ -1463,7 +1462,7 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
   text-transform: uppercase;
 }
 
-.uploader__tools {
+.admin .uploader__tools {
   position: absolute;
   inset: auto 0 0 0;
   display: flex;
@@ -1472,7 +1471,7 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
   background: linear-gradient(to top, rgba(23, 25, 25, 0.72), transparent);
 }
 
-.uploader__tools button {
+.admin .uploader__tools button {
   flex: 1;
   padding: 0.2rem;
   border: 0;
@@ -1484,42 +1483,42 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
   cursor: pointer;
 }
 
-.uploader__tools button:hover { background: var(--ad-white); }
+.admin .uploader__tools button:hover { background: var(--ad-white); }
 
 /* --------------------------------------------------------------------------
    Managers (categories, discounts, shipping): a list beside its form
    -------------------------------------------------------------------------- */
 
-.manager {
+.admin .manager {
   display: grid;
   gap: var(--ad-s-4);
   align-items: start;
 }
 
 @media (min-width: 70rem) {
-  .manager { grid-template-columns: minmax(0, 1.5fr) minmax(19rem, 1fr); }
+  .admin .manager { grid-template-columns: minmax(0, 1.5fr) minmax(19rem, 1fr); }
 }
 
-.manager__form {
+.admin .manager__form {
   padding: var(--ad-s-4);
   border-radius: var(--ad-r-card);
   background: var(--ad-paper);
 }
 
 @media (min-width: 70rem) {
-  .manager__form { position: sticky; top: var(--ad-s-4); }
+  .admin .manager__form { position: sticky; top: var(--ad-s-4); }
 }
 
-.manager__formtitle {
+.admin .manager__formtitle {
   margin: 0 0 var(--ad-s-4);
   font-size: var(--ad-t-h3);
   font-weight: 600;
   letter-spacing: -0.025em;
 }
 
-.manager__form .field { margin-bottom: var(--ad-s-3); }
+.admin .manager__form .adfield { margin-bottom: var(--ad-s-3); }
 
-.manager__actions {
+.admin .manager__actions {
   display: flex;
   gap: var(--ad-s-2);
   margin-top: var(--ad-s-4);
@@ -1529,45 +1528,45 @@ a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
    Settings: a grouped, sectioned form
    -------------------------------------------------------------------------- */
 
-.settings {
+.admin .settings {
   display: grid;
   gap: var(--ad-s-4);
   max-width: 58rem;
 }
 
-.settings__group {
+.admin .settings__group {
   display: grid;
   gap: var(--ad-s-3);
   padding-top: var(--ad-s-5);
   border-top: 1px solid var(--ad-line);
 }
 
-.settings__group:first-of-type { padding-top: 0; border-top: 0; }
+.admin .settings__group:first-of-type { padding-top: 0; border-top: 0; }
 
 @media (min-width: 56rem) {
-  .settings__group {
+  .admin .settings__group {
     grid-template-columns: 14rem minmax(0, 1fr);
     gap: var(--ad-s-5);
   }
 }
 
-.settings__aside { align-self: start; }
+.admin .settings__aside { align-self: start; }
 
-.settings__grouptitle {
+.admin .settings__grouptitle {
   margin: 0 0 0.35rem;
   font-size: var(--ad-t-body);
   font-weight: 600;
   letter-spacing: -0.015em;
 }
 
-.settings__groupnote {
+.admin .settings__groupnote {
   margin: 0;
   font-size: var(--ad-t-small);
   color: var(--ad-ink-2);
   line-height: 1.55;
 }
 
-.settings__fields { min-width: 0; }
+.admin .settings__fields { min-width: 0; }
 
 /* --------------------------------------------------------------------------
    Reduced motion

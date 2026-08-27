@@ -37,8 +37,8 @@ export default async function AdminCustomerPage({ params }: PageProps<'/admin/cu
         }
       />
 
-      <div className="split">
-        <div className="split__col">
+      <div className="adsplit">
+        <div className="adsplit__col">
           <section className="panel panel--ink">
             <p className="alabel">Lifetime value</p>
             <p className="figure__value figure__value--lg">
@@ -117,7 +117,7 @@ export default async function AdminCustomerPage({ params }: PageProps<'/admin/cu
           </section>
         </div>
 
-        <div className="split__col">
+        <div className="adsplit__col">
           {customer.addresses.length ? (
             <section className="panel">
               <p className="alabel">Addresses</p>

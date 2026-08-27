@@ -229,7 +229,7 @@ export function CategoryManager({
           {draft.id ? 'Edit ' + draft.slug : 'New collection'}
         </h2>
 
-        <label className="field">
+        <label className="adfield">
           Name
           <input
             value={draft.name}
@@ -238,7 +238,7 @@ export function CategoryManager({
           />
         </label>
 
-        <label className="field">
+        <label className="adfield">
           Slug
           <input
             value={draft.slug}
@@ -251,7 +251,7 @@ export function CategoryManager({
           </small>
         </label>
 
-        <label className="field">
+        <label className="adfield">
           Description
           <textarea
             value={draft.description}
@@ -260,7 +260,7 @@ export function CategoryManager({
           />
         </label>
 
-        <label className="field">
+        <label className="adfield">
           SEO title
           <input
             value={draft.seoTitle}
@@ -268,7 +268,7 @@ export function CategoryManager({
           />
         </label>
 
-        <label className="field">
+        <label className="adfield">
           SEO description
           <textarea
             value={draft.seoDescription}

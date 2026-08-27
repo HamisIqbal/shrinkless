@@ -220,7 +220,7 @@ export function DiscountManager({
           {draft.id ? 'Edit ' + draft.code : 'New discount'}
         </h2>
 
-        <label className="field">
+        <label className="adfield">
           Code
           <input
             value={draft.code}
@@ -229,7 +229,7 @@ export function DiscountManager({
           />
         </label>
 
-        <label className="field">
+        <label className="adfield">
           Description
           <input
             value={draft.description}
@@ -238,7 +238,7 @@ export function DiscountManager({
         </label>
 
         <div className="fieldrow">
-          <label className="field">
+          <label className="adfield">
             Type
             <select
               value={draft.type}
@@ -251,7 +251,7 @@ export function DiscountManager({
             </select>
           </label>
 
-          <label className="field">
+          <label className="adfield">
             {draft.type === 'percentage' ? 'Percent off' : 'Dollars off'}
             <input
               type="number"
@@ -264,7 +264,7 @@ export function DiscountManager({
           </label>
         </div>
 
-        <label className="field">
+        <label className="adfield">
           Minimum order, in dollars
           <input
             type="number"
@@ -276,7 +276,7 @@ export function DiscountManager({
         </label>
 
         <div className="fieldrow">
-          <label className="field">
+          <label className="adfield">
             Starts
             <input
               type="date"
@@ -285,7 +285,7 @@ export function DiscountManager({
             />
           </label>
 
-          <label className="field">
+          <label className="adfield">
             Ends
             <input
               type="date"
@@ -296,7 +296,7 @@ export function DiscountManager({
         </div>
 
         <div className="fieldrow">
-          <label className="field">
+          <label className="adfield">
             Total uses
             <input
               type="number"
@@ -307,7 +307,7 @@ export function DiscountManager({
             />
           </label>
 
-          <label className="field">
+          <label className="adfield">
             Per customer
             <input
               type="number"
@@ -341,7 +341,7 @@ export function DiscountManager({
               </label>
             ))}
 
-            <p className="field__hint">None selected means the code applies to everything.</p>
+            <p className="adfield__hint">None selected means the code applies to everything.</p>
           </fieldset>
         ) : null}
 
