@@ -1,0 +1,115 @@
+'use server';
+
+import { revalidatePath } from 'next/cache';
+import { z } from 'zod';
+import { Types } from 'mongoose';
+import { adminAction } from '@/lib/admin/action';
+import { ADJUSTMENT_REASONS } from '@/lib/db/models/inventory-adjustment';
+import { Variant } from '@/lib/db/models/variant';
+import { connectToDatabase } from '@/lib/db/connection';
+import {
+  InsufficientStockError,
+  VariantNotFoundError,
+  adjustStock,
+  setVariantStock,
+} from '@/lib/services/inventory';
+
+function revalidateInventory(): void {
+  revalidatePath('/admin/inventory');
+  revalidatePath('/admin/products');
+  revalidatePath('/admin');
+  revalidatePath('/shop');
+}
+
+function translate(error: unknown): string | null {
+  if (error instanceof InsufficientStockError) return error.message;
+  if (error instanceof VariantNotFoundError) return 'That variant no longer exists.';
+  return null;
+}
+
+/** A manual movement: "+12, restock" or "-1, damage". Reason is required
+ *  because a ledger entry that cannot explain itself is barely a record. */
+export const adjustStockAction = adminAction(
+  {
+    permission: 'inventory:write',
+    schema: z.object({
+      variantId: z.string().min(1),
+      delta: z
+        .number()
+        .int('Adjust by a whole number of units')
+        .refine((value) => value !== 0, 'An adjustment of zero changes nothing'),
+      reason: z.enum(ADJUSTMENT_REASONS),
+      note: z.string().trim().max(200).default(''),
+    }),
+    translate,
+    genericError: 'Could not adjust the stock.',
+  },
+  async (input, actor) => {
+    const stock = await adjustStock({
+      variantId: input.variantId,
+      delta: input.delta,
+      reason: input.reason,
+      note: input.note,
+      actor: { id: actor.id, email: actor.email },
+    });
+
+    revalidateInventory();
+    return { stock };
+  },
+);
+
+/** An absolute count, as after a stock take. */
+export const setStockAction = adminAction(
+  {
+    permission: 'inventory:write',
+    schema: z.object({
+      variantId: z.string().min(1),
+      stock: z.number().int().min(0, 'Stock cannot be negative'),
+      note: z.string().trim().max(200).default(''),
+    }),
+    translate,
+    genericError: 'Could not set the stock level.',
+  },
+  async (input, actor) => {
+    const stock = await setVariantStock({
+      variantId: input.variantId,
+      stock: input.stock,
+      reason: 'correction',
+      note: input.note || 'Stock take',
+      actor: { id: actor.id, email: actor.email },
+    });
+
+    revalidateInventory();
+    return { stock };
+  },
+);
+
+/** Per-variant low-stock threshold. Null hands the variant back to the
+ *  store-wide setting. */
+export const setLowStockThresholdAction = adminAction(
+  {
+    permission: 'inventory:write',
+    schema: z.object({
+      variantId: z.string().min(1),
+      threshold: z.number().int().min(0).nullable(),
+    }),
+    translate,
+    genericError: 'Could not update the threshold.',
+  },
+  async (input) => {
+    if (!Types.ObjectId.isValid(input.variantId)) {
+      throw new VariantNotFoundError(input.variantId);
+    }
+
+    await connectToDatabase();
+
+    const updated = await Variant.findByIdAndUpdate(input.variantId, {
+      $set: { lowStockThreshold: input.threshold },
+    });
+
+    if (!updated) throw new VariantNotFoundError(input.variantId);
+
+    revalidateInventory();
+    return undefined;
+  },
+);

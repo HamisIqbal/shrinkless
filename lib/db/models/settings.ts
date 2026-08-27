@@ -16,6 +16,8 @@ const settingsSchema = new Schema(
     announcement: { type: String, default: '' },
     shippingZones: { type: [shippingZoneSchema], default: [] },
     freeShippingThresholdCents: { type: Number, default: null },
+    /** Store-wide default. A variant may override it; most never need to. */
+    lowStockThreshold: { type: Number, default: 3, min: 0 },
     taxMode: { type: String, enum: ['none', 'flat', 'stripe'], default: 'none' },
     flatTaxRateBasisPoints: { type: Number, default: 0, min: 0 },
   },

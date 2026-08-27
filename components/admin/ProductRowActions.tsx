@@ -1,0 +1,66 @@
+'use client';
+
+import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { archiveProductAction, setProductStatusAction } from '@/app/actions/admin/products';
+
+type Props = {
+  id: string;
+  status: 'draft' | 'published';
+  archived: boolean;
+  title: string;
+};
+
+/**
+ * Publish, unpublish and archive, from the list.
+ *
+ * Every one of these is a server action that re-checks the permission — the
+ * buttons are a convenience, not the authorization. Archiving asks first,
+ * because it is the closest thing to a delete this store offers.
+ */
+export function ProductRowActions({ id, status, archived, title }: Props) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [error, setError] = useState('');
+
+  function toggleStatus() {
+    setError('');
+    startTransition(async () => {
+      const result = await setProductStatusAction({
+        id,
+        status: status === 'published' ? 'draft' : 'published',
+      });
+
+      if (!result.ok) setError(result.error);
+      else router.refresh();
+    });
+  }
+
+  function toggleArchive() {
+    if (!archived && !window.confirm(`Archive “${title}”? It leaves the storefront.`)) return;
+
+    setError('');
+    startTransition(async () => {
+      const result = await archiveProductAction({ id, archived: !archived });
+
+      if (!result.ok) setError(result.error);
+      else router.refresh();
+    });
+  }
+
+  return (
+    <span className="rowactions">
+      {!archived ? (
+        <button type="button" onClick={toggleStatus} disabled={pending}>
+          {status === 'published' ? 'Unpublish' : 'Publish'}
+        </button>
+      ) : null}
+
+      <button type="button" onClick={toggleArchive} disabled={pending}>
+        {archived ? 'Restore' : 'Archive'}
+      </button>
+
+      {error ? <span role="alert" className="rowactions__error">{error}</span> : null}
+    </span>
+  );
+}

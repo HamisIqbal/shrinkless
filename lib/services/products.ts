@@ -3,7 +3,8 @@ import { connectToDatabase } from '@/lib/db/connection';
 import { Product, type ProductDoc } from '@/lib/db/models/product';
 import { Variant, type VariantDoc } from '@/lib/db/models/variant';
 import type { ProductFilter } from '@/lib/validation/catalogue';
-import type { ProductInput } from '@/lib/validation/product';
+import type { ProductInput, VariantInput } from '@/lib/validation/product';
+import { pageWindow, searchRegex, sortStage, toPaged, type ListParams, type Paged } from '@/lib/admin/query';
 import type { AdminProductRowDTO, ProductDTO, VariantDTO } from '@/types/dto';
 
 type WithId<T> = T & { _id: Types.ObjectId };
@@ -18,6 +19,8 @@ function toVariantDTO(variant: WithId<VariantDoc>): VariantDTO {
     stock: variant.stock,
     inStock: variant.stock > 0,
     enabled: variant.enabled,
+    lowStockThreshold: variant.lowStockThreshold ?? null,
+    imagePublicId: variant.imagePublicId ?? '',
   };
 }
 
@@ -45,6 +48,19 @@ function toProductDTO(product: WithId<ProductDoc>, variants: WithId<VariantDoc>[
     colors: product.optionSets?.colors ?? [],
     variants: variantDTOs,
     minPriceCents: sellable.length ? Math.min(...sellable.map((v) => v.priceCents)) : 0,
+    tags: product.tags ?? [],
+    baseSku: product.baseSku ?? '',
+    seo: {
+      title: product.seo?.title ?? '',
+      description: product.seo?.description ?? '',
+      keywords: product.seo?.keywords ?? [],
+    },
+    quantityRule: {
+      min: product.quantityRule?.min ?? 1,
+      step: product.quantityRule?.step ?? 1,
+      max: product.quantityRule?.max ?? null,
+    },
+    archived: Boolean(product.archivedAt),
   };
 }
 
@@ -66,7 +82,9 @@ export async function listPublishedProducts(
 ): Promise<ProductDTO[]> {
   await connectToDatabase();
 
-  const query: Record<string, unknown> = { status: 'published' };
+  // Archived products leave the storefront entirely. They keep their
+  // documents so old orders and carts still resolve, but nothing lists them.
+  const query: Record<string, unknown> = { status: 'published', archivedAt: null };
   if (category) query.category = category;
 
   const products = (await Product.find(query).lean()) as WithId<ProductDoc>[];
@@ -119,8 +137,8 @@ export async function listPublishedProducts(
 }
 
 /** `timestamps: true` is on the schema but absent from the inferred type. */
-function timeOf(doc: unknown): number {
-  const value = (doc as { createdAt?: Date | string }).createdAt;
+function timeOf(doc: unknown, field: 'createdAt' | 'updatedAt' = 'createdAt'): number {
+  const value = (doc as Record<string, Date | string | undefined>)[field];
   return value ? new Date(value).getTime() : 0;
 }
 
@@ -163,33 +181,83 @@ export async function listProductsInCategory(
 export async function getPublishedProductBySlug(slug: string): Promise<ProductDTO | null> {
   await connectToDatabase();
 
-  const product = (await Product.findOne({ slug, status: 'published' }).lean()) as WithId<ProductDoc> | null;
+  const product = (await Product.findOne({
+    slug,
+    status: 'published',
+    archivedAt: null,
+  }).lean()) as WithId<ProductDoc> | null;
   if (!product) return null;
 
   const variants = (await Variant.find({ productId: product._id }).lean()) as WithId<VariantDoc>[];
   return toProductDTO(product, variants);
 }
 
-export async function listProductsForAdmin(): Promise<AdminProductRowDTO[]> {
+/** Sort keys the admin product list understands. First one is the default. */
+export const PRODUCT_SORTS = ['updatedAt', 'createdAt', 'title', 'status'] as const;
+export const PRODUCT_FILTERS = ['status', 'category', 'featured', 'archived'] as const;
+
+/**
+ * One page of products, filtered and sorted by the database.
+ *
+ * The variant roll-up (count, total stock, cheapest price) is a second query
+ * scoped to the ids on *this page* — not the whole catalogue — so the cost of
+ * the list does not grow with the size of the store.
+ */
+export async function listProductsForAdmin(
+  params: ListParams,
+): Promise<Paged<AdminProductRowDTO>> {
   await connectToDatabase();
 
-  const products = (await Product.find({}).sort({ createdAt: -1 }).lean()) as WithId<ProductDoc>[];
+  const query: Record<string, unknown> = {};
+
+  // Archived is opt-in: an admin looking at "products" means the live ones.
+  query.archivedAt = params.filters.archived === 'true' ? { $ne: null } : null;
+
+  if (params.filters.status === 'draft' || params.filters.status === 'published') {
+    query.status = params.filters.status;
+  }
+  if (params.filters.category) query.category = params.filters.category;
+  if (params.filters.featured === 'true') query.featured = true;
+
+  const needle = searchRegex(params.q);
+  if (needle) {
+    query.$or = [{ title: needle }, { slug: needle }, { baseSku: needle }, { tags: needle }];
+  }
+
+  const { skip, limit } = pageWindow(params);
+
+  const [total, products] = await Promise.all([
+    Product.countDocuments(query),
+    Product.find(query)
+      .sort(sortStage(params.sort, params.direction))
+      .skip(skip)
+      .limit(limit)
+      .lean() as Promise<WithId<ProductDoc>[]>,
+  ]);
+
   const grouped = await loadVariantsByProduct(products.map((p) => p._id));
 
-  return products.map((product) => {
+  const rows = products.map((product) => {
     const variants = grouped.get(String(product._id)) ?? [];
+    const sellable = variants.filter((variant) => variant.enabled);
 
     return {
       id: String(product._id),
       title: product.title,
       slug: product.slug,
+      category: product.category,
       status: product.status as 'draft' | 'published',
       featured: Boolean(product.featured),
+      archived: Boolean(product.archivedAt),
       imagePublicId: product.images[0]?.publicId ?? '',
       variantCount: variants.length,
       totalStock: variants.reduce((sum, variant) => sum + variant.stock, 0),
+      minPriceCents: sellable.length ? Math.min(...sellable.map((v) => v.priceCents)) : 0,
+      updatedAt: new Date(timeOf(product, 'updatedAt') || timeOf(product) || Date.now()).toISOString(),
     };
   });
+
+  return toPaged(rows, total, params);
 }
 
 export async function getProductForAdmin(id: string): Promise<ProductDTO | null> {
@@ -211,20 +279,103 @@ export class SlugTakenError extends Error {
   }
 }
 
+export class SkuTakenError extends Error {
+  constructor(sku: string) {
+    super(`The SKU "${sku}" is already used by another variant`);
+    this.name = 'SkuTakenError';
+  }
+}
+
+export class ProductNotFoundError extends Error {
+  constructor(id: string) {
+    super(`No product with id ${id}`);
+    this.name = 'ProductNotFoundError';
+  }
+}
+
+export type SaveActor = { id: string; email: string };
+
+/** Every SKU in the payload has to be unique among themselves and free of any
+ *  variant belonging to another product. The unique index is the real guard;
+ *  this turns a driver-level duplicate-key crash into a message that names the
+ *  offending SKU. */
+async function assertSkusAreFree(
+  skus: string[],
+  productId: Types.ObjectId | null,
+): Promise<void> {
+  const seen = new Set<string>();
+  for (const sku of skus) {
+    if (seen.has(sku)) throw new SkuTakenError(sku);
+    seen.add(sku);
+  }
+
+  if (!skus.length) return;
+
+  const clashes = await Variant.find({
+    sku: { $in: skus },
+    ...(productId ? { productId: { $ne: productId } } : {}),
+  })
+    .select('sku')
+    .lean();
+
+  if (clashes.length) throw new SkuTakenError(clashes[0].sku);
+}
+
+/**
+ * Creates or updates a product and reconciles its variants.
+ *
+ * Two rules that look like details and are not:
+ *
+ * Variants are upserted by (productId, size, color) and never deleted. Carts
+ * hold variant ids and past orders were priced from them, so removing a row
+ * would rewrite history; a combination that leaves the option sets is disabled
+ * instead.
+ *
+ * Stock is *not* written here. A quantity typed into the product form is a
+ * stock correction like any other, so it goes through the inventory service,
+ * which takes the lock, refuses to go negative, and records who did it. The
+ * editor is not a back door around the ledger.
+ */
 export async function saveProduct(
-  input: Omit<ProductInput, 'featured' | 'badge' | 'rating'> & {
+  input: Omit<
+    ProductInput,
+    | 'featured'
+    | 'badge'
+    | 'rating'
+    | 'tags'
+    | 'baseSku'
+    | 'seo'
+    | 'quantityRule'
+    | 'variants'
+  > & {
+    variants: (Omit<VariantInput, 'lowStockThreshold' | 'imagePublicId'> & {
+      lowStockThreshold?: number | null;
+      imagePublicId?: string;
+    })[];
     featured?: boolean;
     badge?: 'none' | 'new';
     rating?: number;
+    tags?: string[];
+    baseSku?: string;
+    seo?: { title: string; description: string; keywords: string[] };
+    quantityRule?: { min: number; step: number; max: number | null };
     id?: string;
   },
+  actor: SaveActor = { id: '', email: 'system' },
 ): Promise<string> {
   await connectToDatabase();
+
+  if (input.id && !Types.ObjectId.isValid(input.id)) throw new ProductNotFoundError(input.id);
 
   const clash = await Product.findOne({ slug: input.slug }).select('_id').lean();
   if (clash && (!input.id || String(clash._id) !== input.id)) {
     throw new SlugTakenError(input.slug);
   }
+
+  await assertSkusAreFree(
+    input.variants.map((variant) => variant.sku),
+    input.id ? new Types.ObjectId(input.id) : null,
+  );
 
   const fields = {
     title: input.title,
@@ -235,6 +386,10 @@ export async function saveProduct(
     featured: input.featured ?? false,
     badge: input.badge ?? 'none',
     rating: input.rating ?? 0,
+    tags: input.tags ?? [],
+    baseSku: input.baseSku ?? '',
+    seo: input.seo ?? { title: '', description: '', keywords: [] },
+    quantityRule: input.quantityRule ?? { min: 1, step: 1, max: null },
     images: input.images,
     optionSets: { sizes: input.sizes, colors: input.colors },
   };
@@ -243,25 +398,101 @@ export async function saveProduct(
     ? await Product.findByIdAndUpdate(input.id, { $set: fields }, { returnDocument: 'after' })
     : await Product.create(fields);
 
-  if (!product) throw new Error(`No product with id ${input.id}`);
+  if (!product) throw new ProductNotFoundError(input.id ?? '');
 
-  // Upsert by (productId, size, color) — the pair the unique index covers — so a
-  // re-save never duplicates a row, and never deletes one either: carts hold
-  // variant ids and past orders were priced from them.
+  const { setVariantStock } = await import('@/lib/services/inventory');
+
   for (const variant of input.variants) {
-    await Variant.findOneAndUpdate(
+    const saved = await Variant.findOneAndUpdate(
       { productId: product._id, size: variant.size, color: variant.color },
       {
         $set: {
           sku: variant.sku,
           priceCents: variant.priceCents,
-          stock: variant.stock,
           enabled: variant.enabled,
+          lowStockThreshold: variant.lowStockThreshold ?? null,
+          imagePublicId: variant.imagePublicId ?? '',
         },
+        // Only ever an initial value. Existing rows keep the ledger's number.
+        $setOnInsert: { stock: 0 },
       },
       { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true },
     );
+
+    if (saved && saved.stock !== variant.stock) {
+      await setVariantStock({
+        variantId: String(saved._id),
+        stock: variant.stock,
+        reason: 'correction',
+        note: 'Set from the product editor',
+        actor,
+      });
+    }
   }
 
   return String(product._id);
+}
+
+/**
+ * Takes a product off the storefront without destroying it.
+ *
+ * A hard delete is never offered: variant ids live in carts and every past
+ * order was priced from a variant that belongs to a product. Archiving keeps
+ * those references resolvable while removing the product from every list a
+ * shopper or an admin sees by default.
+ */
+export async function archiveProduct(id: string, archived: boolean): Promise<void> {
+  if (!Types.ObjectId.isValid(id)) throw new ProductNotFoundError(id);
+
+  await connectToDatabase();
+
+  const update = archived
+    ? { $set: { archivedAt: new Date(), status: 'draft' as const } }
+    : { $set: { archivedAt: null } };
+
+  const product = await Product.findByIdAndUpdate(id, update);
+  if (!product) throw new ProductNotFoundError(id);
+}
+
+/** Publish or unpublish. Archived products cannot be published — they would
+ *  reappear on the storefront with no obvious cause. */
+export async function setProductStatus(
+  id: string,
+  status: 'draft' | 'published',
+): Promise<void> {
+  if (!Types.ObjectId.isValid(id)) throw new ProductNotFoundError(id);
+
+  await connectToDatabase();
+
+  const product = await Product.findById(id).select('archivedAt').lean();
+  if (!product) throw new ProductNotFoundError(id);
+
+  if (product.archivedAt && status === 'published') {
+    throw new Error('Restore this product before publishing it.');
+  }
+
+  await Product.updateOne({ _id: id }, { $set: { status } });
+}
+
+/** Every distinct category slug in use, for the admin filter. */
+export async function listUsedCategorySlugs(): Promise<string[]> {
+  await connectToDatabase();
+  const slugs = await Product.distinct('category', { archivedAt: null });
+  return (slugs as string[]).filter(Boolean).sort();
+}
+
+/** How many live products sit in a category. The category service asks before
+ *  allowing an archive. */
+export async function countProductsInCategory(slug: string): Promise<number> {
+  await connectToDatabase();
+  return Product.countDocuments({ category: slug, archivedAt: null });
+}
+
+/** Moves every product from one category slug to another. Used when a category
+ *  is renamed, so no product is left pointing at a slug that no longer
+ *  resolves. */
+export async function reassignCategory(from: string, to: string): Promise<number> {
+  await connectToDatabase();
+  const result = await Product.updateMany({ category: from }, { $set: { category: to } });
+  return result.modifiedCount ?? 0;
 }

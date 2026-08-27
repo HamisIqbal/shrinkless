@@ -8,6 +8,13 @@ const variantSchema = new Schema(
     sku: { type: String, required: true, unique: true, uppercase: true, trim: true },
     priceCents: { type: Number, required: true, min: 0 },
     stock: { type: Number, required: true, min: 0, default: 0 },
+    /** Per-variant override of the store-wide low-stock threshold. Null means
+     *  "use the store setting" — a rule that lives in one place until a
+     *  particular variant needs its own. */
+    lowStockThreshold: { type: Number, default: null, min: 0 },
+    /** Optional colourway shot. Falls back to the product's images when
+     *  empty, which is the common case. */
+    imagePublicId: { type: String, default: '' },
     enabled: { type: Boolean, default: true },
   },
   { timestamps: true },

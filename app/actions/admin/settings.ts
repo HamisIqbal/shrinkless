@@ -1,29 +1,24 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { NotAuthorizedError, requireAdminActor } from '@/lib/auth/guards';
+import { adminAction } from '@/lib/admin/action';
 import { updateStoreSettings } from '@/lib/services/settings';
 import { settingsInputSchema } from '@/lib/validation/settings';
 
-export type SaveSettingsResult = { ok: true } | { ok: false; error: string };
+export const saveSettingsAction = adminAction(
+  {
+    permission: 'settings:write',
+    schema: settingsInputSchema,
+    genericError: 'Could not save the settings.',
+  },
+  async (input) => {
+    await updateStoreSettings(input);
 
-export async function saveSettingsAction(input: unknown): Promise<SaveSettingsResult> {
-  try {
-    await requireAdminActor();
-  } catch (error) {
-    if (error instanceof NotAuthorizedError) return { ok: false, error: 'Not authorised.' };
-    throw error;
-  }
+    revalidatePath('/admin/settings');
+    // Settings reach the storefront through the layout: the announcement bar,
+    // the store email in the footer, shipping and tax at checkout.
+    revalidatePath('/', 'layout');
 
-  const parsed = settingsInputSchema.safeParse(input);
-  if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? 'Check the settings.' };
-  }
-
-  await updateStoreSettings(parsed.data);
-
-  revalidatePath('/admin/settings');
-  revalidatePath('/', 'layout');
-
-  return { ok: true };
-}
+    return undefined;
+  },
+);

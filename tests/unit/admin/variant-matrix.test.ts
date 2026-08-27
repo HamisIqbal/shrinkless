@@ -7,6 +7,7 @@ function variant(overrides: Partial<VariantDTO>): VariantDTO {
   return {
     id: 'v1', size: 's', color: 'sand', sku: 'FIELD-TEE-S-SAND',
     priceCents: 4200, stock: 5, inStock: true, enabled: true,
+    lowStockThreshold: null, imagePublicId: '',
     ...overrides,
   };
 }

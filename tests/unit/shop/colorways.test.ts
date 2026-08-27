@@ -10,6 +10,8 @@ function variant(overrides: Partial<VariantDTO> & { color: string; size: string 
     stock: 5,
     inStock: true,
     enabled: true,
+    lowStockThreshold: null,
+    imagePublicId: '',
     ...overrides,
   };
 }
@@ -24,6 +26,11 @@ const product: ProductDTO = {
   featured: false,
   badge: 'none',
   rating: 0,
+  tags: [],
+  baseSku: '',
+  seo: { title: '', description: '', keywords: [] },
+  quantityRule: { min: 1, step: 1, max: null },
+  archived: false,
   images: [
     { publicId: 'https://img/black.jpg', width: 1400, height: 1750, alt: 'Black tee' },
     { publicId: 'https://img/white.jpg', width: 1400, height: 1750, alt: 'White tee' },

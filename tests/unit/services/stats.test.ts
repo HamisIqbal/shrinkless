@@ -65,6 +65,52 @@ describe('getAdminStats', () => {
   });
 
   it('returns zeroes on an empty store', async () => {
-    expect(await getAdminStats(NOW)).toEqual({ ordersToday: 0, revenueWeekCents: 0, lowStock: [] });
+    const stats = await getAdminStats(NOW);
+
+    expect(stats).toMatchObject({
+      revenueTotalCents: 0,
+      revenueTodayCents: 0,
+      revenueWeekCents: 0,
+      revenueMonthCents: 0,
+      ordersTotal: 0,
+      ordersToday: 0,
+      ordersPending: 0,
+      ordersCompleted: 0,
+      ordersCancelled: 0,
+      customersTotal: 0,
+      averageOrderCents: 0,
+      lowStockCount: 0,
+      outOfStockCount: 0,
+    });
+
+    expect(stats.lowStock).toEqual([]);
+    expect(stats.bestSellers).toEqual([]);
+    expect(stats.recentOrders).toEqual([]);
+  });
+
+  it('splits revenue by window and averages only paid orders', async () => {
+    await seedOrder('SL-1', 'paid', 5000, new Date('2026-08-21T09:00:00.000Z'));
+    await seedOrder('SL-2', 'delivered', 3000, new Date('2026-08-18T09:00:00.000Z'));
+    await seedOrder('SL-3', 'paid', 1000, new Date('2026-08-02T09:00:00.000Z'));
+    await seedOrder('SL-4', 'cancelled', 9999, new Date('2026-08-21T09:00:00.000Z'));
+
+    const stats = await getAdminStats(NOW);
+
+    expect(stats.revenueTodayCents).toBe(5000);
+    expect(stats.revenueWeekCents).toBe(8000);
+    expect(stats.revenueMonthCents).toBe(9000);
+    expect(stats.revenueTotalCents).toBe(9000);
+    expect(stats.averageOrderCents).toBe(3000);
+    expect(stats.ordersCancelled).toBe(1);
+  });
+
+  it('ranks best sellers by units sold, from paid orders only', async () => {
+    await seedOrder('SL-1', 'paid', 4200, new Date('2026-08-20T09:00:00.000Z'));
+    await seedOrder('SL-2', 'cancelled', 4200, new Date('2026-08-20T09:00:00.000Z'));
+
+    const stats = await getAdminStats(NOW);
+
+    expect(stats.bestSellers).toHaveLength(1);
+    expect(stats.bestSellers[0]).toMatchObject({ title: 'Field Tee', unitsSold: 1 });
   });
 });

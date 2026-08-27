@@ -6,8 +6,12 @@ export const metadata = { title: 'Shrinkless admin' };
 const NAV = [
   { href: '/admin', label: 'Dashboard' },
   { href: '/admin/products', label: 'Products' },
+  { href: '/admin/inventory', label: 'Inventory' },
+  { href: '/admin/categories', label: 'Categories' },
   { href: '/admin/orders', label: 'Orders' },
   { href: '/admin/customers', label: 'Customers' },
+  { href: '/admin/discounts', label: 'Discounts' },
+  { href: '/admin/shipping', label: 'Shipping' },
   { href: '/admin/settings', label: 'Settings' },
 ];
 

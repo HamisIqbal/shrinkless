@@ -14,6 +14,18 @@ const addressSchema = new Schema(
   { _id: false },
 );
 
+/** Shop-internal note about a customer. Never rendered anywhere a customer
+ *  can reach. */
+const customerNoteSchema = new Schema(
+  {
+    body: { type: String, required: true, trim: true },
+    actorId: { type: String, default: '' },
+    actorEmail: { type: String, default: 'system' },
+    at: { type: Date, default: () => new Date() },
+  },
+  { _id: true },
+);
+
 const userSchema = new Schema(
   {
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
@@ -21,6 +33,7 @@ const userSchema = new Schema(
     name: { type: String, default: '' },
     role: { type: String, enum: ['customer', 'admin'], default: 'customer', index: true },
     addresses: { type: [addressSchema], default: [] },
+    notes: { type: [customerNoteSchema], default: [] },
   },
   { timestamps: true },
 );

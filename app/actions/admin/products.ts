@@ -1,46 +1,83 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { NotAuthorizedError, requireAdminActor } from '@/lib/auth/guards';
-import { SlugTakenError, saveProduct } from '@/lib/services/products';
+import { z } from 'zod';
+import { NotAuthorizedError, requireAdminActor, requirePermission } from '@/lib/auth/guards';
+import { adminAction, type AdminResult } from '@/lib/admin/action';
+import {
+  ProductNotFoundError,
+  SkuTakenError,
+  SlugTakenError,
+  archiveProduct,
+  saveProduct,
+  setProductStatus,
+} from '@/lib/services/products';
 import { productInputSchema } from '@/lib/validation/product';
 import { UPLOAD_FOLDER } from '@/lib/cloudinary/config';
 import { loadCloudinaryEnv, signParams } from '@/lib/cloudinary/signature';
 
-export type SaveProductResult =
-  | { ok: true; id: string }
-  | { ok: false; error: string };
-
-export async function saveProductAction(payload: unknown): Promise<SaveProductResult> {
-  try {
-    // The proxy is a convenience; this is the check that matters.
-    await requireAdminActor();
-  } catch (error) {
-    if (error instanceof NotAuthorizedError) return { ok: false, error: 'Not authorised.' };
-    throw error;
-  }
-
-  const parsed = productInputSchema.safeParse(payload);
-  if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0]?.message ?? 'Check the product details.' };
-  }
-
-  const rawId = (payload as { id?: unknown }).id;
-  const id = typeof rawId === 'string' && rawId ? rawId : undefined;
-
-  try {
-    const savedId = await saveProduct({ ...parsed.data, id });
-
-    revalidatePath('/admin/products');
-    revalidatePath('/shop');
-    revalidatePath(`/product/${parsed.data.slug}`);
-
-    return { ok: true, id: savedId };
-  } catch (error) {
-    if (error instanceof SlugTakenError) return { ok: false, error: error.message };
-    return { ok: false, error: 'Could not save the product.' };
-  }
+/** Refreshes every surface a product change can be seen on. */
+function revalidateProduct(slug?: string): void {
+  revalidatePath('/admin/products');
+  revalidatePath('/admin');
+  revalidatePath('/shop');
+  revalidatePath('/', 'layout');
+  if (slug) revalidatePath(`/product/${slug}`);
 }
+
+/** Known, human-readable failures. Anything else stays generic. */
+function translateProductError(error: unknown): string | null {
+  if (error instanceof SlugTakenError) return error.message;
+  if (error instanceof SkuTakenError) return error.message;
+  if (error instanceof ProductNotFoundError) return 'That product no longer exists.';
+  return null;
+}
+
+const saveSchema = productInputSchema.extend({ id: z.string().min(1).optional() });
+
+export type SaveProductResult = AdminResult<{ id: string }>;
+
+export const saveProductAction = adminAction(
+  {
+    permission: 'products:write',
+    schema: saveSchema,
+    translate: translateProductError,
+    genericError: 'Could not save the product.',
+  },
+  async (input, actor) => {
+    const id = await saveProduct(input, { id: actor.id, email: actor.email });
+    revalidateProduct(input.slug);
+    return { id };
+  },
+);
+
+export const archiveProductAction = adminAction(
+  {
+    permission: 'products:write',
+    schema: z.object({ id: z.string().min(1), archived: z.boolean() }),
+    translate: translateProductError,
+    genericError: 'Could not archive the product.',
+  },
+  async (input) => {
+    await archiveProduct(input.id, input.archived);
+    revalidateProduct();
+    return undefined;
+  },
+);
+
+export const setProductStatusAction = adminAction(
+  {
+    permission: 'products:write',
+    schema: z.object({ id: z.string().min(1), status: z.enum(['draft', 'published']) }),
+    translate: translateProductError,
+    genericError: 'Could not change the product status.',
+  },
+  async (input) => {
+    await setProductStatus(input.id, input.status);
+    revalidateProduct();
+    return undefined;
+  },
+);
 
 export type UploadSignature = {
   ok: true;
@@ -51,11 +88,18 @@ export type UploadSignature = {
   signature: string;
 };
 
+/**
+ * Signs one direct-to-Cloudinary upload.
+ *
+ * Kept off the generic wrapper because its success shape predates it and the
+ * uploader in the browser reads those fields by name. The authorization check
+ * is the same one the wrapper would apply.
+ */
 export async function createUploadSignatureAction(): Promise<
   UploadSignature | { ok: false; error: string }
 > {
   try {
-    await requireAdminActor();
+    await requirePermission('products:write');
   } catch (error) {
     if (error instanceof NotAuthorizedError) return { ok: false, error: 'Not authorised.' };
     throw error;
@@ -80,4 +124,15 @@ export async function createUploadSignatureAction(): Promise<
     folder: UPLOAD_FOLDER,
     signature: signParams({ folder: UPLOAD_FOLDER, timestamp }, env.apiSecret),
   };
+}
+
+/** Kept so callers that only need "am I still an admin" do not import a guard
+ *  directly from a client boundary. */
+export async function assertAdminAction(): Promise<AdminResult> {
+  try {
+    await requireAdminActor();
+    return { ok: true, data: undefined };
+  } catch {
+    return { ok: false, error: 'Not authorised.' };
+  }
 }

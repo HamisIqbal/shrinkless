@@ -17,6 +17,7 @@ export function SettingsForm({ settings }: { settings: SettingsDTO }) {
   const [threshold, setThreshold] = useState(
     settings.freeShippingThresholdCents === null ? '' : String(settings.freeShippingThresholdCents),
   );
+  const [lowStock, setLowStock] = useState(String(settings.lowStockThreshold));
   const [taxMode, setTaxMode] = useState(settings.taxMode);
   const [taxRate, setTaxRate] = useState(String(settings.flatTaxRateBasisPoints));
 
@@ -35,6 +36,7 @@ export function SettingsForm({ settings }: { settings: SettingsDTO }) {
         announcement,
         shippingZones: zones,
         freeShippingThresholdCents: threshold === '' ? null : Number(threshold),
+        lowStockThreshold: Number(lowStock),
         taxMode,
         flatTaxRateBasisPoints: Number(taxRate),
       });
@@ -55,6 +57,16 @@ export function SettingsForm({ settings }: { settings: SettingsDTO }) {
 
       <label>Announcement bar
         <input value={announcement} onChange={(e) => setAnnouncement(e.target.value)} />
+      </label>
+
+      <label>Low-stock threshold
+        <input
+          type="number"
+          min={0}
+          value={lowStock}
+          onChange={(e) => setLowStock(e.target.value)}
+        />
+        <small>Units at or below this count as low. A variant can override it.</small>
       </label>
 
       <fieldset>

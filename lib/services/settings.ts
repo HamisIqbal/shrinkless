@@ -27,12 +27,13 @@ export async function getStoreSettings(): Promise<SettingsDTO> {
       rateCents: zone.rateCents,
     })),
     freeShippingThresholdCents: settings.freeShippingThresholdCents ?? null,
+    lowStockThreshold: settings.lowStockThreshold ?? 3,
     taxMode: settings.taxMode as 'none' | 'flat' | 'stripe',
     flatTaxRateBasisPoints: settings.flatTaxRateBasisPoints,
   };
 }
 
-export async function updateStoreSettings(input: SettingsInput): Promise<SettingsDTO> {
+export async function updateStoreSettings(input: Omit<SettingsInput, 'lowStockThreshold'> & { lowStockThreshold?: number }): Promise<SettingsDTO> {
   await connectToDatabase();
 
   await Settings.findOneAndUpdate(
@@ -43,6 +44,7 @@ export async function updateStoreSettings(input: SettingsInput): Promise<Setting
         announcement: input.announcement,
         shippingZones: input.shippingZones,
         freeShippingThresholdCents: input.freeShippingThresholdCents,
+        lowStockThreshold: input.lowStockThreshold ?? 3,
         taxMode: input.taxMode,
         flatTaxRateBasisPoints: input.flatTaxRateBasisPoints,
       },
