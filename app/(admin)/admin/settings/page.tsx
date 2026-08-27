@@ -1,3 +1,4 @@
+import { PageHead } from '@/components/admin/PageHead';
 import { SettingsForm } from '@/components/admin/SettingsForm';
 import { requireAdminPage } from '@/lib/auth/guards';
 import { getStoreSettings } from '@/lib/services/settings';
@@ -7,11 +8,13 @@ export default async function AdminSettingsPage() {
   const settings = await getStoreSettings();
 
   return (
-    <section>
-      <h1>Store settings</h1>
-      {/* The shipping/tax rules themselves are a Phase 5 concern; this page
-          only stores the values lib/pricing will consume. */}
+    <>
+      <PageHead
+        title="Settings"
+        sub="Store-wide values the storefront and the pricing engine both read."
+      />
+
       <SettingsForm settings={settings} />
-    </section>
+    </>
   );
 }

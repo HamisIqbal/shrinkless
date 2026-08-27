@@ -1,45 +1,26 @@
-import Link from 'next/link';
+import { AdminRail } from '@/components/admin/AdminRail';
 import { requireAdminPage } from '@/lib/auth/guards';
 
 export const metadata = { title: 'Shrinkless admin' };
 
-const NAV = [
-  { href: '/admin', label: 'Dashboard' },
-  { href: '/admin/products', label: 'Products' },
-  { href: '/admin/inventory', label: 'Inventory' },
-  { href: '/admin/categories', label: 'Categories' },
-  { href: '/admin/orders', label: 'Orders' },
-  { href: '/admin/customers', label: 'Customers' },
-  { href: '/admin/discounts', label: 'Discounts' },
-  { href: '/admin/shipping', label: 'Shipping' },
-  { href: '/admin/settings', label: 'Settings' },
-];
-
+/**
+ * The shell: a white worksheet floating on warm off-white, with the dark
+ * spine down its left edge. The outer padding is the design — it is what
+ * makes the interface read as an object on a desk rather than a browser
+ * chrome filled edge to edge.
+ */
 export default async function AdminLayout({ children }: LayoutProps<'/'>) {
   const actor = await requireAdminPage();
 
   return (
     <div className="admin">
-      <aside className="admin__aside">
-        <Link href="/admin" className="admin__mark">Shrinkless admin</Link>
+      <div className="admin__shell">
+        <AdminRail actorEmail={actor.email} />
 
-        <nav aria-label="Admin" className="admin__nav">
-          <ul>
-            {NAV.map((item) => (
-              <li key={item.href}>
-                <Link href={item.href}>{item.label}</Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
-
-        <div className="admin__foot">
-          <p className="admin__actor">{actor.email}</p>
-          <Link href="/" className="admin__back">Back to store</Link>
-        </div>
-      </aside>
-
-      <main className="admin__main">{children}</main>
+        <main className="admin__main">
+          <div className="apage">{children}</div>
+        </main>
+      </div>
     </div>
   );
 }

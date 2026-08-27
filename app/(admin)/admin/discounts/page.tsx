@@ -1,5 +1,6 @@
 import { DiscountManager } from '@/components/admin/DiscountManager';
 import { ListControls, Pagination } from '@/components/admin/ListControls';
+import { PageHead } from '@/components/admin/PageHead';
 import { requireAdminPage } from '@/lib/auth/guards';
 import { parseListParams } from '@/lib/admin/query';
 import { DISCOUNT_FILTERS, DISCOUNT_SORTS, listDiscounts } from '@/lib/services/discounts';
@@ -16,12 +17,11 @@ export default async function AdminDiscountsPage(props: PageProps<'/admin/discou
   const [page, categories] = await Promise.all([listDiscounts(params), listCategories()]);
 
   return (
-    <section>
-      <h1>Discounts</h1>
-      <p>
-        Codes are validated and priced on the server. The browser only ever
-        sends the code.
-      </p>
+    <>
+      <PageHead
+        title="Discounts"
+        sub="Codes are validated and priced on the server. The browser only ever sends the code."
+      />
 
       <ListControls
         action="/admin/discounts"
@@ -60,6 +60,6 @@ export default async function AdminDiscountsPage(props: PageProps<'/admin/discou
       />
 
       <Pagination action="/admin/discounts" page={page} />
-    </section>
+    </>
   );
 }

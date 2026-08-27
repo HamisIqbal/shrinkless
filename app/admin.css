@@ -1,353 +1,1583 @@
 /* ==========================================================================
-   Admin panel. Shares the storefront tokens and nothing else: no paper grain,
-   no reveals, tighter type, denser rules. A back office, not a shopfront.
-   Styling is scoped under .admin and mostly targets elements, so the admin
-   pages stay plain semantic markup.
+   Shrinkless admin
+   --------------------------------------------------------------------------
+   A back office for a fashion house, not a dashboard template.
+
+   The composition is one idea: a white worksheet floating on warm off-white,
+   with a dark spine down its left edge. Everything else is spacing and
+   restraint. Panels are recessed off-white rather than white-on-white cards,
+   so the page reads as one sheet with regions instead of a tray of tiles.
+
+   The acid is rationed on purpose. It marks exactly three things: where you
+   are, what is selected, and what needs a human today. Spend it anywhere else
+   and it stops meaning anything.
+
+   Own tokens rather than the storefront's: the shopfront is paper and ink with
+   a grain, this is a working instrument. Scoped under .admin, and this file is
+   unlayered so it outranks globals.css inside @layer shrinkless-base.
    ========================================================================== */
+
+.admin {
+  /* --- Palette ------------------------------------------------------------ */
+  --ad-ink: #171919;
+  --ad-paper: #f4f5f1;
+  --ad-white: #ffffff;
+  --ad-acid: #efff65;
+
+  /* Secondary text is mixed from the ink, never a neutral grey — grey on a
+     warm ground reads dirty. Both clear 4.5:1 on white and on paper. */
+  --ad-ink-2: color-mix(in oklab, var(--ad-ink) 66%, var(--ad-paper));
+  --ad-ink-3: color-mix(in oklab, var(--ad-ink) 48%, var(--ad-paper));
+
+  /* Hairlines only. The layout separates with space; lines are punctuation. */
+  --ad-line: color-mix(in oklab, var(--ad-ink) 12%, transparent);
+  --ad-line-2: color-mix(in oklab, var(--ad-ink) 7%, transparent);
+
+  /* On the dark spine. */
+  --ad-onink: color-mix(in oklab, var(--ad-paper) 92%, var(--ad-ink));
+  --ad-onink-2: color-mix(in oklab, var(--ad-paper) 55%, var(--ad-ink));
+  --ad-onink-line: color-mix(in oklab, var(--ad-paper) 16%, transparent);
+
+  /* --- Radius ------------------------------------------------------------- */
+  --ad-r-shell: 30px;
+  --ad-r-card: 20px;
+  --ad-r-inner: 14px;
+  --ad-r-field: 11px;
+  --ad-r-pill: 999px;
+
+  /* --- Depth --------------------------------------------------------------
+     Offset and blur, tinted with the ink. A haloed shadow with no offset is
+     decoration; this is the sheet sitting on the desk. */
+  --ad-lift: 0 1px 2px rgba(23, 25, 25, 0.04), 0 24px 48px -28px rgba(23, 25, 25, 0.26);
+  --ad-lift-sm: 0 1px 2px rgba(23, 25, 25, 0.05), 0 8px 20px -14px rgba(23, 25, 25, 0.22);
+
+  /* --- Type ---------------------------------------------------------------
+     Fixed rem, ~1.22 ratio. Product UI is read at a consistent size; fluid
+     headings that shrink inside a panel look worse, not better. */
+  --ad-t-micro: 0.6875rem;
+  --ad-t-small: 0.8125rem;
+  --ad-t-body: 0.9375rem;
+  --ad-t-lead: 1.0625rem;
+  --ad-t-h3: 1.25rem;
+  --ad-t-h2: 1.625rem;
+  --ad-t-h1: 2.25rem;
+  --ad-t-figure: 2.75rem;
+
+  --ad-track-label: 0.14em;
+
+  /* --- Space -------------------------------------------------------------- */
+  --ad-s-1: 0.375rem;
+  --ad-s-2: 0.625rem;
+  --ad-s-3: 1rem;
+  --ad-s-4: 1.5rem;
+  --ad-s-5: 2rem;
+  --ad-s-6: 3rem;
+  --ad-s-7: 4.5rem;
+
+  /* --- Motion -------------------------------------------------------------
+     One curve, two durations. Users are inside a task; nothing here should
+     make them wait for choreography. */
+  --ad-ease: cubic-bezier(0.16, 0.84, 0.44, 1);
+  --ad-fast: 140ms;
+  --ad-slow: 220ms;
+
+  min-height: 100dvh;
+  padding: clamp(0.5rem, 1.4vw, 1.25rem);
+  background: var(--ad-paper);
+  color: var(--ad-ink);
+  font-size: var(--ad-t-body);
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+}
 
 /* Texture is a storefront device. The admin gets clean stock. */
 body:has(.admin)::before { display: none; }
 
-.admin {
+body:has(.admin) {
+  background: var(--ad-paper);
+}
+
+/* --------------------------------------------------------------------------
+   Shell
+   -------------------------------------------------------------------------- */
+
+.admin__shell {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  min-height: 100dvh;
-  font-size: var(--text-step-2);
+  min-height: calc(100dvh - 2 * clamp(0.5rem, 1.4vw, 1.25rem));
+  border-radius: var(--ad-r-shell);
+  background: var(--ad-white);
+  box-shadow: var(--ad-lift);
+  overflow: clip;
 }
 
-@media (min-width: 60rem) {
-  .admin { grid-template-columns: 14rem minmax(0, 1fr); }
+@media (min-width: 64rem) {
+  .admin__shell { grid-template-columns: 15.5rem minmax(0, 1fr); }
 }
 
-/* --- Sidebar -------------------------------------------------------------- */
-
-.admin__aside {
-  border-bottom: var(--spacing-rule) solid var(--color-ink);
-  background: var(--color-stock-deep);
-  padding: 1.25rem;
+.admin__main {
+  min-width: 0;
+  padding: var(--ad-s-4) var(--ad-s-4) var(--ad-s-7);
 }
 
-@media (min-width: 60rem) {
-  .admin__aside {
-    border-bottom: 0;
-    border-right: var(--spacing-rule) solid var(--color-ink);
+@media (min-width: 48rem) {
+  .admin__main { padding: var(--ad-s-6) var(--ad-s-6) var(--ad-s-7); }
+}
+
+@media (min-width: 90rem) {
+  .admin__main { padding: var(--ad-s-6) var(--ad-s-7) var(--ad-s-7); }
+}
+
+/* --------------------------------------------------------------------------
+   The spine
+
+   Desktop: a dark column the full height of the sheet. Below 64rem it becomes
+   a dark header with the navigation scrolling horizontally underneath — a
+   recomposition, not a squeeze. No JavaScript, so it cannot break.
+   -------------------------------------------------------------------------- */
+
+.rail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ad-s-4);
+  padding: var(--ad-s-4);
+  background: var(--ad-ink);
+  color: var(--ad-onink);
+}
+
+@media (min-width: 64rem) {
+  .rail {
     position: sticky;
     top: 0;
-    height: 100dvh;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+    height: calc(100dvh - 2 * clamp(0.5rem, 1.4vw, 1.25rem));
+    padding: var(--ad-s-5) var(--ad-s-3) var(--ad-s-4);
   }
 }
 
-.admin__mark {
-  display: block;
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: var(--text-step-3);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+.rail__brand {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding-inline: var(--ad-s-2);
+  color: var(--ad-white);
   text-decoration: none;
-  padding-bottom: 0.75rem;
-  border-bottom: var(--spacing-rule) solid var(--color-rule);
+  font-size: var(--ad-t-lead);
+  font-weight: 600;
+  letter-spacing: -0.03em;
 }
 
-.admin__nav ul {
+.rail__brand::after {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--ad-acid);
+}
+
+.rail__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.rail__nav ul {
+  display: flex;
+  gap: var(--ad-s-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Below the desktop breakpoint the nav is one scrolling row of pills. */
+.rail__nav ul {
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+
+.rail__nav ul::-webkit-scrollbar { display: none; }
+
+@media (min-width: 64rem) {
+  .rail__nav ul {
+    flex-direction: column;
+    overflow-x: visible;
+  }
+}
+
+.rail__link {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem var(--ad-s-2);
+  border-radius: var(--ad-r-field);
+  color: var(--ad-onink-2);
+  text-decoration: none;
+  font-size: var(--ad-t-small);
+  font-weight: 500;
+  white-space: nowrap;
+  transition: color var(--ad-fast) var(--ad-ease),
+    background-color var(--ad-fast) var(--ad-ease);
+}
+
+@media (min-width: 64rem) {
+  .rail__link { padding: 0.5rem 0.625rem; }
+}
+
+.rail__link:hover {
+  color: var(--ad-white);
+  background: color-mix(in oklab, var(--ad-paper) 8%, transparent);
+}
+
+/* Where you are. One of the three things the acid is allowed to say. */
+.rail__link[aria-current="page"] {
+  background: var(--ad-acid);
+  color: var(--ad-ink);
+  font-weight: 600;
+}
+
+.rail__icon {
+  flex: none;
+  width: 1.0625rem;
+  height: 1.0625rem;
+  stroke-width: 1.5;
+}
+
+.rail__foot {
+  display: none;
+  padding-top: var(--ad-s-3);
+  border-top: 1px solid var(--ad-onink-line);
+}
+
+@media (min-width: 64rem) {
+  .rail__foot { display: block; }
+}
+
+.rail__actor {
+  display: block;
+  padding-inline: 0.625rem;
+  font-size: var(--ad-t-micro);
+  letter-spacing: var(--ad-track-label);
+  text-transform: uppercase;
+  color: var(--ad-onink-2);
+}
+
+.rail__email {
+  display: block;
+  padding: 0.125rem 0.625rem var(--ad-s-2);
+  font-size: var(--ad-t-small);
+  color: var(--ad-onink);
+  overflow-wrap: anywhere;
+}
+
+.rail__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.625rem;
+  border-radius: var(--ad-r-pill);
+  color: var(--ad-onink-2);
+  font-size: var(--ad-t-small);
+  text-decoration: none;
+  transition: color var(--ad-fast) var(--ad-ease);
+}
+
+.rail__back:hover { color: var(--ad-white); }
+.rail__back svg { width: 0.875rem; height: 0.875rem; }
+
+/* --------------------------------------------------------------------------
+   Page furniture
+   -------------------------------------------------------------------------- */
+
+.apage__head {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem 1rem;
-  margin-top: 1rem;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--ad-s-3) var(--ad-s-4);
+  padding-bottom: var(--ad-s-4);
+  margin-bottom: var(--ad-s-5);
+  border-bottom: 1px solid var(--ad-line);
 }
 
-@media (min-width: 60rem) {
-  .admin__nav ul { display: grid; gap: 0.15rem; }
+.apage__titles { max-width: 46ch; }
+
+.apage h1,
+.apage__title {
+  margin: 0;
+  font-size: var(--ad-t-h1);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+  text-wrap: balance;
 }
 
-.admin__nav a {
-  display: block;
-  padding: 0.35rem 0.5rem;
-  margin-inline: -0.5rem;
-  font-family: var(--font-display);
-  font-size: var(--text-step-2);
-  letter-spacing: 0.12em;
+.apage__sub {
+  margin: var(--ad-s-2) 0 0;
+  color: var(--ad-ink-2);
+  font-size: var(--ad-t-small);
+  line-height: 1.55;
+  max-width: 62ch;
+}
+
+.apage__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ad-s-2);
+}
+
+.apage__section {
+  margin-top: var(--ad-s-6);
+}
+
+/* A small uppercase label is how a region announces itself. Never above a
+   page title — only over a region inside one. */
+.alabel {
+  margin: 0 0 var(--ad-s-3);
+  font-size: var(--ad-t-micro);
+  font-weight: 600;
+  letter-spacing: var(--ad-track-label);
   text-transform: uppercase;
-  text-decoration: none;
+  color: var(--ad-ink-3);
 }
 
-.admin__nav a:hover { background: var(--color-ink); color: var(--color-stock); }
-
-.admin__actor {
-  font-family: var(--font-display);
-  font-size: var(--text-step-1);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-ink-soft);
+.aquiet {
+  color: var(--ad-ink-2);
+  font-size: var(--ad-t-small);
+  line-height: 1.6;
 }
 
-@media (min-width: 60rem) {
-  .admin__foot { margin-top: auto; display: grid; gap: 0.5rem; }
+.anum { font-variant-numeric: tabular-nums; }
+
+/* --------------------------------------------------------------------------
+   Panels
+
+   Recessed rather than raised: the sheet is white, so a region is defined by
+   a warmer fill, not by another shadow. Nested panels are never correct.
+   -------------------------------------------------------------------------- */
+
+.panel {
+  padding: var(--ad-s-4);
+  border-radius: var(--ad-r-card);
+  background: var(--ad-paper);
 }
 
-.admin__back {
-  font-family: var(--font-display);
-  font-size: var(--text-step-1);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+@media (min-width: 48rem) {
+  .panel { padding: var(--ad-s-5); }
 }
 
-/* --- Main ----------------------------------------------------------------- */
+.panel--tight { padding: var(--ad-s-4); }
 
-.admin__main { padding: 1.5rem 1.25rem 4rem; min-width: 0; }
-
-@media (min-width: 60rem) {
-  .admin__main { padding: 2.5rem 2.5rem 5rem; }
+.panel--outline {
+  background: var(--ad-white);
+  border: 1px solid var(--ad-line);
 }
 
-.admin h1 {
-  font-size: var(--text-step-5);
-  padding-bottom: 0.75rem;
-  border-bottom: var(--spacing-rule) solid var(--color-ink);
-  margin-bottom: 1.5rem;
+.panel--ink {
+  background: var(--ad-ink);
+  color: var(--ad-onink);
 }
 
-.admin h2 {
-  font-size: var(--text-step-3);
-  letter-spacing: 0.12em;
-  color: var(--color-ink-soft);
-  margin-top: 2rem;
-  margin-bottom: 0.75rem;
-  padding-bottom: 0.4rem;
-  border-bottom: var(--spacing-rule) solid var(--color-rule);
+.panel--ink .alabel { color: var(--ad-onink-2); }
+.panel--ink a { color: var(--ad-white); }
+
+.panel--acid {
+  background: var(--ad-acid);
+  color: var(--ad-ink);
 }
 
-.admin h3 { font-size: var(--text-step-2); letter-spacing: 0.12em; margin-bottom: 0.5rem; }
+.panel__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--ad-s-2);
+}
 
-.admin p { margin-bottom: 0.5rem; }
+.panel__head .alabel { margin-bottom: var(--ad-s-3); }
 
-.admin section + section { margin-top: 1rem; }
+/* --------------------------------------------------------------------------
+   Figures
 
-/* --- Tables --------------------------------------------------------------- */
+   Large numbers are the point of the dashboard, so they are set as display
+   type: tabular, tight, and unencumbered by a supporting stat.
+   -------------------------------------------------------------------------- */
 
-.admin table {
-  width: 100%;
-  border-collapse: collapse;
+.figure__value {
+  margin: 0;
+  font-size: var(--ad-t-figure);
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 1;
   font-variant-numeric: tabular-nums;
 }
 
-.admin th {
-  text-align: left;
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: var(--text-step-1);
-  letter-spacing: 0.16em;
+.figure__value--lg { font-size: clamp(2.75rem, 6vw, 4.25rem); }
+
+.figure__note {
+  margin: var(--ad-s-2) 0 0;
+  font-size: var(--ad-t-small);
+  color: var(--ad-ink-2);
+}
+
+.panel--ink .figure__note { color: var(--ad-onink-2); }
+
+/* A row of secondary figures inside a panel: hairline-separated, never boxed. */
+.figrow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: var(--ad-s-3) var(--ad-s-4);
+  margin: 0;
+  padding-top: var(--ad-s-4);
+  margin-top: var(--ad-s-4);
+  border-top: 1px solid var(--ad-line);
+}
+
+.panel--ink .figrow { border-color: var(--ad-onink-line); }
+
+.figrow dt {
+  font-size: var(--ad-t-micro);
+  letter-spacing: var(--ad-track-label);
   text-transform: uppercase;
-  color: var(--color-ink-soft);
-  padding: 0.5rem 0.75rem;
-  border-bottom: var(--spacing-rule) solid var(--color-ink);
+  color: var(--ad-ink-3);
+}
+
+.panel--ink .figrow dt { color: var(--ad-onink-2); }
+
+.figrow dd {
+  margin: 0.25rem 0 0;
+  font-size: var(--ad-t-h3);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   Dashboard composition
+
+   Deliberately not a grid of equal cards: one wide revenue block, a dark
+   figure beside it, then an asymmetric pair of operational lists.
+   -------------------------------------------------------------------------- */
+
+.dash {
+  display: grid;
+  gap: var(--ad-s-3);
+}
+
+@media (min-width: 60rem) {
+  .dash { grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--ad-s-4); }
+  .dash__revenue { grid-column: span 8; }
+  .dash__today { grid-column: span 4; }
+  .dash__orders { grid-column: span 5; }
+  .dash__stock { grid-column: span 7; }
+  .dash__recent { grid-column: span 7; }
+  .dash__people { grid-column: span 5; }
+  .dash__wide { grid-column: 1 / -1; }
+}
+
+/* --------------------------------------------------------------------------
+   Stacked lists — the operational half of the dashboard and the detail pages
+   -------------------------------------------------------------------------- */
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stack > li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--ad-s-3);
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--ad-line-2);
+  font-size: var(--ad-t-small);
+}
+
+.stack > li:first-child { border-top: 0; padding-top: 0; }
+
+.panel--ink .stack > li { border-color: var(--ad-onink-line); }
+
+.stack__main { min-width: 0; }
+
+.stack__title {
+  display: block;
+  font-size: var(--ad-t-body);
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  color: inherit;
+  text-decoration: none;
+}
+
+a.stack__title:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+.stack__meta {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: var(--ad-t-small);
+  color: var(--ad-ink-2);
+}
+
+.panel--ink .stack__meta { color: var(--ad-onink-2); }
+
+.stack__value {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
+/* --------------------------------------------------------------------------
+   Tables
+
+   Generous rows, one hairline between them, no vertical rules, no zebra. The
+   header is a small uppercase label, not a heavy bar.
+   -------------------------------------------------------------------------- */
+
+.tablewrap {
+  overflow-x: auto;
+  margin-inline: calc(-1 * var(--ad-s-2));
+  padding-inline: var(--ad-s-2);
+}
+
+.atable {
+  width: 100%;
+  min-width: 40rem;
+  border-collapse: collapse;
+  font-size: var(--ad-t-small);
+}
+
+.atable thead th {
+  padding: 0 var(--ad-s-3) var(--ad-s-2);
+  border-bottom: 1px solid var(--ad-line);
+  text-align: left;
+  font-size: var(--ad-t-micro);
+  font-weight: 600;
+  letter-spacing: var(--ad-track-label);
+  text-transform: uppercase;
+  color: var(--ad-ink-3);
   white-space: nowrap;
 }
 
-.admin td {
-  padding: 0.6rem 0.75rem;
-  border-bottom: var(--spacing-rule) solid var(--color-rule);
-  vertical-align: top;
+.atable tbody td {
+  padding: var(--ad-s-3);
+  border-bottom: 1px solid var(--ad-line-2);
+  vertical-align: middle;
 }
 
-.admin tbody tr:hover { background: var(--color-stock-deep); }
+.atable tbody tr {
+  transition: background-color var(--ad-fast) var(--ad-ease);
+}
 
-.admin td:first-child, .admin th:first-child { padding-left: 0; }
-.admin td:last-child, .admin th:last-child { padding-right: 0; }
+.atable tbody tr:hover {
+  background: color-mix(in oklab, var(--ad-paper) 62%, transparent);
+}
 
-/* --- Definition lists ----------------------------------------------------- */
+.atable tbody tr:last-child td { border-bottom: 0; }
 
-.admin dl {
+.atable th:first-child,
+.atable td:first-child { padding-left: var(--ad-s-2); }
+
+.atable th:last-child,
+.atable td:last-child { padding-right: var(--ad-s-2); }
+
+.atable a {
+  color: inherit;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.atable a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+.atable__num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.atable__actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* The product row: the thumbnail is the point, so it is large and the type
+   sits beside it rather than under it. */
+.prow {
+  display: flex;
+  align-items: center;
+  gap: var(--ad-s-3);
+  min-width: 0;
+}
+
+.prow__thumb {
+  flex: none;
+  width: 3.25rem;
+  height: 4.0625rem;
+  border-radius: 10px;
+  object-fit: cover;
+  background: var(--ad-paper);
+}
+
+.prow__thumb--empty {
   display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.35rem 1.5rem;
-  margin-bottom: 1rem;
+  place-items: center;
+  font-size: var(--ad-t-micro);
+  letter-spacing: var(--ad-track-label);
+  color: var(--ad-ink-3);
 }
 
-.admin dt {
-  font-family: var(--font-display);
-  font-size: var(--text-step-1);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--color-ink-soft);
-}
-
-.admin dd { margin: 0; font-variant-numeric: tabular-nums; }
-
-/* --- Lists ---------------------------------------------------------------- */
-
-.admin ol li,
-.admin main ul li { padding-block: 0.3rem; }
-
-.admin section > ul > li,
-.admin section > ol > li { border-bottom: var(--spacing-rule) solid var(--color-rule); }
-
-/* --- Forms ---------------------------------------------------------------- */
-
-.admin label {
+.prow__title {
   display: block;
-  font-family: var(--font-display);
-  font-size: var(--text-step-1);
-  letter-spacing: 0.14em;
+  font-size: var(--ad-t-body);
+  font-weight: 500;
+  letter-spacing: -0.015em;
+}
+
+.prow__meta {
+  display: block;
+  margin-top: 0.1rem;
+  font-size: var(--ad-t-micro);
+  letter-spacing: var(--ad-track-label);
   text-transform: uppercase;
-  color: var(--color-ink-soft);
-  margin-bottom: 0.75rem;
+  color: var(--ad-ink-3);
+}
+
+/* --------------------------------------------------------------------------
+   Status
+
+   A refined pill: hairline, no fill, and a single dot carrying the state. The
+   dot is the only place colour is permitted, and only three of them exist.
+   -------------------------------------------------------------------------- */
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.55rem 0.2rem 0.45rem;
+  border: 1px solid var(--ad-line);
+  border-radius: var(--ad-r-pill);
+  font-size: var(--ad-t-micro);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--ad-ink-2);
+}
+
+.pill::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+/* Live and selling. */
+.pill--on {
+  color: var(--ad-ink);
+  border-color: color-mix(in oklab, var(--ad-ink) 22%, transparent);
+}
+
+.pill--on::before { background: var(--ad-ink); }
+
+/* Needs a human today. The second permitted use of the acid — and it earns
+   its contrast from the dark ring, not from the fill. */
+.pill--attention {
+  color: var(--ad-ink);
+  border-color: color-mix(in oklab, var(--ad-ink) 22%, transparent);
+  background: var(--ad-acid);
+}
+
+.pill--attention::before { background: var(--ad-ink); }
+
+/* Closed, cancelled, out. */
+.pill--off {
+  color: var(--ad-ink-3);
+  border-color: var(--ad-line);
+}
+
+.pill--off::before { background: var(--ad-ink-3); }
+
+/* --------------------------------------------------------------------------
+   Toolbar — search, filters, sort
+   -------------------------------------------------------------------------- */
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--ad-s-2);
+  padding: var(--ad-s-3);
+  border-radius: var(--ad-r-card);
+  background: var(--ad-paper);
+  margin-bottom: var(--ad-s-4);
+}
+
+.toolbar__search { flex: 1 1 14rem; min-width: 0; }
+
+.toolbar .field { margin: 0; }
+
+.toolbar__reset {
+  padding: 0.55rem 0.75rem;
+  color: var(--ad-ink-2);
+  font-size: var(--ad-t-small);
+  text-decoration: none;
+  border-radius: var(--ad-r-field);
+  transition: color var(--ad-fast) var(--ad-ease);
+}
+
+.toolbar__reset:hover { color: var(--ad-ink); }
+
+/* --------------------------------------------------------------------------
+   Forms
+   -------------------------------------------------------------------------- */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: var(--ad-s-3);
+  font-size: var(--ad-t-micro);
+  font-weight: 600;
+  letter-spacing: var(--ad-track-label);
+  text-transform: uppercase;
+  color: var(--ad-ink-3);
+}
+
+.field small,
+.field__hint {
+  font-size: var(--ad-t-small);
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--ad-ink-2);
+  line-height: 1.5;
 }
 
 .admin input[type="text"],
 .admin input[type="email"],
+.admin input[type="password"],
+.admin input[type="search"],
 .admin input[type="number"],
-.admin input:not([type]),
+.admin input[type="date"],
+.admin input[type="url"],
 .admin select,
 .admin textarea {
-  display: block;
   width: 100%;
-  max-width: 28rem;
-  margin-top: 0.3rem;
-  padding: 0.45rem 0.6rem;
-  border: var(--spacing-rule) solid var(--color-rule);
-  border-radius: 0;
-  background: var(--color-stock);
-  color: var(--color-ink);
-  font-family: var(--font-body);
-  font-size: var(--text-step-2);
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--ad-line);
+  border-radius: var(--ad-r-field);
+  background: var(--ad-white);
+  color: var(--ad-ink);
+  font: inherit;
+  font-size: var(--ad-t-small);
+  font-weight: 400;
   letter-spacing: normal;
   text-transform: none;
+  transition: border-color var(--ad-fast) var(--ad-ease),
+    box-shadow var(--ad-fast) var(--ad-ease);
 }
 
-.admin td input,
-.admin td select { max-width: 8rem; margin-top: 0; }
+.admin textarea {
+  resize: vertical;
+  min-height: 5rem;
+  line-height: 1.55;
+}
 
-.admin input:focus, .admin select:focus, .admin textarea:focus {
-  border-color: var(--color-ink);
-  outline: 2px solid var(--color-spot);
-  outline-offset: 1px;
+.admin input::placeholder,
+.admin textarea::placeholder {
+  color: var(--ad-ink-3);
+}
+
+.admin input:focus-visible,
+.admin select:focus-visible,
+.admin textarea:focus-visible {
+  outline: none;
+  border-color: var(--ad-ink);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ad-acid) 70%, transparent);
+}
+
+.admin select {
+  appearance: none;
+  padding-right: 2rem;
+  /* A drawn chevron, matching the icon set's stroke. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23171919' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6.5 4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.65rem center;
+  background-size: 0.875rem;
+}
+
+.checkline {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin-bottom: var(--ad-s-3);
+  font-size: var(--ad-t-small);
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--ad-ink);
+  cursor: pointer;
 }
 
 .admin input[type="checkbox"] {
-  width: auto;
-  margin: 0 0.4rem 0 0;
-  accent-color: var(--color-spot);
+  flex: none;
+  width: 1.05rem;
+  height: 1.05rem;
+  margin-top: 0.1rem;
+  accent-color: var(--ad-ink);
+  cursor: pointer;
 }
 
 .admin fieldset {
-  border: var(--spacing-rule) solid var(--color-rule);
-  padding: 1rem;
-  margin-bottom: 1rem;
+  margin: 0 0 var(--ad-s-4);
+  padding: 0;
+  border: 0;
 }
 
 .admin legend {
-  font-family: var(--font-display);
-  font-size: var(--text-step-1);
-  letter-spacing: 0.16em;
+  padding: 0;
+  margin-bottom: var(--ad-s-3);
+  font-size: var(--ad-t-micro);
+  font-weight: 600;
+  letter-spacing: var(--ad-track-label);
   text-transform: uppercase;
-  padding-inline: 0.4rem;
+  color: var(--ad-ink-3);
 }
 
-.admin button {
-  display: inline-block;
-  border: var(--spacing-rule) solid var(--color-ink);
-  border-radius: 0;
-  background: transparent;
-  color: var(--color-ink);
-  font-family: var(--font-display);
-  font-size: var(--text-step-1);
+/* Two-up form rows, collapsing to one on narrow screens. */
+.fieldrow {
+  display: grid;
+  gap: 0 var(--ad-s-3);
+}
+
+@media (min-width: 40rem) {
+  .fieldrow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fieldrow--three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* --------------------------------------------------------------------------
+   Buttons
+
+   Black, white, and a hairline. The acid never lands on a button: it would
+   compete with the navigation's "you are here", which matters more.
+   -------------------------------------------------------------------------- */
+
+.admin .btn,
+.abtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.6rem 1.05rem;
+  border: 1px solid var(--ad-ink);
+  border-radius: var(--ad-r-pill);
+  background: var(--ad-ink);
+  color: var(--ad-white);
+  font: inherit;
+  font-size: var(--ad-t-small);
   font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  padding: 0.45rem 0.9rem;
-  margin-right: 0.5rem;
+  letter-spacing: -0.005em;
+  text-decoration: none;
+  white-space: nowrap;
   cursor: pointer;
-  transition: background-color 140ms ease-out, color 140ms ease-out;
+  transition: background-color var(--ad-fast) var(--ad-ease),
+    color var(--ad-fast) var(--ad-ease),
+    border-color var(--ad-fast) var(--ad-ease),
+    opacity var(--ad-fast) var(--ad-ease);
 }
 
-.admin button:hover { background: var(--color-ink); color: var(--color-stock); }
-
-.admin button[type="submit"] {
-  background: var(--color-spot);
-  border-color: var(--color-spot);
-  color: var(--color-stock);
+.abtn:hover {
+  background: color-mix(in oklab, var(--ad-ink) 84%, var(--ad-paper));
+  border-color: color-mix(in oklab, var(--ad-ink) 84%, var(--ad-paper));
 }
 
-.admin button[type="submit"]:hover {
-  background: var(--color-spot-deep);
-  border-color: var(--color-spot-deep);
+.abtn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ad-acid) 70%, transparent);
 }
 
-.admin button:disabled { opacity: 0.4; cursor: not-allowed; }
-.admin button:disabled:hover { background: transparent; color: var(--color-ink); }
-.admin button[type="submit"]:disabled:hover { background: var(--color-spot); color: var(--color-stock); }
+.abtn[disabled],
+.abtn[aria-disabled="true"] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 
-/* --- Status badges -------------------------------------------------------- */
+.abtn--ghost {
+  background: transparent;
+  color: var(--ad-ink);
+  border-color: color-mix(in oklab, var(--ad-ink) 24%, transparent);
+}
 
-.admin [data-status] {
-  display: inline-block;
-  font-family: var(--font-display);
-  font-size: var(--text-step-1);
-  letter-spacing: 0.14em;
+.abtn--ghost:hover {
+  background: var(--ad-paper);
+  border-color: var(--ad-ink);
+  color: var(--ad-ink);
+}
+
+.abtn--quiet {
+  padding-inline: 0.6rem;
+  background: transparent;
+  border-color: transparent;
+  color: var(--ad-ink-2);
+}
+
+.abtn--quiet:hover {
+  background: var(--ad-paper);
+  border-color: transparent;
+  color: var(--ad-ink);
+}
+
+.abtn--sm {
+  padding: 0.35rem 0.7rem;
+  font-size: var(--ad-t-micro);
+  letter-spacing: 0.02em;
+}
+
+.abtn--block { width: 100%; }
+
+/* A row of row-level actions. */
+.rowactions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.rowactions__error {
+  display: block;
+  width: 100%;
+  margin-top: 0.3rem;
+  font-size: var(--ad-t-micro);
+  color: var(--ad-ink);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* --------------------------------------------------------------------------
+   Notices
+   -------------------------------------------------------------------------- */
+
+.anotice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--ad-r-inner);
+  background: var(--ad-paper);
+  font-size: var(--ad-t-small);
+  color: var(--ad-ink-2);
+  line-height: 1.55;
+}
+
+.anotice--alert {
+  background: var(--ad-acid);
+  color: var(--ad-ink);
+  font-weight: 500;
+}
+
+.anotice--error {
+  background: var(--ad-ink);
+  color: var(--ad-white);
+}
+
+.anotice p { margin: 0; }
+
+/* --------------------------------------------------------------------------
+   Empty states
+
+   Designed, not apologetic: a line of type that teaches what the region is
+   for, and the action that fills it.
+   -------------------------------------------------------------------------- */
+
+.empty {
+  display: grid;
+  justify-items: start;
+  gap: var(--ad-s-2);
+  padding: var(--ad-s-5) var(--ad-s-4);
+  border-radius: var(--ad-r-card);
+  background: var(--ad-paper);
+}
+
+.empty--center {
+  justify-items: center;
+  text-align: center;
+  padding-block: var(--ad-s-6);
+}
+
+.empty__title {
+  margin: 0;
+  font-size: var(--ad-t-h3);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+.empty__body {
+  margin: 0;
+  max-width: 46ch;
+  font-size: var(--ad-t-small);
+  color: var(--ad-ink-2);
+  line-height: 1.6;
+}
+
+/* --------------------------------------------------------------------------
+   Pagination
+   -------------------------------------------------------------------------- */
+
+.pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ad-s-3);
+  margin-top: var(--ad-s-4);
+  padding-top: var(--ad-s-3);
+  border-top: 1px solid var(--ad-line);
+}
+
+.pager__count {
+  margin: 0;
+  font-size: var(--ad-t-micro);
+  letter-spacing: var(--ad-track-label);
   text-transform: uppercase;
-  padding: 0.15rem 0.45rem;
-  border: var(--spacing-rule) solid currentColor;
-  color: var(--color-ink-soft);
+  color: var(--ad-ink-3);
+}
+
+.pager__links {
+  display: flex;
+  align-items: center;
+  gap: var(--ad-s-2);
+}
+
+.pager__link {
+  padding: 0.4rem 0.85rem;
+  border: 1px solid color-mix(in oklab, var(--ad-ink) 24%, transparent);
+  border-radius: var(--ad-r-pill);
+  font-size: var(--ad-t-small);
+  color: var(--ad-ink);
+  text-decoration: none;
+  transition: background-color var(--ad-fast) var(--ad-ease);
+}
+
+.pager__link:hover { background: var(--ad-paper); }
+
+.pager__link[aria-disabled="true"] {
+  color: var(--ad-ink-3);
+  border-color: var(--ad-line);
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   Detail pages: definition lists and address blocks
+   -------------------------------------------------------------------------- */
+
+.deflist {
+  display: grid;
+  gap: 0;
+  margin: 0;
+}
+
+.deflist > div,
+.deflist__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--ad-s-3);
+  padding: 0.65rem 0;
+  border-top: 1px solid var(--ad-line-2);
+}
+
+.deflist > div:first-child { border-top: 0; padding-top: 0; }
+
+.deflist dt {
+  font-size: var(--ad-t-micro);
+  letter-spacing: var(--ad-track-label);
+  text-transform: uppercase;
+  color: var(--ad-ink-3);
+}
+
+.deflist dd {
+  margin: 0;
+  text-align: right;
+  font-size: var(--ad-t-small);
+  font-variant-numeric: tabular-nums;
+}
+
+.deflist__total {
+  border-top: 1px solid var(--ad-ink) !important;
+  padding-top: 0.75rem !important;
+  margin-top: 0.25rem;
+}
+
+.deflist__total dt,
+.deflist__total dd {
+  color: var(--ad-ink);
+  font-size: var(--ad-t-lead);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-transform: none;
+}
+
+.aaddress {
+  font-style: normal;
+  font-size: var(--ad-t-small);
+  line-height: 1.7;
+  color: var(--ad-ink-2);
+}
+
+.aaddress strong {
+  display: block;
+  color: var(--ad-ink);
+  font-weight: 500;
+}
+
+/* --------------------------------------------------------------------------
+   Detail layout: content and a narrower operational column
+   -------------------------------------------------------------------------- */
+
+.split {
+  display: grid;
+  gap: var(--ad-s-3);
+  align-items: start;
+}
+
+@media (min-width: 66rem) {
+  .split {
+    grid-template-columns: minmax(0, 1.55fr) minmax(17rem, 1fr);
+    gap: var(--ad-s-4);
+  }
+}
+
+.split__col {
+  display: grid;
+  gap: var(--ad-s-3);
+  align-content: start;
+}
+
+@media (min-width: 48rem) {
+  .split__col { gap: var(--ad-s-4); }
+}
+
+/* --------------------------------------------------------------------------
+   Order items
+   -------------------------------------------------------------------------- */
+
+.items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.items > li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--ad-s-3);
+  padding: 0.85rem 0;
+  border-top: 1px solid var(--ad-line-2);
+}
+
+.items > li:first-child { border-top: 0; padding-top: 0; }
+
+.items__name {
+  font-size: var(--ad-t-body);
+  font-weight: 500;
+  letter-spacing: -0.015em;
+}
+
+.items__spec {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: var(--ad-t-micro);
+  letter-spacing: var(--ad-track-label);
+  text-transform: uppercase;
+  color: var(--ad-ink-3);
+}
+
+.items__price {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
+/* --------------------------------------------------------------------------
+   Timeline
+   -------------------------------------------------------------------------- */
+
+.timeline {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.timeline > li {
+  position: relative;
+  padding: 0 0 var(--ad-s-4) var(--ad-s-4);
+  border-left: 1px solid var(--ad-line);
+}
+
+.timeline > li:last-child { padding-bottom: 0; border-color: transparent; }
+
+.timeline > li::before {
+  content: "";
+  position: absolute;
+  left: -3.5px;
+  top: 0.35rem;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--ad-ink-3);
+}
+
+.timeline > li:first-child::before { background: var(--ad-ink); }
+
+.timeline__what {
+  font-size: var(--ad-t-small);
+  font-weight: 500;
+}
+
+.timeline__meta {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: var(--ad-t-micro);
+  color: var(--ad-ink-3);
+}
+
+.timeline__note {
+  margin: 0.35rem 0 0;
+  font-size: var(--ad-t-small);
+  color: var(--ad-ink-2);
+  line-height: 1.55;
+}
+
+/* --------------------------------------------------------------------------
+   Notes
+   -------------------------------------------------------------------------- */
+
+.notes__list {
+  margin: 0 0 var(--ad-s-4);
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--ad-s-2);
+}
+
+.notes__item {
+  padding: 0.85rem 1rem;
+  border-radius: var(--ad-r-inner);
+  background: var(--ad-white);
+  border: 1px solid var(--ad-line-2);
+}
+
+.notes__item p {
+  margin: 0;
+  font-size: var(--ad-t-small);
+  line-height: 1.55;
+}
+
+.notes__meta {
+  display: block;
+  margin-top: 0.4rem;
+  font-size: var(--ad-t-micro);
+  color: var(--ad-ink-3);
+}
+
+/* --------------------------------------------------------------------------
+   Inventory
+   -------------------------------------------------------------------------- */
+
+.stockcell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.stockcell__value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  font-size: var(--ad-t-lead);
+  letter-spacing: -0.02em;
+}
+
+.stockcell input[type="number"] { width: 5rem; }
+.stockcell select { width: auto; min-width: 7rem; }
+
+/* A stock bar: a hairline track with the level drawn on it. Reads at a glance
+   across a long list in a way a number alone does not. */
+.level {
+  display: block;
+  width: 100%;
+  max-width: 6rem;
+  height: 3px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--ad-ink) 12%, transparent);
+  overflow: hidden;
+}
+
+.level__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ad-ink);
+}
+
+.level--low .level__fill { background: var(--ad-ink); }
+.level--out .level__fill { background: transparent; }
+
+/* --------------------------------------------------------------------------
+   Product editor
+   -------------------------------------------------------------------------- */
+
+.editor {
+  display: grid;
+  gap: var(--ad-s-4);
+}
+
+.editor__section {
+  padding-top: var(--ad-s-5);
+  border-top: 1px solid var(--ad-line);
+}
+
+.editor__section:first-of-type { padding-top: 0; border-top: 0; }
+
+.editor__sectionhead {
+  display: grid;
+  gap: 0.25rem;
+  margin-bottom: var(--ad-s-4);
+}
+
+.editor__sectiontitle {
+  margin: 0;
+  font-size: var(--ad-t-h3);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+.editor__sectionnote {
+  margin: 0;
+  max-width: 60ch;
+  font-size: var(--ad-t-small);
+  color: var(--ad-ink-2);
+  line-height: 1.55;
+}
+
+/* The save bar rides the bottom of the viewport so a long editor never hides
+   its own commit. */
+.editor__save {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--ad-s-3);
+  margin-top: var(--ad-s-5);
+  padding: var(--ad-s-3);
+  border-radius: var(--ad-r-card);
+  background: color-mix(in oklab, var(--ad-white) 86%, transparent);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--ad-line);
+}
+
+.editor__savemsg {
+  margin: 0;
+  margin-right: auto;
+  font-size: var(--ad-t-small);
+  color: var(--ad-ink-2);
+}
+
+/* Variant matrix and image uploader keep the table and field vocabulary. */
+.matrix { overflow-x: auto; }
+
+.matrix table {
+  width: 100%;
+  min-width: 44rem;
+  border-collapse: collapse;
+  font-size: var(--ad-t-small);
+}
+
+.matrix th {
+  padding: 0 0.6rem var(--ad-s-2);
+  border-bottom: 1px solid var(--ad-line);
+  text-align: left;
+  font-size: var(--ad-t-micro);
+  font-weight: 600;
+  letter-spacing: var(--ad-track-label);
+  text-transform: uppercase;
+  color: var(--ad-ink-3);
   white-space: nowrap;
 }
 
-.admin [data-status="paid"],
-.admin [data-status="published"] { color: var(--color-ink); }
-
-.admin [data-status="shipped"],
-.admin [data-status="delivered"] { color: var(--color-ochre); }
-
-.admin [data-status="cancelled"],
-.admin [data-status="payment_failed"] { color: var(--color-spot); }
-
-/* --- Feedback ------------------------------------------------------------- */
-
-.admin [role="alert"] { color: var(--color-spot); font-family: var(--font-display); letter-spacing: 0.1em; text-transform: uppercase; font-size: var(--text-step-1); }
-.admin [role="status"] { color: var(--color-ink-soft); font-family: var(--font-display); letter-spacing: 0.1em; text-transform: uppercase; font-size: var(--text-step-1); }
-
-.admin a { text-underline-offset: 0.2em; }
-
-/* --- Variant matrix ------------------------------------------------------- */
-
-.admin caption {
-  text-align: left;
-  font-family: var(--font-display);
-  font-size: var(--text-step-1);
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--color-ink-soft);
-  padding-bottom: 0.5rem;
+.matrix td {
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--ad-line-2);
 }
 
-/* An orphan row is a size/colour combination that was dropped from the option
-   sets. Variants are never deleted, so the row stays and has to read as
-   retired rather than active. */
-.admin tr[data-orphan] td { color: var(--color-ink-soft); }
-.admin tr[data-orphan] td:first-child { box-shadow: inset 2px 0 0 var(--color-spot); padding-left: 0.5rem; }
+.matrix input[type="text"],
+.matrix input[type="number"] { min-width: 5rem; }
 
-/* --- Image uploader ------------------------------------------------------- */
-
-.admin img {
-  display: block;
-  max-width: 100%;
-  height: auto;
-  border: var(--spacing-rule) solid var(--color-rule);
-}
-
-.admin input[type="file"] {
-  border: 0;
+.uploader__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
+  gap: var(--ad-s-3);
+  margin: 0 0 var(--ad-s-3);
   padding: 0;
-  background: transparent;
-  max-width: none;
-  font-family: var(--font-display);
-  font-size: var(--text-step-1);
+  list-style: none;
 }
 
-.admin textarea { min-height: 6rem; resize: vertical; }
+.uploader__item {
+  position: relative;
+  border-radius: var(--ad-r-inner);
+  overflow: hidden;
+  background: var(--ad-paper);
+  aspect-ratio: 4 / 5;
+}
 
-.admin form > table,
-.admin form > button { margin-top: 1.25rem; }
+.uploader__item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Position one is the featured image everywhere else in the store, so the
+   list says so rather than leaving it to be discovered. */
+.uploader__badge {
+  position: absolute;
+  top: 0.4rem;
+  left: 0.4rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--ad-r-pill);
+  background: var(--ad-acid);
+  color: var(--ad-ink);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.uploader__tools {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.35rem;
+  background: linear-gradient(to top, rgba(23, 25, 25, 0.72), transparent);
+}
+
+.uploader__tools button {
+  flex: 1;
+  padding: 0.2rem;
+  border: 0;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--ad-ink);
+  font-size: 0.625rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.uploader__tools button:hover { background: var(--ad-white); }
+
+/* --------------------------------------------------------------------------
+   Managers (categories, discounts, shipping): a list beside its form
+   -------------------------------------------------------------------------- */
+
+.manager {
+  display: grid;
+  gap: var(--ad-s-4);
+  align-items: start;
+}
+
+@media (min-width: 70rem) {
+  .manager { grid-template-columns: minmax(0, 1.5fr) minmax(19rem, 1fr); }
+}
+
+.manager__form {
+  padding: var(--ad-s-4);
+  border-radius: var(--ad-r-card);
+  background: var(--ad-paper);
+}
+
+@media (min-width: 70rem) {
+  .manager__form { position: sticky; top: var(--ad-s-4); }
+}
+
+.manager__formtitle {
+  margin: 0 0 var(--ad-s-4);
+  font-size: var(--ad-t-h3);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+.manager__form .field { margin-bottom: var(--ad-s-3); }
+
+.manager__actions {
+  display: flex;
+  gap: var(--ad-s-2);
+  margin-top: var(--ad-s-4);
+}
+
+/* --------------------------------------------------------------------------
+   Settings: a grouped, sectioned form
+   -------------------------------------------------------------------------- */
+
+.settings {
+  display: grid;
+  gap: var(--ad-s-4);
+  max-width: 58rem;
+}
+
+.settings__group {
+  display: grid;
+  gap: var(--ad-s-3);
+  padding-top: var(--ad-s-5);
+  border-top: 1px solid var(--ad-line);
+}
+
+.settings__group:first-of-type { padding-top: 0; border-top: 0; }
+
+@media (min-width: 56rem) {
+  .settings__group {
+    grid-template-columns: 14rem minmax(0, 1fr);
+    gap: var(--ad-s-5);
+  }
+}
+
+.settings__aside { align-self: start; }
+
+.settings__grouptitle {
+  margin: 0 0 0.35rem;
+  font-size: var(--ad-t-body);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.settings__groupnote {
+  margin: 0;
+  font-size: var(--ad-t-small);
+  color: var(--ad-ink-2);
+  line-height: 1.55;
+}
+
+.settings__fields { min-width: 0; }
+
+/* --------------------------------------------------------------------------
+   Reduced motion
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .admin *,
+  .admin *::before,
+  .admin *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

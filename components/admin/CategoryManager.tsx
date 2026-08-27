@@ -8,6 +8,7 @@ import {
   reorderCategoriesAction,
   saveCategoryAction,
 } from '@/app/actions/admin/categories';
+import { EmptyState } from '@/components/admin/EmptyState';
 import type { CategoryDTO } from '@/types/dto';
 
 const BLANK = {
@@ -37,9 +38,12 @@ function draftFrom(category: CategoryDTO): Draft {
 }
 
 /**
- * Create, edit, reorder, hide and archive — the whole category surface in one
- * screen, because there are rarely more than a handful and a separate detail
- * page for each would be more navigation than content.
+ * The whole collection surface on one screen: the list on the left, the editor
+ * pinned beside it.
+ *
+ * There are rarely more than a handful of collections, so a detail page per
+ * collection would be more navigation than content — and editing one while
+ * looking at the others is exactly what ordering them requires.
  */
 export function CategoryManager({
   categories,
@@ -85,7 +89,7 @@ export function CategoryManager({
           sortOrder: Number(draft.sortOrder) || 0,
           seo: { title: draft.seoTitle, description: draft.seoDescription, keywords: [] },
         }),
-      draft.id ? 'Category updated.' : 'Category created.',
+      draft.id ? 'Collection updated.' : 'Collection created.',
     );
 
     if (!draft.id) setDraft(BLANK);
@@ -102,73 +106,130 @@ export function CategoryManager({
   }
 
   return (
-    <div className="catman">
-      {orphanSlugs.length ? (
-        <div className="notice">
-          <p>
-            {orphanSlugs.length} slug{orphanSlugs.length === 1 ? '' : 's'} in use by products
-            have no category record: {orphanSlugs.join(', ')}.
-          </p>
-          <button
-            type="button"
-            disabled={pending}
-            onClick={() => run(() => backfillCategoriesAction({}), 'Imported.')}
-          >
-            Import them
-          </button>
-        </div>
-      ) : null}
+    <div className="manager">
+      <div>
+        {orphanSlugs.length ? (
+          <div className="anotice anotice--alert" style={{ marginBottom: 'var(--ad-s-4)' }}>
+            <p>
+              {orphanSlugs.length === 1
+                ? 'One slug is used by products but has no collection record'
+                : orphanSlugs.length + ' slugs are used by products but have no collection record'}
+              : {orphanSlugs.join(', ')}.
+            </p>
+            <button
+              type="button"
+              className="abtn abtn--sm"
+              disabled={pending}
+              onClick={() => run(() => backfillCategoriesAction({}), 'Imported.')}
+            >
+              Import
+            </button>
+          </div>
+        ) : null}
 
-      <table>
-        <thead>
-          <tr>
-            <th scope="col">Name</th>
-            <th scope="col">Slug</th>
-            <th scope="col">Products</th>
-            <th scope="col">Visible</th>
-            <th scope="col">Order</th>
-            <th scope="col">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {categories.map((category, index) => (
-            <tr key={category.id}>
-              <td>{category.name}{category.archived ? ' (archived)' : ''}</td>
-              <td>{category.slug}</td>
-              <td>{category.productCount}</td>
-              <td>{category.visible ? 'Yes' : 'Hidden'}</td>
-              <td>
-                <button type="button" onClick={() => move(index, -1)} disabled={pending}>↑</button>
-                <button type="button" onClick={() => move(index, 1)} disabled={pending}>↓</button>
-              </td>
-              <td>
-                <button type="button" onClick={() => setDraft(draftFrom(category))}>Edit</button>
-                <button
-                  type="button"
-                  disabled={pending}
-                  onClick={() =>
-                    run(
-                      () =>
-                        archiveCategoryAction({
-                          id: category.id,
-                          archived: !category.archived,
-                        }),
-                      category.archived ? 'Restored.' : 'Archived.',
-                    )
-                  }
-                >
-                  {category.archived ? 'Restore' : 'Archive'}
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+        {categories.length ? (
+          <div className="tablewrap">
+            <table className="atable">
+              <thead>
+                <tr>
+                  <th scope="col">Collection</th>
+                  <th scope="col">Visibility</th>
+                  <th scope="col" className="atable__num">Products</th>
+                  <th scope="col" className="atable__actions">Order</th>
+                  <th scope="col" className="atable__actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {categories.map((category, index) => (
+                  <tr key={category.id}>
+                    <td>
+                      <span className="prow__title">{category.name}</span>
+                      <span className="prow__meta">{category.slug}</span>
+                    </td>
+                    <td>
+                      <span
+                        className={
+                          'pill pill--' +
+                          (category.archived || !category.visible ? 'off' : 'on')
+                        }
+                      >
+                        {category.archived
+                          ? 'Archived'
+                          : category.visible
+                            ? 'Visible'
+                            : 'Hidden'}
+                      </span>
+                    </td>
+                    <td className="atable__num">{category.productCount}</td>
+                    <td className="atable__actions">
+                      <span className="rowactions">
+                        <button
+                          type="button"
+                          className="abtn abtn--quiet abtn--sm"
+                          onClick={() => move(index, -1)}
+                          disabled={pending || index === 0}
+                          aria-label={'Move ' + category.name + ' up'}
+                        >
+                          &uarr;
+                        </button>
+                        <button
+                          type="button"
+                          className="abtn abtn--quiet abtn--sm"
+                          onClick={() => move(index, 1)}
+                          disabled={pending || index === categories.length - 1}
+                          aria-label={'Move ' + category.name + ' down'}
+                        >
+                          &darr;
+                        </button>
+                      </span>
+                    </td>
+                    <td className="atable__actions">
+                      <span className="rowactions">
+                        <button
+                          type="button"
+                          className="abtn abtn--ghost abtn--sm"
+                          onClick={() => setDraft(draftFrom(category))}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          className="abtn abtn--quiet abtn--sm"
+                          disabled={pending}
+                          onClick={() =>
+                            run(
+                              () =>
+                                archiveCategoryAction({
+                                  id: category.id,
+                                  archived: !category.archived,
+                                }),
+                              category.archived ? 'Restored.' : 'Archived.',
+                            )
+                          }
+                        >
+                          {category.archived ? 'Restore' : 'Archive'}
+                        </button>
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <EmptyState
+            title="No collections yet"
+            body="A collection is what a product belongs to and a page a shopper can land on. Create one here, then assign products to it from the product editor."
+          />
+        )}
+      </div>
 
-      <form onSubmit={save}>
-        <h2>{draft.id ? `Edit ${draft.slug}` : 'New category'}</h2>
+      <form onSubmit={save} className="manager__form">
+        <h2 className="manager__formtitle">
+          {draft.id ? 'Edit ' + draft.slug : 'New collection'}
+        </h2>
 
-        <label>
+        <label className="field">
           Name
           <input
             value={draft.name}
@@ -177,16 +238,20 @@ export function CategoryManager({
           />
         </label>
 
-        <label>
+        <label className="field">
           Slug
           <input
             value={draft.slug}
             onChange={(event) => setDraft({ ...draft, slug: event.target.value })}
             required
           />
+          <small>
+            Products point at a collection by slug. Renaming one moves every
+            product with it.
+          </small>
         </label>
 
-        <label>
+        <label className="field">
           Description
           <textarea
             value={draft.description}
@@ -195,7 +260,7 @@ export function CategoryManager({
           />
         </label>
 
-        <label>
+        <label className="field">
           SEO title
           <input
             value={draft.seoTitle}
@@ -203,7 +268,7 @@ export function CategoryManager({
           />
         </label>
 
-        <label>
+        <label className="field">
           SEO description
           <textarea
             value={draft.seoDescription}
@@ -212,28 +277,41 @@ export function CategoryManager({
           />
         </label>
 
-        <label>
+        <label className="checkline">
           <input
             type="checkbox"
             checked={draft.visible}
             onChange={(event) => setDraft({ ...draft, visible: event.target.checked })}
           />
-          Visible in navigation
+          Visible in storefront navigation
         </label>
 
-        <button type="submit" disabled={pending}>
-          {draft.id ? 'Save category' : 'Create category'}
-        </button>
-
-        {draft.id ? (
-          <button type="button" onClick={() => setDraft(BLANK)} disabled={pending}>
-            Cancel
+        <div className="manager__actions">
+          <button type="submit" className="abtn" disabled={pending}>
+            {draft.id ? 'Save collection' : 'Create collection'}
           </button>
+
+          {draft.id ? (
+            <button
+              type="button"
+              className="abtn abtn--ghost"
+              onClick={() => setDraft(BLANK)}
+              disabled={pending}
+            >
+              Cancel
+            </button>
+          ) : null}
+        </div>
+
+        {error ? (
+          <p role="alert" className="anotice anotice--error" style={{ marginTop: 'var(--ad-s-3)' }}>
+            {error}
+          </p>
+        ) : null}
+        {!error && message ? (
+          <p className="anotice" style={{ marginTop: 'var(--ad-s-3)' }}>{message}</p>
         ) : null}
       </form>
-
-      {error ? <p role="alert">{error}</p> : null}
-      {!error && message ? <p>{message}</p> : null}
     </div>
   );
 }

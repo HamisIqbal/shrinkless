@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import { DataTable, type Column } from '@/components/admin/DataTable';
 import { ListControls, Pagination } from '@/components/admin/ListControls';
+import { PageHead } from '@/components/admin/PageHead';
 import { ProductRowActions } from '@/components/admin/ProductRowActions';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import { requireAdminPage } from '@/lib/auth/guards';
+import { cloudinaryUrl } from '@/lib/cloudinary/url';
 import { formatCents } from '@/lib/money';
 import { parseListParams } from '@/lib/admin/query';
 import {
@@ -14,20 +16,72 @@ import {
 } from '@/lib/services/products';
 import type { AdminProductRowDTO } from '@/types/dto';
 
+/**
+ * The product list of a clothing brand should look like clothes, so the
+ * thumbnail leads and the row is tall enough to let it. Everything else on the
+ * row is set quietly around it.
+ */
 const columns: Column<AdminProductRowDTO>[] = [
   {
     key: 'title',
-    header: 'Title',
-    cell: (row) => <Link href={`/admin/products/${row.id}`}>{row.title}</Link>,
+    header: 'Product',
+    cell: (row) => (
+      <span className="prow">
+        {row.imagePublicId ? (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            className="prow__thumb"
+            src={cloudinaryUrl(row.imagePublicId, 'w_130,h_162,c_fill,q_auto,f_auto')}
+            alt=""
+            width={65}
+            height={81}
+            loading="lazy"
+          />
+        ) : (
+          <span className="prow__thumb prow__thumb--empty" aria-hidden="true">
+            No image
+          </span>
+        )}
+
+        <span>
+          <Link href={`/admin/products/${row.id}`} className="prow__title">
+            {row.title}
+          </Link>
+          <span className="prow__meta">
+            {row.category} · {row.slug}
+          </span>
+        </span>
+      </span>
+    ),
   },
-  { key: 'category', header: 'Category', cell: (row) => row.category },
-  { key: 'status', header: 'Status', cell: (row) => <StatusBadge status={row.status} /> },
-  { key: 'price', header: 'From', cell: (row) => formatCents(row.minPriceCents) },
-  { key: 'variants', header: 'Variants', cell: (row) => row.variantCount },
-  { key: 'stock', header: 'Total stock', cell: (row) => row.totalStock },
+  {
+    key: 'status',
+    header: 'Status',
+    cell: (row) => <StatusBadge status={row.archived ? 'archived' : row.status} />,
+  },
+  {
+    key: 'stock',
+    header: 'Stock',
+    numeric: true,
+    cell: (row) => (
+      <>
+        <span className="anum">{row.totalStock}</span>
+        <span className="prow__meta">
+          {row.variantCount} {row.variantCount === 1 ? 'variant' : 'variants'}
+        </span>
+      </>
+    ),
+  },
+  {
+    key: 'price',
+    header: 'From',
+    numeric: true,
+    cell: (row) => formatCents(row.minPriceCents),
+  },
   {
     key: 'actions',
-    header: 'Actions',
+    header: '',
+    actions: true,
     cell: (row) => (
       <ProductRowActions
         id={row.id}
@@ -53,9 +107,12 @@ export default async function AdminProductsPage(props: PageProps<'/admin/product
   ]);
 
   return (
-    <section>
-      <h1>Products</h1>
-      <Link href="/admin/products/new">New product</Link>
+    <>
+      <PageHead
+        title="Products"
+        sub="Everything the store sells, live or in draft. Archived products keep their history and leave the shop."
+        actions={<Link href="/admin/products/new" className="abtn">New product</Link>}
+      />
 
       <ListControls
         action="/admin/products"
@@ -72,7 +129,7 @@ export default async function AdminProductsPage(props: PageProps<'/admin/product
           },
           {
             name: 'category',
-            label: 'Category',
+            label: 'Collection',
             options: categories.map((slug) => ({ value: slug, label: slug })),
           },
           {
@@ -98,10 +155,20 @@ export default async function AdminProductsPage(props: PageProps<'/admin/product
         columns={columns}
         rows={page.rows}
         rowKey={(row) => row.id}
-        empty={params.q ? `Nothing matches “${params.q}”.` : 'No products yet.'}
+        empty={params.q ? `Nothing matches “${params.q}”` : 'No products yet'}
+        emptyBody={
+          params.q
+            ? 'Search covers titles, slugs, SKUs and tags. Clear the filters to see the whole catalogue.'
+            : 'A product holds the copy, the photography and the option sets; sizes and colours become variants with their own SKU, price and stock.'
+        }
+        emptyAction={
+          params.q ? null : (
+            <Link href="/admin/products/new" className="abtn">Add the first product</Link>
+          )
+        }
       />
 
       <Pagination action="/admin/products" page={page} />
-    </section>
+    </>
   );
 }

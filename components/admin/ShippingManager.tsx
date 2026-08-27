@@ -6,6 +6,7 @@ import {
   archiveShippingMethodAction,
   saveShippingMethodAction,
 } from '@/app/actions/admin/shipping';
+import { EmptyState } from '@/components/admin/EmptyState';
 import { formatCents } from '@/lib/money';
 import type { ShippingMethodDTO } from '@/types/dto';
 
@@ -47,6 +48,11 @@ function codeList(value: string): string[] {
     .split(',')
     .map((part) => part.trim().toUpperCase())
     .filter(Boolean);
+}
+
+function servesLabel(method: ShippingMethodDTO): string {
+  const scope = [...method.countries, ...method.states];
+  return scope.length ? scope.join(', ') : 'Everywhere';
 }
 
 export function ShippingManager({ methods }: { methods: ShippingMethodDTO[] }) {
@@ -105,139 +111,179 @@ export function ShippingManager({ methods }: { methods: ShippingMethodDTO[] }) {
   }
 
   return (
-    <div className="shipman">
-      <table>
-        <thead>
-          <tr>
-            <th scope="col">Method</th>
-            <th scope="col">Rate</th>
-            <th scope="col">Free over</th>
-            <th scope="col">Applies to</th>
-            <th scope="col">State</th>
-            <th scope="col">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {methods.length === 0 ? (
-            <tr>
-              <td colSpan={6}>
-                No methods yet — the store still quotes from the legacy zone table
-                in Settings.
-              </td>
-            </tr>
-          ) : null}
-
-          {methods.map((method) => (
-            <tr key={method.id}>
-              <td>
-                {method.name} <small>({method.code})</small>
-              </td>
-              <td>{formatCents(method.rateCents)}</td>
-              <td>{method.freeOverCents === null ? '—' : formatCents(method.freeOverCents)}</td>
-              <td>
-                {method.countries.length || method.states.length
-                  ? [...method.countries, ...method.states].join(', ')
-                  : 'Everywhere'}
-              </td>
-              <td>
-                {method.archived ? 'Archived' : method.active ? 'Active' : 'Inactive'}
-              </td>
-              <td>
-                <button type="button" onClick={() => setDraft(draftFrom(method))}>Edit</button>
-                <button
-                  type="button"
-                  disabled={pending}
-                  onClick={() =>
-                    run(
-                      () =>
-                        archiveShippingMethodAction({
-                          id: method.id,
-                          archived: !method.archived,
-                        }),
-                      method.archived ? 'Restored.' : 'Archived.',
-                    )
-                  }
-                >
-                  {method.archived ? 'Restore' : 'Archive'}
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <form onSubmit={save}>
-        <h2>{draft.id ? `Edit ${draft.code}` : 'New shipping method'}</h2>
-
-        <label>
-          Name
-          <input
-            value={draft.name}
-            onChange={(event) => setDraft({ ...draft, name: event.target.value })}
-            required
+    <div className="manager">
+      <div>
+        {methods.length ? (
+          <div className="tablewrap">
+            <table className="atable">
+              <thead>
+                <tr>
+                  <th scope="col">Method</th>
+                  <th scope="col">Applies to</th>
+                  <th scope="col">State</th>
+                  <th scope="col" className="atable__num">Rate</th>
+                  <th scope="col" className="atable__actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {methods.map((method) => (
+                  <tr key={method.id}>
+                    <td>
+                      <span className="prow__title">{method.name}</span>
+                      <span className="prow__meta">
+                        {method.code}
+                        {method.estimate ? ' · ' + method.estimate : ''}
+                      </span>
+                    </td>
+                    <td>{servesLabel(method)}</td>
+                    <td>
+                      <span
+                        className={
+                          'pill pill--' +
+                          (method.archived || !method.active ? 'off' : 'on')
+                        }
+                      >
+                        {method.archived
+                          ? 'Archived'
+                          : method.active
+                            ? 'Active'
+                            : 'Inactive'}
+                      </span>
+                    </td>
+                    <td className="atable__num">
+                      {formatCents(method.rateCents)}
+                      {method.freeOverCents !== null ? (
+                        <span className="prow__meta">
+                          free over {formatCents(method.freeOverCents)}
+                        </span>
+                      ) : null}
+                    </td>
+                    <td className="atable__actions">
+                      <span className="rowactions">
+                        <button
+                          type="button"
+                          className="abtn abtn--ghost abtn--sm"
+                          onClick={() => setDraft(draftFrom(method))}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          className="abtn abtn--quiet abtn--sm"
+                          disabled={pending}
+                          onClick={() =>
+                            run(
+                              () =>
+                                archiveShippingMethodAction({
+                                  id: method.id,
+                                  archived: !method.archived,
+                                }),
+                              method.archived ? 'Restored.' : 'Archived.',
+                            )
+                          }
+                        >
+                          {method.archived ? 'Restore' : 'Archive'}
+                        </button>
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <EmptyState
+            title="No methods configured"
+            body="Until one exists the store quotes from the legacy zone table in Settings. A method with no countries and no states applies everywhere; anything listed narrows it."
           />
-        </label>
+        )}
+      </div>
 
-        <label>
-          Code
-          <input
-            value={draft.code}
-            onChange={(event) => setDraft({ ...draft, code: event.target.value.toUpperCase() })}
-            required
-          />
-        </label>
+      <form onSubmit={save} className="manager__form">
+        <h2 className="manager__formtitle">
+          {draft.id ? 'Edit ' + draft.code : 'New method'}
+        </h2>
 
-        <label>
-          Rate (dollars)
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            value={draft.rate}
-            onChange={(event) => setDraft({ ...draft, rate: event.target.value })}
-            required
-          />
-        </label>
+        <div className="fieldrow">
+          <label className="field">
+            Name
+            <input
+              value={draft.name}
+              onChange={(event) => setDraft({ ...draft, name: event.target.value })}
+              required
+            />
+          </label>
 
-        <label>
-          Free over (dollars, blank for never)
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            value={draft.freeOver}
-            onChange={(event) => setDraft({ ...draft, freeOver: event.target.value })}
-          />
-        </label>
+          <label className="field">
+            Code
+            <input
+              value={draft.code}
+              onChange={(event) => setDraft({ ...draft, code: event.target.value.toUpperCase() })}
+              required
+            />
+          </label>
+        </div>
 
-        <label>
-          Countries (two-letter, comma separated, blank for all)
-          <input
-            value={draft.countries}
-            onChange={(event) => setDraft({ ...draft, countries: event.target.value })}
-            placeholder="US, CA"
-          />
-        </label>
+        <div className="fieldrow">
+          <label className="field">
+            Rate, in dollars
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={draft.rate}
+              onChange={(event) => setDraft({ ...draft, rate: event.target.value })}
+              required
+            />
+          </label>
 
-        <label>
-          States (two-letter, comma separated, blank for all)
-          <input
-            value={draft.states}
-            onChange={(event) => setDraft({ ...draft, states: event.target.value })}
-            placeholder="TX, CA"
-          />
-        </label>
+          <label className="field">
+            Free over
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={draft.freeOver}
+              onChange={(event) => setDraft({ ...draft, freeOver: event.target.value })}
+              placeholder="Never"
+            />
+          </label>
+        </div>
 
-        <label>
+        <div className="fieldrow">
+          <label className="field">
+            Countries
+            <input
+              value={draft.countries}
+              onChange={(event) => setDraft({ ...draft, countries: event.target.value })}
+              placeholder="US, CA"
+            />
+          </label>
+
+          <label className="field">
+            States
+            <input
+              value={draft.states}
+              onChange={(event) => setDraft({ ...draft, states: event.target.value })}
+              placeholder="TX, CA"
+            />
+          </label>
+        </div>
+
+        <p className="field__hint" style={{ marginBottom: 'var(--ad-s-3)' }}>
+          Two-letter codes, comma separated. Leave both blank to apply everywhere.
+        </p>
+
+        <label className="field">
           Delivery estimate
           <input
             value={draft.estimate}
             onChange={(event) => setDraft({ ...draft, estimate: event.target.value })}
-            placeholder="3–5 business days"
+            placeholder="3 to 5 business days"
           />
         </label>
 
-        <label>
+        <label className="checkline">
           <input
             type="checkbox"
             checked={draft.active}
@@ -246,19 +292,32 @@ export function ShippingManager({ methods }: { methods: ShippingMethodDTO[] }) {
           Active
         </label>
 
-        <button type="submit" disabled={pending}>
-          {draft.id ? 'Save method' : 'Create method'}
-        </button>
-
-        {draft.id ? (
-          <button type="button" onClick={() => setDraft(BLANK)} disabled={pending}>
-            Cancel
+        <div className="manager__actions">
+          <button type="submit" className="abtn" disabled={pending}>
+            {draft.id ? 'Save method' : 'Create method'}
           </button>
+
+          {draft.id ? (
+            <button
+              type="button"
+              className="abtn abtn--ghost"
+              onClick={() => setDraft(BLANK)}
+              disabled={pending}
+            >
+              Cancel
+            </button>
+          ) : null}
+        </div>
+
+        {error ? (
+          <p role="alert" className="anotice anotice--error" style={{ marginTop: 'var(--ad-s-3)' }}>
+            {error}
+          </p>
+        ) : null}
+        {!error && message ? (
+          <p className="anotice" style={{ marginTop: 'var(--ad-s-3)' }}>{message}</p>
         ) : null}
       </form>
-
-      {error ? <p role="alert">{error}</p> : null}
-      {!error && message ? <p>{message}</p> : null}
     </div>
   );
 }

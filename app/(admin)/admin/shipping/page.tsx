@@ -1,5 +1,7 @@
+import { PageHead } from '@/components/admin/PageHead';
 import { ShippingManager } from '@/components/admin/ShippingManager';
 import { requireAdminPage } from '@/lib/auth/guards';
+import { formatCents } from '@/lib/money';
 import { getStoreSettings } from '@/lib/services/settings';
 import { listShippingMethods } from '@/lib/services/shipping';
 
@@ -12,17 +14,21 @@ export default async function AdminShippingPage() {
   ]);
 
   return (
-    <section>
-      <h1>Shipping</h1>
-      <p>
-        Rates are quoted server-side at checkout. A method with no countries and
-        no states applies everywhere; anything listed narrows it.
-        {settings.freeShippingThresholdCents !== null
-          ? ` Orders over ${(settings.freeShippingThresholdCents / 100).toFixed(2)} ship free store-wide.`
-          : ''}
-      </p>
+    <>
+      <PageHead
+        title="Shipping"
+        sub="Rates are quoted server-side at checkout. A method with no countries and no states applies everywhere; anything listed narrows it."
+      />
+
+      {settings.freeShippingThresholdCents !== null ? (
+        <p className="anotice">
+          Store-wide, orders over{' '}
+          {formatCents(settings.freeShippingThresholdCents)} ship free regardless of
+          method.
+        </p>
+      ) : null}
 
       <ShippingManager methods={methods} />
-    </section>
+    </>
   );
 }

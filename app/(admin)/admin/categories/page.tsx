@@ -1,4 +1,5 @@
 import { CategoryManager } from '@/components/admin/CategoryManager';
+import { PageHead } from '@/components/admin/PageHead';
 import { requireAdminPage } from '@/lib/auth/guards';
 import { listCategories } from '@/lib/services/categories';
 import { listUsedCategorySlugs } from '@/lib/services/products';
@@ -11,20 +12,19 @@ export default async function AdminCategoriesPage() {
     listUsedCategorySlugs(),
   ]);
 
-  // Slugs products already use that have no category document yet. Shown so
-  // the gap is visible rather than silently mysterious.
+  // Slugs products already use that have no collection document yet. Surfaced
+  // rather than silently missing, with the one control that fixes it.
   const known = new Set(categories.map((category) => category.slug));
   const orphans = usedSlugs.filter((slug) => !known.has(slug));
 
   return (
-    <section>
-      <h1>Categories</h1>
-      <p>
-        Products belong to a category by slug. Renaming a slug moves every
-        product with it; archiving one is refused while it still holds products.
-      </p>
+    <>
+      <PageHead
+        title="Collections"
+        sub="Products belong to a collection by slug. Renaming a slug moves every product with it; archiving is refused while a collection still holds products."
+      />
 
       <CategoryManager categories={categories} orphanSlugs={orphans} />
-    </section>
+    </>
   );
 }

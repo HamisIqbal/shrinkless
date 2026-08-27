@@ -81,11 +81,11 @@ export function StockTakePanel({
   }
 
   return (
-    <div className="stocktake">
-      <form onSubmit={submitCount}>
-        <h2>Stock take</h2>
+    <div className="split">
+      <form onSubmit={submitCount} className="panel">
+        <p className="alabel">Stock take</p>
 
-        <label>
+        <label className="field">
           Counted
           <input
             type="number"
@@ -96,7 +96,7 @@ export function StockTakePanel({
           />
         </label>
 
-        <label>
+        <label className="field">
           Note
           <input
             value={note}
@@ -105,13 +105,15 @@ export function StockTakePanel({
           />
         </label>
 
-        <button type="submit" disabled={pending}>Record count</button>
+        <button type="submit" className="abtn" disabled={pending}>
+          Record count
+        </button>
       </form>
 
-      <form onSubmit={submitThreshold}>
-        <h2>Low-stock threshold</h2>
+      <form onSubmit={submitThreshold} className="panel">
+        <p className="alabel">Low-stock threshold</p>
 
-        <label>
+        <label className="field">
           Low at
           <input
             type="number"
@@ -123,11 +125,13 @@ export function StockTakePanel({
           />
         </label>
 
-        <button type="submit" disabled={pending}>Save threshold</button>
+        <button type="submit" className="abtn abtn--ghost" disabled={pending}>
+          Save threshold
+        </button>
       </form>
 
-      {error ? <p role="alert">{error}</p> : null}
-      {!error && message ? <p>{message}</p> : null}
+      {error ? <p role="alert" className="anotice anotice--error">{error}</p> : null}
+      {!error && message ? <p className="anotice">{message}</p> : null}
     </div>
   );
 }

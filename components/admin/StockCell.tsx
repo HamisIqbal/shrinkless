@@ -63,8 +63,14 @@ export function StockCell({
   if (!open) {
     return (
       <span className="stockcell">
-        <strong>{stock}</strong>
-        <button type="button" onClick={() => setOpen(true)}>Adjust</button>
+        <span className="stockcell__value">{stock}</span>
+        <button
+          type="button"
+          className="abtn abtn--quiet abtn--sm"
+          onClick={() => setOpen(true)}
+        >
+          Adjust
+        </button>
       </span>
     );
   }
@@ -95,8 +101,17 @@ export function StockCell({
         </select>
       </label>
 
-      <button type="submit" disabled={pending}>{pending ? '…' : 'Save'}</button>
-      <button type="button" onClick={() => setOpen(false)} disabled={pending}>Cancel</button>
+      <button type="submit" className="abtn abtn--sm" disabled={pending}>
+        {pending ? 'Saving' : 'Save'}
+      </button>
+      <button
+        type="button"
+        className="abtn abtn--quiet abtn--sm"
+        onClick={() => setOpen(false)}
+        disabled={pending}
+      >
+        Cancel
+      </button>
 
       {error ? <span role="alert" className="rowactions__error">{error}</span> : null}
     </form>

@@ -33,9 +33,9 @@ export function RefundPanel({
 
   if (!payable) {
     return (
-      <section aria-labelledby="refund-heading">
-        <h2 id="refund-heading">Refunds</h2>
-        <p>This order was never paid, so there is nothing to refund.</p>
+      <section className="panel" aria-labelledby="refund-heading">
+        <p className="alabel" id="refund-heading">Refunds</p>
+        <p className="aquiet">This order was never paid, so there is nothing to refund.</p>
       </section>
     );
   }
@@ -69,16 +69,16 @@ export function RefundPanel({
   }
 
   return (
-    <section aria-labelledby="refund-heading">
-      <h2 id="refund-heading">Refunds</h2>
-      <p>
+    <section className="panel" aria-labelledby="refund-heading">
+      <p className="alabel" id="refund-heading">Refunds</p>
+      <p className="aquiet" style={{ marginBottom: 'var(--ad-s-3)' }}>
         {formatCents(refundableCents)} still refundable. This records the refund
         in the order&rsquo;s history — it does not move money, because no payment
         provider is connected yet.
       </p>
 
       <form onSubmit={submit}>
-        <label>
+        <label className="field">
           Amount (dollars)
           <input
             type="number"
@@ -91,17 +91,25 @@ export function RefundPanel({
           />
         </label>
 
-        <label>
+        <label className="field">
           Reason
           <input value={note} onChange={(event) => setNote(event.target.value)} />
         </label>
 
-        <button type="submit" disabled={pending || refundableCents <= 0}>
+        <button
+          type="submit"
+          className="abtn abtn--ghost abtn--block"
+          disabled={pending || refundableCents <= 0}
+        >
           {pending ? 'Recording…' : 'Record refund'}
         </button>
       </form>
 
-      {error ? <p role="alert">{error}</p> : null}
+      {error ? (
+        <p role="alert" className="anotice anotice--error" style={{ marginTop: 'var(--ad-s-3)' }}>
+          {error}
+        </p>
+      ) : null}
     </section>
   );
 }

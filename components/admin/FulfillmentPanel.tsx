@@ -63,36 +63,55 @@ export function FulfillmentPanel({ orderId, status, trackingNumber, allowed }: P
   }
 
   return (
-    <section aria-labelledby="fulfillment-heading">
-      <h2 id="fulfillment-heading">Fulfillment</h2>
+    <section className="panel panel--outline" aria-labelledby="fulfillment-heading">
+      <p className="alabel" id="fulfillment-heading">Fulfilment</p>
 
       {allowed.includes('shipped') ? (
-        <label>
+        <label className="field">
           Tracking number
           <input value={tracking} onChange={(event) => setTracking(event.target.value)} />
         </label>
       ) : null}
 
       {allowed.length ? (
-        <label>
-          Note (recorded against the status change)
-          <input value={note} onChange={(event) => setNote(event.target.value)} />
+        <label className="field">
+          Note
+          <input
+            value={note}
+            onChange={(event) => setNote(event.target.value)}
+            placeholder="Recorded against the status change"
+          />
         </label>
       ) : null}
 
       {allowed.map((to) => (
-        <button key={to} type="button" disabled={pending} onClick={() => run(to)}>
+        <button
+          key={to}
+          type="button"
+          className={`abtn abtn--block${to === 'cancelled' ? ' abtn--ghost' : ''}`}
+          disabled={pending}
+          onClick={() => run(to)}
+          style={{ marginTop: 'var(--ad-s-2)' }}
+        >
           {LABELS[to]}
         </button>
       ))}
 
-      {!allowed.length ? <p>This order is closed. No further status changes.</p> : null}
-
-      {status === 'paid' ? (
-        <p><small>Stock for this order has been taken from inventory.</small></p>
+      {!allowed.length ? (
+        <p className="aquiet">This order is closed. No further status changes.</p>
       ) : null}
 
-      {error ? <p role="alert">{error}</p> : null}
+      {status === 'paid' ? (
+        <p className="aquiet" style={{ marginTop: 'var(--ad-s-3)' }}>
+          Stock for this order has been taken from inventory.
+        </p>
+      ) : null}
+
+      {error ? (
+        <p role="alert" className="anotice anotice--error" style={{ marginTop: 'var(--ad-s-3)' }}>
+          {error}
+        </p>
+      ) : null}
     </section>
   );
 }

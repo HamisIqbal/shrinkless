@@ -47,27 +47,35 @@ export function NotesPanel({
   }
 
   return (
-    <div className="notespanel">
-      <h2>{heading}</h2>
-      <p>Staff only. Customers never see these.</p>
+    <section className="panel notes">
+      <p className="alabel">{heading}</p>
 
       {notes.length ? (
-        <ul>
+        <ul className="notes__list">
           {notes.map((note) => (
-            <li key={note.id}>
+            <li key={note.id} className="notes__item">
               <p>{note.body}</p>
-              <small>
-                {note.actorEmail} — {new Date(note.at).toLocaleString('en-US')}
-              </small>
+              <span className="notes__meta">
+                {note.actorEmail} ·{' '}
+                {new Date(note.at).toLocaleString('en-US', {
+                  day: 'numeric',
+                  month: 'short',
+                  hour: 'numeric',
+                  minute: '2-digit',
+                })}
+              </span>
             </li>
           ))}
         </ul>
       ) : (
-        <p>No notes yet.</p>
+        <p className="aquiet" style={{ marginBottom: 'var(--ad-s-3)' }}>
+          Nothing recorded yet. Notes are staff-only and append-only — a
+          correction is another note.
+        </p>
       )}
 
       <form onSubmit={submit}>
-        <label>
+        <label className="field">
           <span className="visually-hidden">New note</span>
           <textarea
             value={body}
@@ -78,12 +86,20 @@ export function NotesPanel({
           />
         </label>
 
-        <button type="submit" disabled={pending || !body.trim()}>
-          {pending ? 'Saving…' : 'Add note'}
+        <button
+          type="submit"
+          className="abtn abtn--ghost abtn--block"
+          disabled={pending || !body.trim()}
+        >
+          {pending ? 'Saving' : 'Add note'}
         </button>
       </form>
 
-      {error ? <p role="alert">{error}</p> : null}
-    </div>
+      {error ? (
+        <p role="alert" className="anotice anotice--error" style={{ marginTop: 'var(--ad-s-3)' }}>
+          {error}
+        </p>
+      ) : null}
+    </section>
   );
 }

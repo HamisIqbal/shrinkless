@@ -137,137 +137,243 @@ export function ProductEditor({ product }: { product: ProductDTO | null }) {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <label>Title
-        <input value={title} onChange={(e) => setTitle(e.target.value)} required />
-      </label>
+    <form onSubmit={handleSubmit} className="editor">
+      {/* Six sections, in the order a product is actually built: what it is,
+          what it looks like, where it sits, how it is bought, what it costs,
+          and how it is found. */}
+      <section className="editor__section">
+        <div className="editor__sectionhead">
+          <h2 className="editor__sectiontitle">Product information</h2>
+          <p className="editor__sectionnote">
+            The name, the address it lives at, and the copy the product page is
+            built from.
+          </p>
+        </div>
 
-      <label>Slug
-        <input value={slug} onChange={(e) => setSlug(e.target.value)} required />
-      </label>
+        <div className="fieldrow">
+          <label className="field">
+            Title
+            <input value={title} onChange={(e) => setTitle(e.target.value)} required />
+          </label>
 
-      <label>Category
-        <input value={category} onChange={(e) => setCategory(e.target.value)} required />
-      </label>
+          <label className="field">
+            Slug
+            <input value={slug} onChange={(e) => setSlug(e.target.value)} required />
+          </label>
+        </div>
 
-      <label>Description
-        <textarea
-          rows={14}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-        <small>
-          Blank lines separate blocks; a line starting with a dash is a bullet.
-          The storefront reads a lead paragraph, five to seven bullets and a
-          closing line.
-        </small>
-      </label>
+        <label className="field">
+          Description
+          <textarea
+            rows={12}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+          <small>
+            Blank lines separate blocks; a line starting with a dash is a
+            bullet. The storefront reads a lead paragraph, five to seven
+            bullets and a closing line.
+          </small>
+        </label>
+      </section>
 
-      <label>Status
-        <select value={status} onChange={(e) => setStatus(e.target.value as 'draft' | 'published')}>
-          <option value="draft">Draft</option>
-          <option value="published">Published</option>
-        </select>
-      </label>
+      <section className="editor__section">
+        <div className="editor__sectionhead">
+          <h2 className="editor__sectiontitle">Images</h2>
+          <p className="editor__sectionnote">
+            The first image is the one a card, a cart line and a share preview
+            all use. Reorder to change it.
+          </p>
+        </div>
 
-      <label className="checkfield">
-        <input
-          type="checkbox"
-          checked={featured}
-          onChange={(e) => setFeatured(e.target.checked)}
-        />
-        <span>
-          Featured
-          <small>Shows in the Featured band on the homepage.</small>
-        </span>
-      </label>
+        <ImageUploader images={images} onChange={setImages} />
+      </section>
 
-      <label>Badge
-        <select value={badge} onChange={(e) => setBadge(e.target.value as 'none' | 'new')}>
-          <option value="none">None</option>
-          <option value="new">New arrival</option>
-        </select>
-        <small>Drawn on the product card. Sold out is worked out from stock.</small>
-      </label>
+      <section className="editor__section">
+        <div className="editor__sectionhead">
+          <h2 className="editor__sectiontitle">Collection and merchandising</h2>
+          <p className="editor__sectionnote">
+            Where the product sits in the shop, and how it is promoted on the
+            home page.
+          </p>
+        </div>
 
-      <label>Rating
-        <input
-          type="number"
-          min={0}
-          max={5}
-          step={0.1}
-          value={rating}
-          onChange={(e) => setRating(e.target.value)}
-        />
-        <small>Out of 5, drawn on the card. Leave at 0 for no rating.</small>
-      </label>
+        <div className="fieldrow">
+          <label className="field">
+            Collection
+            <input value={category} onChange={(e) => setCategory(e.target.value)} required />
+            <small>The collection slug, as it appears in the URL.</small>
+          </label>
 
-      <label>Tags (comma separated)
-        <input value={tagsText} onChange={(e) => setTagsText(e.target.value)} />
-        <small>Merchandising labels. Searchable in the admin product list.</small>
-      </label>
+          <label className="field">
+            Status
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value as 'draft' | 'published')}
+            >
+              <option value="draft">Draft</option>
+              <option value="published">Published</option>
+            </select>
+          </label>
+        </div>
 
-      <label>Base SKU
-        <input value={baseSku} onChange={(e) => setBaseSku(e.target.value.toUpperCase())} />
-        <small>The family code. Each variant still carries its own SKU below.</small>
-      </label>
+        <div className="fieldrow">
+          <label className="field">
+            Badge
+            <select value={badge} onChange={(e) => setBadge(e.target.value as 'none' | 'new')}>
+              <option value="none">None</option>
+              <option value="new">New arrival</option>
+            </select>
+            <small>Drawn on the card. Sold out is worked out from stock.</small>
+          </label>
 
-      <fieldset>
-        <legend>How it is sold</legend>
+          <label className="field">
+            Rating
+            <input
+              type="number"
+              min={0}
+              max={5}
+              step={0.1}
+              value={rating}
+              onChange={(e) => setRating(e.target.value)}
+            />
+            <small>Out of 5. Zero draws no rating at all.</small>
+          </label>
+        </div>
 
-        <label>Minimum quantity
-          <input type="number" min={1} value={qtyMin} onChange={(e) => setQtyMin(e.target.value)} />
+        <label className="field">
+          Tags
+          <input value={tagsText} onChange={(e) => setTagsText(e.target.value)} />
+          <small>Comma separated. Searchable in the product list.</small>
         </label>
 
-        <label>Sold in multiples of
-          <input type="number" min={1} value={qtyStep} onChange={(e) => setQtyStep(e.target.value)} />
+        <label className="checkline">
+          <input
+            type="checkbox"
+            checked={featured}
+            onChange={(e) => setFeatured(e.target.checked)}
+          />
+          Featured in the home page band
+        </label>
+      </section>
+
+      <section className="editor__section">
+        <div className="editor__sectionhead">
+          <h2 className="editor__sectiontitle">How it is sold</h2>
+          <p className="editor__sectionnote">
+            A minimum of 12 with a step of 12 sells in 12, 24 and 36. The
+            product page offers only these quantities and the server refuses
+            anything else.
+          </p>
+        </div>
+
+        <div className="fieldrow fieldrow--three">
+          <label className="field">
+            Minimum quantity
+            <input
+              type="number"
+              min={1}
+              value={qtyMin}
+              onChange={(e) => setQtyMin(e.target.value)}
+            />
+          </label>
+
+          <label className="field">
+            Sold in multiples of
+            <input
+              type="number"
+              min={1}
+              value={qtyStep}
+              onChange={(e) => setQtyStep(e.target.value)}
+            />
+          </label>
+
+          <label className="field">
+            Maximum per order
+            <input
+              type="number"
+              min={1}
+              value={qtyMax}
+              onChange={(e) => setQtyMax(e.target.value)}
+              placeholder="No limit"
+            />
+          </label>
+        </div>
+      </section>
+
+      <section className="editor__section">
+        <div className="editor__sectionhead">
+          <h2 className="editor__sectiontitle">Options, pricing and inventory</h2>
+          <p className="editor__sectionnote">
+            Every size crossed with every colour becomes a variant with its own
+            SKU, price and stock. Changing a quantity here is recorded as a
+            stock correction against your name.
+          </p>
+        </div>
+
+        <div className="fieldrow">
+          <label className="field">
+            Sizes
+            <input value={sizesText} onChange={(e) => setSizesText(e.target.value)} />
+            <small>Comma separated.</small>
+          </label>
+
+          <label className="field">
+            Colours
+            <input value={colorsText} onChange={(e) => setColorsText(e.target.value)} />
+            <small>Comma separated.</small>
+          </label>
+        </div>
+
+        <label className="field">
+          Base SKU
+          <input value={baseSku} onChange={(e) => setBaseSku(e.target.value.toUpperCase())} />
+          <small>The family code. Each variant carries its own SKU below.</small>
         </label>
 
-        <label>Maximum per order (blank for none)
-          <input type="number" min={1} value={qtyMax} onChange={(e) => setQtyMax(e.target.value)} />
-        </label>
+        <VariantMatrix rows={rows} onRowChange={handleRowChange} />
+      </section>
 
-        <small>
-          Minimum 12 with a step of 12 sells in 12, 24, 36. The product page
-          offers only these quantities and the server refuses anything else.
-        </small>
-      </fieldset>
+      <section className="editor__section">
+        <div className="editor__sectionhead">
+          <h2 className="editor__sectiontitle">Search engines</h2>
+          <p className="editor__sectionnote">
+            What a search result and a shared link say. Left blank, the title
+            and description above are used.
+          </p>
+        </div>
 
-      <fieldset>
-        <legend>SEO</legend>
-
-        <label>Title
+        <label className="field">
+          SEO title
           <input value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} maxLength={70} />
+          <small>Up to 70 characters.</small>
         </label>
 
-        <label>Description
+        <label className="field">
+          SEO description
           <textarea
             value={seoDescription}
             onChange={(e) => setSeoDescription(e.target.value)}
             maxLength={160}
-            rows={2}
+            rows={3}
           />
+          <small>Up to 160 characters.</small>
         </label>
 
-        <label>Keywords (comma separated)
+        <label className="field">
+          Keywords
           <input value={seoKeywords} onChange={(e) => setSeoKeywords(e.target.value)} />
+          <small>Comma separated.</small>
         </label>
-      </fieldset>
+      </section>
 
-      <label>Sizes (comma separated)
-        <input value={sizesText} onChange={(e) => setSizesText(e.target.value)} />
-      </label>
+      <div className="editor__save">
+        {error ? <p role="alert" className="editor__savemsg">{error}</p> : null}
 
-      <label>Colours (comma separated)
-        <input value={colorsText} onChange={(e) => setColorsText(e.target.value)} />
-      </label>
-
-      <ImageUploader images={images} onChange={setImages} />
-
-      <VariantMatrix rows={rows} onRowChange={handleRowChange} />
-
-      <button type="submit" disabled={pending}>{pending ? 'Saving…' : 'Save product'}</button>
-      {error ? <p role="alert">{error}</p> : null}
+        <button type="submit" className="abtn" disabled={pending}>
+          {pending ? 'Saving' : 'Save product'}
+        </button>
+      </div>
     </form>
   );
 }

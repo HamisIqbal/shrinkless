@@ -367,6 +367,56 @@ export async function listOrdersForUser(userId: string): Promise<OrderRowDTO[]> 
   return orders.map((order) => toRow(toOrderDTO(order)));
 }
 
+export const PAYMENT_SORTS = ['createdAt', 'amountCents'] as const;
+export const PAYMENT_FILTERS = ['provider', 'status'] as const;
+
+/**
+ * Every payment the store has recorded, newest first.
+ *
+ * Read-only in the strictest sense: payment rows are written by a provider's
+ * webhook and by nothing else, so this list has no counterpart that writes.
+ */
+export async function listPaymentsPaged(
+  params: ListParams,
+): Promise<Paged<PaymentDTO & { orderNumber: string; email: string }>> {
+  await connectToDatabase();
+
+  const query: Record<string, unknown> = {};
+  if (params.filters.provider) query.provider = params.filters.provider;
+  if (params.filters.status) query.status = params.filters.status;
+
+  const needle = searchRegex(params.q);
+  if (needle) query.providerPaymentId = needle;
+
+  const { skip, limit } = pageWindow(params);
+
+  const [total, payments] = await Promise.all([
+    Payment.countDocuments(query),
+    Payment.find(query).sort(sortStage(params.sort, params.direction)).skip(skip).limit(limit).lean(),
+  ]);
+
+  // The orders for this page only, so the list stays flat as payments pile up.
+  const orders = await Order.find({ _id: { $in: payments.map((row) => row.orderId) } })
+    .select('orderNumber email')
+    .lean();
+
+  const byId = new Map(orders.map((order) => [String(order._id), order]));
+
+  return toPaged(
+    payments.map((payment) => {
+      const order = byId.get(String(payment.orderId));
+
+      return {
+        ...toPaymentDTO(payment),
+        orderNumber: order?.orderNumber ?? 'Unknown order',
+        email: order?.email ?? '',
+      };
+    }),
+    total,
+    params,
+  );
+}
+
 /** Payments recorded against an order. Read-only: payment rows are written by
  *  the provider's webhook, never by an admin. */
 export async function listPaymentsForOrder(orderId: string): Promise<PaymentDTO[]> {

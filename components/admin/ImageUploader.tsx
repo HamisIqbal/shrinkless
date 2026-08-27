@@ -48,36 +48,86 @@ export function ImageUploader({ images, onChange }: Props) {
     }
   }
 
+  /** Order is meaning here: position one is the featured image everywhere in
+   *  the store, so moving an image is how that choice is made. */
+  function move(index: number, by: number) {
+    const target = index + by;
+    if (target < 0 || target >= images.length) return;
+
+    const next = [...images];
+    [next[index], next[target]] = [next[target], next[index]];
+    onChange(next);
+  }
+
   return (
-    <fieldset>
-      <legend>Images</legend>
+    <div className="uploader">
+      {images.length ? (
+        <ul className="uploader__grid">
+          {images.map((image, index) => (
+            <li key={image.publicId}>
+              <div className="uploader__item">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={cloudinaryUrl(image.publicId, 'w_320,h_400,c_fill,q_auto,f_auto')}
+                  alt={image.alt}
+                  width={160}
+                  height={200}
+                />
 
-      <ul>
-        {images.map((image, index) => (
-          <li key={image.publicId}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={cloudinaryUrl(image.publicId, 'w_120,h_150,c_fill')}
-              alt={image.alt}
-              width={120}
-              height={150}
-            />
-            <label>Alt text
-              <input
-                value={image.alt}
-                onChange={(event) => onChange(images.map((current, i) =>
-                  i === index ? { ...current, alt: event.target.value } : current,
-                ))}
-              />
-            </label>
-            <button type="button" onClick={() => onChange(images.filter((_, i) => i !== index))}>
-              Remove
-            </button>
-          </li>
-        ))}
-      </ul>
+                {index === 0 ? <span className="uploader__badge">Featured</span> : null}
 
-      <label>Add image
+                <div className="uploader__tools">
+                  <button
+                    type="button"
+                    onClick={() => move(index, -1)}
+                    disabled={index === 0}
+                    aria-label="Move image earlier"
+                  >
+                    &larr;
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => move(index, 1)}
+                    disabled={index === images.length - 1}
+                    aria-label="Move image later"
+                  >
+                    &rarr;
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onChange(images.filter((_, i) => i !== index))}
+                    aria-label="Remove image"
+                  >
+                    &times;
+                  </button>
+                </div>
+              </div>
+
+              <label className="field" style={{ marginTop: '0.5rem' }}>
+                <span className="visually-hidden">Alt text</span>
+                <input
+                  value={image.alt}
+                  placeholder="Alt text"
+                  onChange={(event) =>
+                    onChange(
+                      images.map((current, i) =>
+                        i === index ? { ...current, alt: event.target.value } : current,
+                      ),
+                    )
+                  }
+                />
+              </label>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="aquiet" style={{ marginBottom: 'var(--ad-s-3)' }}>
+          No photography yet. The first image you add becomes the featured one.
+        </p>
+      )}
+
+      <label className="field">
+        Add image
         <input
           type="file"
           accept="image/*"
@@ -90,8 +140,8 @@ export function ImageUploader({ images, onChange }: Props) {
         />
       </label>
 
-      {busy ? <p>Uploading…</p> : null}
-      {error ? <p role="alert">{error}</p> : null}
-    </fieldset>
+      {busy ? <p className="anotice">Uploading</p> : null}
+      {error ? <p role="alert" className="anotice anotice--error">{error}</p> : null}
+    </div>
   );
 }

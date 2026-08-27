@@ -7,9 +7,6 @@ import type { ListParams, Paged } from '@/lib/admin/query';
  * No client component and no state: the query string *is* the state, which
  * means every admin list is linkable, bookmarkable, back-button-safe, and
  * works with JavaScript off. The server reads the same parameters it wrote.
- *
- * Deliberately unstyled beyond the existing admin classes — the visual pass
- * comes later; this is the functional skeleton it will dress.
  */
 export type FilterOption = { value: string; label: string };
 
@@ -35,8 +32,8 @@ export function ListControls({
   sorts = [],
 }: Props) {
   return (
-    <form method="get" action={action} className="adminbar">
-      <label className="adminbar__field">
+    <form method="get" action={action} className="toolbar">
+      <label className="field toolbar__search">
         <span className="visually-hidden">Search</span>
         <input
           type="search"
@@ -47,7 +44,7 @@ export function ListControls({
       </label>
 
       {filters.map((filter) => (
-        <label key={filter.name} className="adminbar__field">
+        <label key={filter.name} className="field">
           {filter.label}
           <select name={filter.name} defaultValue={params.filters[filter.name] ?? ''}>
             <option value="">All</option>
@@ -61,7 +58,7 @@ export function ListControls({
       ))}
 
       {sorts.length ? (
-        <label className="adminbar__field">
+        <label className="field">
           Sort
           <select name="sort" defaultValue={params.sort}>
             {sorts.map((sort) => (
@@ -73,11 +70,11 @@ export function ListControls({
         </label>
       ) : null}
 
-      <label className="adminbar__field">
+      <label className="field">
         Order
         <select name="direction" defaultValue={params.direction}>
-          <option value="desc">Newest / highest first</option>
-          <option value="asc">Oldest / lowest first</option>
+          <option value="desc">Newest first</option>
+          <option value="asc">Oldest first</option>
         </select>
       </label>
 
@@ -86,8 +83,8 @@ export function ListControls({
           broken. */}
       <input type="hidden" name="page" value="1" />
 
-      <button type="submit">Apply</button>
-      <Link href={action}>Reset</Link>
+      <button type="submit" className="abtn">Apply</button>
+      <Link href={action} className="toolbar__reset">Reset</Link>
     </form>
   );
 }
@@ -107,11 +104,15 @@ function hrefFor(action: string, params: ListParams, page: number): string {
 }
 
 export function Pagination<T>({ action, page }: { action: string; page: Paged<T> }) {
+  const noun = page.total === 1 ? 'result' : 'results';
+
   if (page.pageCount <= 1) {
     return (
-      <p className="adminpage__count">
-        {page.total} {page.total === 1 ? 'result' : 'results'}
-      </p>
+      <div className="pager">
+        <p className="pager__count">
+          {page.total} {noun}
+        </p>
+      </div>
     );
   }
 
@@ -119,26 +120,28 @@ export function Pagination<T>({ action, page }: { action: string; page: Paged<T>
   const next = Math.min(page.pageCount, page.page + 1);
 
   return (
-    <nav className="adminpager" aria-label="Pagination">
-      <p className="adminpage__count">
-        {page.total} results · page {page.page} of {page.pageCount}
+    <nav className="pager" aria-label="Pagination">
+      <p className="pager__count">
+        {page.total} {noun} — page {page.page} of {page.pageCount}
       </p>
 
-      {page.page > 1 ? (
-        <Link href={hrefFor(action, page.params, previous)} rel="prev">
-          Previous
-        </Link>
-      ) : (
-        <span aria-disabled="true">Previous</span>
-      )}
+      <div className="pager__links">
+        {page.page > 1 ? (
+          <Link href={hrefFor(action, page.params, previous)} rel="prev" className="pager__link">
+            Previous
+          </Link>
+        ) : (
+          <span className="pager__link" aria-disabled="true">Previous</span>
+        )}
 
-      {page.page < page.pageCount ? (
-        <Link href={hrefFor(action, page.params, next)} rel="next">
-          Next
-        </Link>
-      ) : (
-        <span aria-disabled="true">Next</span>
-      )}
+        {page.page < page.pageCount ? (
+          <Link href={hrefFor(action, page.params, next)} rel="next" className="pager__link">
+            Next
+          </Link>
+        ) : (
+          <span className="pager__link" aria-disabled="true">Next</span>
+        )}
+      </div>
     </nav>
   );
 }

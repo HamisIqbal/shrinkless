@@ -51,12 +51,22 @@ export function ProductRowActions({ id, status, archived, title }: Props) {
   return (
     <span className="rowactions">
       {!archived ? (
-        <button type="button" onClick={toggleStatus} disabled={pending}>
+        <button
+          type="button"
+          className="abtn abtn--ghost abtn--sm"
+          onClick={toggleStatus}
+          disabled={pending}
+        >
           {status === 'published' ? 'Unpublish' : 'Publish'}
         </button>
       ) : null}
 
-      <button type="button" onClick={toggleArchive} disabled={pending}>
+      <button
+        type="button"
+        className="abtn abtn--quiet abtn--sm"
+        onClick={toggleArchive}
+        disabled={pending}
+      >
         {archived ? 'Restore' : 'Archive'}
       </button>
 

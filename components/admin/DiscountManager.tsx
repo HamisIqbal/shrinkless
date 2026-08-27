@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { archiveDiscountAction, saveDiscountAction } from '@/app/actions/admin/discounts';
+import { EmptyState } from '@/components/admin/EmptyState';
 import { formatCents } from '@/lib/money';
 import type { DiscountDTO } from '@/types/dto';
 
@@ -12,7 +13,7 @@ const BLANK = {
   description: '',
   type: 'percentage' as 'percentage' | 'fixed',
   /** Percent for a percentage discount, dollars for a fixed one. Converted to
-   *  basis points or cents on the way out — the server only ever sees integers. */
+   *  basis points or cents on the way out — the server only sees integers. */
   amount: '10',
   active: true,
   startsAt: '',
@@ -31,10 +32,7 @@ function draftFrom(discount: DiscountDTO): Draft {
     code: discount.code,
     description: discount.description,
     type: discount.type,
-    amount:
-      discount.type === 'percentage'
-        ? String(discount.value / 100)
-        : String(discount.value / 100),
+    amount: String(discount.value / 100),
     active: discount.active,
     startsAt: discount.startsAt ? discount.startsAt.slice(0, 10) : '',
     endsAt: discount.endsAt ? discount.endsAt.slice(0, 10) : '',
@@ -46,12 +44,26 @@ function draftFrom(discount: DiscountDTO): Draft {
   };
 }
 
-function describe(discount: DiscountDTO): string {
+function worth(discount: DiscountDTO): string {
   return discount.type === 'percentage'
-    ? `${discount.value / 100}%`
-    : formatCents(discount.value);
+    ? discount.value / 100 + '% off'
+    : formatCents(discount.value) + ' off';
 }
 
+function window(discount: DiscountDTO): string {
+  const from = discount.startsAt ? discount.startsAt.slice(0, 10) : 'now';
+  const to = discount.endsAt ? discount.endsAt.slice(0, 10) : 'no end date';
+
+  return from + ' to ' + to;
+}
+
+/**
+ * Codes as a list, the editor beside it.
+ *
+ * A discount is mostly its rules, and the rules are what an admin needs to
+ * compare across codes — so each row states what the code is worth, when it
+ * runs, and how much of it is left, and nothing else.
+ */
 export function DiscountManager({
   discounts,
   categorySlugs,
@@ -91,8 +103,8 @@ export function DiscountManager({
       return;
     }
 
-    // Percent → basis points, dollars → cents. Both land as integers so no
-    // float reaches the money path.
+    // Percent to basis points, dollars to cents. Both land as integers so no
+    // float ever reaches the money path.
     const value = Math.round(amount * 100);
 
     run(
@@ -120,66 +132,95 @@ export function DiscountManager({
   }
 
   return (
-    <div className="discountman">
-      <table>
-        <thead>
-          <tr>
-            <th scope="col">Code</th>
-            <th scope="col">Worth</th>
-            <th scope="col">Window</th>
-            <th scope="col">Used</th>
-            <th scope="col">State</th>
-            <th scope="col">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {discounts.length === 0 ? (
-            <tr>
-              <td colSpan={6}>No discounts yet.</td>
-            </tr>
-          ) : null}
+    <div className="manager">
+      <div>
+        {discounts.length ? (
+          <div className="tablewrap">
+            <table className="atable">
+              <thead>
+                <tr>
+                  <th scope="col">Code</th>
+                  <th scope="col">Runs</th>
+                  <th scope="col">State</th>
+                  <th scope="col" className="atable__num">Used</th>
+                  <th scope="col" className="atable__actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {discounts.map((discount) => (
+                  <tr key={discount.id}>
+                    <td>
+                      <span className="prow__title">{discount.code}</span>
+                      <span className="prow__meta">
+                        {worth(discount)}
+                        {discount.minOrderCents
+                          ? ' · over ' + formatCents(discount.minOrderCents)
+                          : ''}
+                      </span>
+                    </td>
+                    <td>{window(discount)}</td>
+                    <td>
+                      <span
+                        className={'pill pill--' + (discount.redeemable ? 'on' : 'off')}
+                      >
+                        {discount.archived
+                          ? 'Archived'
+                          : discount.redeemable
+                            ? 'Redeemable'
+                            : 'Not live'}
+                      </span>
+                    </td>
+                    <td className="atable__num">
+                      {discount.usedCount}
+                      {discount.usageLimit === null ? '' : ' / ' + discount.usageLimit}
+                    </td>
+                    <td className="atable__actions">
+                      <span className="rowactions">
+                        <button
+                          type="button"
+                          className="abtn abtn--ghost abtn--sm"
+                          onClick={() => setDraft(draftFrom(discount))}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          className="abtn abtn--quiet abtn--sm"
+                          disabled={pending}
+                          onClick={() =>
+                            run(
+                              () =>
+                                archiveDiscountAction({
+                                  id: discount.id,
+                                  archived: !discount.archived,
+                                }),
+                              discount.archived ? 'Restored.' : 'Archived.',
+                            )
+                          }
+                        >
+                          {discount.archived ? 'Restore' : 'Archive'}
+                        </button>
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <EmptyState
+            title="No codes yet"
+            body="A code can take a percentage or a fixed amount off, run between two dates, cap its own use, and apply only to certain collections. The server decides what it is worth — the browser only ever sends the code."
+          />
+        )}
+      </div>
 
-          {discounts.map((discount) => (
-            <tr key={discount.id}>
-              <td>{discount.code}</td>
-              <td>{describe(discount)}</td>
-              <td>
-                {discount.startsAt ? discount.startsAt.slice(0, 10) : 'now'} →{' '}
-                {discount.endsAt ? discount.endsAt.slice(0, 10) : 'open'}
-              </td>
-              <td>
-                {discount.usedCount}
-                {discount.usageLimit === null ? '' : ` / ${discount.usageLimit}`}
-              </td>
-              <td>{discount.redeemable ? 'Redeemable' : 'Not redeemable'}</td>
-              <td>
-                <button type="button" onClick={() => setDraft(draftFrom(discount))}>Edit</button>
-                <button
-                  type="button"
-                  disabled={pending}
-                  onClick={() =>
-                    run(
-                      () =>
-                        archiveDiscountAction({
-                          id: discount.id,
-                          archived: !discount.archived,
-                        }),
-                      discount.archived ? 'Restored.' : 'Archived.',
-                    )
-                  }
-                >
-                  {discount.archived ? 'Restore' : 'Archive'}
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <form onSubmit={save} className="manager__form">
+        <h2 className="manager__formtitle">
+          {draft.id ? 'Edit ' + draft.code : 'New discount'}
+        </h2>
 
-      <form onSubmit={save}>
-        <h2>{draft.id ? `Edit ${draft.code}` : 'New discount'}</h2>
-
-        <label>
+        <label className="field">
           Code
           <input
             value={draft.code}
@@ -188,7 +229,7 @@ export function DiscountManager({
           />
         </label>
 
-        <label>
+        <label className="field">
           Description
           <input
             value={draft.description}
@@ -196,33 +237,35 @@ export function DiscountManager({
           />
         </label>
 
-        <label>
-          Type
-          <select
-            value={draft.type}
-            onChange={(event) =>
-              setDraft({ ...draft, type: event.target.value as 'percentage' | 'fixed' })
-            }
-          >
-            <option value="percentage">Percentage off</option>
-            <option value="fixed">Fixed amount off</option>
-          </select>
-        </label>
+        <div className="fieldrow">
+          <label className="field">
+            Type
+            <select
+              value={draft.type}
+              onChange={(event) =>
+                setDraft({ ...draft, type: event.target.value as 'percentage' | 'fixed' })
+              }
+            >
+              <option value="percentage">Percentage</option>
+              <option value="fixed">Fixed amount</option>
+            </select>
+          </label>
 
-        <label>
-          {draft.type === 'percentage' ? 'Percent off' : 'Dollars off'}
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            value={draft.amount}
-            onChange={(event) => setDraft({ ...draft, amount: event.target.value })}
-            required
-          />
-        </label>
+          <label className="field">
+            {draft.type === 'percentage' ? 'Percent off' : 'Dollars off'}
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={draft.amount}
+              onChange={(event) => setDraft({ ...draft, amount: event.target.value })}
+              required
+            />
+          </label>
+        </div>
 
-        <label>
-          Minimum order (dollars)
+        <label className="field">
+          Minimum order, in dollars
           <input
             type="number"
             step="0.01"
@@ -232,66 +275,77 @@ export function DiscountManager({
           />
         </label>
 
-        <label>
-          Starts
-          <input
-            type="date"
-            value={draft.startsAt}
-            onChange={(event) => setDraft({ ...draft, startsAt: event.target.value })}
-          />
-        </label>
+        <div className="fieldrow">
+          <label className="field">
+            Starts
+            <input
+              type="date"
+              value={draft.startsAt}
+              onChange={(event) => setDraft({ ...draft, startsAt: event.target.value })}
+            />
+          </label>
 
-        <label>
-          Ends
-          <input
-            type="date"
-            value={draft.endsAt}
-            onChange={(event) => setDraft({ ...draft, endsAt: event.target.value })}
-          />
-        </label>
+          <label className="field">
+            Ends
+            <input
+              type="date"
+              value={draft.endsAt}
+              onChange={(event) => setDraft({ ...draft, endsAt: event.target.value })}
+            />
+          </label>
+        </div>
 
-        <label>
-          Total uses (blank for unlimited)
-          <input
-            type="number"
-            min="1"
-            value={draft.usageLimit}
-            onChange={(event) => setDraft({ ...draft, usageLimit: event.target.value })}
-          />
-        </label>
+        <div className="fieldrow">
+          <label className="field">
+            Total uses
+            <input
+              type="number"
+              min="1"
+              value={draft.usageLimit}
+              onChange={(event) => setDraft({ ...draft, usageLimit: event.target.value })}
+              placeholder="Unlimited"
+            />
+          </label>
 
-        <label>
-          Uses per customer (blank for unlimited)
-          <input
-            type="number"
-            min="1"
-            value={draft.perCustomerLimit}
-            onChange={(event) => setDraft({ ...draft, perCustomerLimit: event.target.value })}
-          />
-        </label>
+          <label className="field">
+            Per customer
+            <input
+              type="number"
+              min="1"
+              value={draft.perCustomerLimit}
+              onChange={(event) => setDraft({ ...draft, perCustomerLimit: event.target.value })}
+              placeholder="Unlimited"
+            />
+          </label>
+        </div>
 
-        <fieldset>
-          <legend>Limit to categories (none means all)</legend>
-          {categorySlugs.map((slug) => (
-            <label key={slug}>
-              <input
-                type="checkbox"
-                checked={draft.categorySlugs.includes(slug)}
-                onChange={(event) =>
-                  setDraft({
-                    ...draft,
-                    categorySlugs: event.target.checked
-                      ? [...draft.categorySlugs, slug]
-                      : draft.categorySlugs.filter((value) => value !== slug),
-                  })
-                }
-              />
-              {slug}
-            </label>
-          ))}
-        </fieldset>
+        {categorySlugs.length ? (
+          <fieldset>
+            <legend>Limit to collections</legend>
 
-        <label>
+            {categorySlugs.map((slug) => (
+              <label key={slug} className="checkline">
+                <input
+                  type="checkbox"
+                  checked={draft.categorySlugs.includes(slug)}
+                  onChange={(event) =>
+                    setDraft({
+                      ...draft,
+                      categorySlugs: event.target.checked
+                        ? [...draft.categorySlugs, slug]
+                        : draft.categorySlugs.filter((value) => value !== slug),
+                    })
+                  }
+                />
+                {slug}
+              </label>
+            ))}
+
+            <p className="field__hint">None selected means the code applies to everything.</p>
+          </fieldset>
+        ) : null}
+
+        <label className="checkline">
           <input
             type="checkbox"
             checked={draft.active}
@@ -300,19 +354,32 @@ export function DiscountManager({
           Active
         </label>
 
-        <button type="submit" disabled={pending}>
-          {draft.id ? 'Save discount' : 'Create discount'}
-        </button>
-
-        {draft.id ? (
-          <button type="button" onClick={() => setDraft(BLANK)} disabled={pending}>
-            Cancel
+        <div className="manager__actions">
+          <button type="submit" className="abtn" disabled={pending}>
+            {draft.id ? 'Save discount' : 'Create discount'}
           </button>
+
+          {draft.id ? (
+            <button
+              type="button"
+              className="abtn abtn--ghost"
+              onClick={() => setDraft(BLANK)}
+              disabled={pending}
+            >
+              Cancel
+            </button>
+          ) : null}
+        </div>
+
+        {error ? (
+          <p role="alert" className="anotice anotice--error" style={{ marginTop: 'var(--ad-s-3)' }}>
+            {error}
+          </p>
+        ) : null}
+        {!error && message ? (
+          <p className="anotice" style={{ marginTop: 'var(--ad-s-3)' }}>{message}</p>
         ) : null}
       </form>
-
-      {error ? <p role="alert">{error}</p> : null}
-      {!error && message ? <p>{message}</p> : null}
     </div>
   );
 }
