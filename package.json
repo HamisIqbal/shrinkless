@@ -14,7 +14,8 @@
     "seed:admin": "tsx --env-file-if-exists=.env.local scripts/seed-admin.ts",
     "seed:orders": "tsx --env-file-if-exists=.env.local scripts/seed-orders.ts",
     "demo:flags": "tsx --env-file-if-exists=.env.local scripts/demo-flags.ts",
-    "copy:refresh": "tsx --env-file-if-exists=.env.local scripts/copy-refresh.ts"
+    "copy:refresh": "tsx --env-file-if-exists=.env.local scripts/copy-refresh.ts",
+    "email:test": "tsx --env-file-if-exists=.env.local scripts/send-test-email.ts"
   },
   "dependencies": {
     "@node-rs/argon2": "^2.1.0",
