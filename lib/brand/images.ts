@@ -138,7 +138,7 @@ export const BRAND_IMAGES = {
 
   /** Heather grey tee, soft daylight. The calmest frame in the set. */
   heather: {
-    url: frame('photo-1564584217132-2271feaeb3c5', 1200),
+    url: 'https://res.cloudinary.com/dcsewsmhd/image/upload/v1787940222/620442161_18124810468539123_6117677647169915015_n_eifssz.jpg',
     alt: 'A heather grey tee hanging on a white wall in soft afternoon light.',
     aspect: '3:2',
   },
