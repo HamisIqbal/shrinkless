@@ -55,7 +55,7 @@ function frame(id: string, width: number): string {
 
 export const HERO_SLIDES = [
   {
-    url: frame('photo-1605949478009-cf3e01396dd2', 1800),
+    url: 'https://res.cloudinary.com/dcsewsmhd/image/upload/v1787938928/website-image-2_if057g.jpg',
     alt: 'A man in a black tee leaning against a bare concrete wall in daylight.',
     aspect: '4:5',
     focus: '50% 30%',
@@ -67,7 +67,7 @@ export const HERO_SLIDES = [
     focus: '50% 45%',
   },
   {
-    url: frame('photo-1629137525253-739adcd9c774', 1800),
+    url: 'https://res.cloudinary.com/dcsewsmhd/image/upload/v1787938928/website-image-1_vmmjcj.jpg',
     alt: 'A woman in an oversized olive tee against a weathered concrete wall.',
     aspect: '2:3',
     focus: '50% 48%',
@@ -110,15 +110,15 @@ export type CategorySlug = keyof typeof CATEGORY_IMAGES;
 export const BRAND_IMAGES = {
   /** Fabric macro. Carries the "organic cotton" claim visually. */
   fabric: {
-    url: frame('photo-1632844384543-bb1b2c3900d7', 1200),
+    url: 'https://res.cloudinary.com/dcsewsmhd/image/upload/v1787938928/website-image-3_tzrf0p.jpg',
     alt: 'A close view of soft grey cotton jersey, folded and catching the light.',
     aspect: '4:5',
   },
 
   /** Cut-and-sew bench. Carries the "Made in USA" claim visually. */
   craft: {
-    url: frame('photo-1584184924103-e310d9dc82fc', 1200),
-    alt: 'A tailor cutting cloth by hand at a wooden workbench, tape measure round the neck.',
+    url: 'https://res.cloudinary.com/dcsewsmhd/image/upload/v1787939781/619261957_18086525564126700_3470738337226757288_n_kvri2r.jpg',
+    alt: 'A view of wardrobe',
     aspect: '4:5',
   },
 
