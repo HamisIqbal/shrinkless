@@ -52,6 +52,33 @@ export async function consume(
   };
 }
 
+/**
+ * Reads a window without spending from it.
+ *
+ * Needed wherever a limit has to be *reported* before the thing it guards is
+ * attempted — a lockout message on a sign-in form, for instance, where asking
+ * "are you locked out?" must not itself count as an attempt.
+ */
+export async function peek(
+  key: string,
+  limit: number,
+  now: Date = new Date(),
+): Promise<RateLimitResult> {
+  await connectToDatabase();
+
+  const doc = await RateLimit.findOne({ key }).lean();
+
+  if (!doc || doc.expiresAt.getTime() <= now.getTime()) {
+    return { allowed: true, remaining: limit, retryAfterMs: 0 };
+  }
+
+  return {
+    allowed: doc.count <= limit,
+    remaining: Math.max(0, limit - doc.count),
+    retryAfterMs: Math.max(0, doc.expiresAt.getTime() - now.getTime()),
+  };
+}
+
 /** Clears a key — used after a success, so a legitimate sign-in does not leave
  *  a nearly-spent budget behind for the next one. */
 export async function reset(key: string): Promise<void> {
@@ -77,4 +104,11 @@ export const LIMITS = {
   twoFactorSend: { limit: 8, windowMs: 60 * 60 * 1000 },
   /** Newsletter and back-in-stock sign-ups from one address. */
   publicWrite: { limit: 20, windowMs: 60 * 60 * 1000 },
+  /** Password reset links mailed for one address, per day. Counted against
+   *  the address typed into the form whether or not an account exists, so
+   *  being throttled never confirms that one does. */
+  passwordReset: { limit: 5, windowMs: 24 * 60 * 60 * 1000 },
+  /** Wrong admin sign-in codes. Spending this budget locks admin sign-in for
+   *  the rest of the window. */
+  adminCode: { limit: 5, windowMs: 60 * 60 * 1000 },
 } as const;

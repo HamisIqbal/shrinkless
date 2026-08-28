@@ -134,7 +134,20 @@ export function SettingsIcon({ className }: IconProps) {
   );
 }
 
-/** Back to the storefront. */
+/** The storefront: an awning over a doorway. Distinct from ExitIcon so
+ *  "view the shop" and "leave the session" never read as the same act. */
+export function StorefrontIcon({ className }: IconProps) {
+  return (
+    <svg {...base(className)}>
+      <path d="M3.25 7.25h13.5l-1 2a2.1 2.1 0 0 1-3.75 0 2.1 2.1 0 0 1-3.75 0 2.1 2.1 0 0 1-3.75 0Z" />
+      <path d="M3.25 7.25 4.5 4.25h11l1.25 3" />
+      <path d="M4.75 10.75v5.5h10.5v-5.5" />
+      <path d="M8.5 16.25v-3.5h3v3.5" />
+    </svg>
+  );
+}
+
+/** Signing out: out through the door. */
 export function ExitIcon({ className }: IconProps) {
   return (
     <svg {...base(className)}>

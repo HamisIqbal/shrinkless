@@ -2,7 +2,12 @@ import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import { loginSchema } from '@/lib/validation/auth';
 import { verifyCredentials } from '@/lib/services/users';
-import { consumeAdminChallenge } from '@/lib/services/two-factor';
+import {
+  adminLockState,
+  clearAdminCodeFailures,
+  consumeAdminChallenge,
+  recordAdminCodeFailure,
+} from '@/lib/services/two-factor';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: 'jwt' },
@@ -27,11 +32,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // that enforces it: a Server Action calling signIn() directly, a
         // replayed POST, or any other path all land here.
         if (user.role === 'admin') {
+          // A closed lock is checked before the code is even looked at, so a
+          // locked-out attacker cannot keep guessing and cannot learn from the
+          // timing whether a guess was close.
+          const lock = await adminLockState(user.id);
+          if (lock.locked) return null;
+
           const supplied = (raw as { code?: unknown }).code;
           const code = typeof supplied === 'string' ? supplied : '';
 
           const passed = await consumeAdminChallenge(user.id, code);
-          if (!passed) return null;
+
+          if (!passed) {
+            await recordAdminCodeFailure(user.id);
+            return null;
+          }
+
+          await clearAdminCodeFailures(user.id);
         }
 
         return { id: user.id, email: user.email, name: user.name, role: user.role };

@@ -3,6 +3,13 @@ import { Types } from 'mongoose';
 import { hash, verify } from '@node-rs/argon2';
 import { connectToDatabase } from '@/lib/db/connection';
 import { LoginChallenge } from '@/lib/db/models/login-challenge';
+import {
+  LIMITS,
+  consume,
+  peek,
+  reset,
+  type RateLimitResult,
+} from '@/lib/security/rate-limit';
 
 /** Long enough to walk to another device for the mail, short enough that a
  *  code left in an inbox is not a standing key. */
@@ -129,4 +136,66 @@ export async function clearAdminChallenge(userId: string): Promise<void> {
   if (!Types.ObjectId.isValid(userId)) return;
   await connectToDatabase();
   await LoginChallenge.deleteOne({ userId });
+}
+
+/* --------------------------------------------------------------------------
+   The lockout
+
+   The per-challenge attempt cap above protects one code. This protects the
+   account: five wrong codes, whether spread across one challenge or fifty,
+   and admin sign-in stops answering for an hour.
+
+   It is deliberately a separate counter from `attempts`. A challenge is
+   destroyed on its fifth miss, so a script that simply asks for a fresh code
+   after every fifth guess would otherwise get unlimited attempts five at a
+   time.
+   -------------------------------------------------------------------------- */
+
+/** Wrong codes allowed before the lock closes. */
+export const LOCK_AFTER_FAILURES = LIMITS.adminCode.limit;
+
+/** How long it stays closed. */
+export const LOCK_MS = LIMITS.adminCode.windowMs;
+
+export type LockState = {
+  locked: boolean;
+  /** Milliseconds until the lock lifts. Zero when not locked. */
+  retryAfterMs: number;
+  /** Wrong codes still available before the lock closes. */
+  remaining: number;
+};
+
+function lockKey(userId: string): string {
+  return `admin-code:${userId}`;
+}
+
+function toLockState(result: RateLimitResult): LockState {
+  return {
+    locked: !result.allowed,
+    retryAfterMs: result.allowed ? 0 : result.retryAfterMs,
+    remaining: result.remaining,
+  };
+}
+
+/** Asks whether admin sign-in is locked, without spending an attempt. */
+export async function adminLockState(userId: string): Promise<LockState> {
+  if (!Types.ObjectId.isValid(userId)) return { locked: false, retryAfterMs: 0, remaining: LOCK_AFTER_FAILURES };
+
+  return toLockState(await peek(lockKey(userId), LIMITS.adminCode.limit));
+}
+
+/** Records one wrong code and reports where that leaves the account. */
+export async function recordAdminCodeFailure(userId: string): Promise<LockState> {
+  if (!Types.ObjectId.isValid(userId)) return { locked: false, retryAfterMs: 0, remaining: LOCK_AFTER_FAILURES };
+
+  return toLockState(
+    await consume(lockKey(userId), LIMITS.adminCode.limit, LIMITS.adminCode.windowMs),
+  );
+}
+
+/** A correct code clears the record. Getting in is proof the failures were
+ *  fumbles rather than an attack. */
+export async function clearAdminCodeFailures(userId: string): Promise<void> {
+  if (!Types.ObjectId.isValid(userId)) return;
+  await reset(lockKey(userId));
 }

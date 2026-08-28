@@ -8,7 +8,9 @@ export const metadata = { title: 'Sign in' };
 
 export default async function LoginPage() {
   const session = await auth();
-  if (session?.user) redirect('/account');
+  // An admin signs in to work, so the panel is where they belong — including
+  // when they land on this page with a session already in hand.
+  if (session?.user) redirect(session.user.role === 'admin' ? '/admin' : '/account');
 
   return (
     <div className="pagehead">
@@ -17,9 +19,12 @@ export default async function LoginPage() {
 
       <AuthForm action={loginAction} submitLabel="Sign in" />
 
-      <p className="authswap">
-        No account? <Link href="/register" className="ulink">Create one</Link>
-      </p>
+      {/* One block, two offers. Two `.authswap` paragraphs would draw the
+          rule twice and read as two unrelated afterthoughts. */}
+      <div className="authswap">
+        <p>Forgot your password? <Link href="/forgot-password" className="ulink">Reset it</Link></p>
+        <p>No account? <Link href="/register" className="ulink">Create one</Link></p>
+      </div>
     </div>
   );
 }

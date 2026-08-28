@@ -11,6 +11,9 @@ const serverSchema = z.object({
   /* Where admin sign-in codes go. Unset means the admin account's own
      address. */
   ADMIN_2FA_EMAIL: z.string().optional(),
+  /* The public origin, for links that travel in email. Optional: Vercel's own
+     variables cover a deployment, and local development has a sane default. */
+  NEXT_PUBLIC_SITE_URL: z.string().optional(),
 });
 
 export type ServerEnv = z.infer<typeof serverSchema>;

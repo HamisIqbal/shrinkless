@@ -59,6 +59,14 @@ const shippingAddressSchema = new Schema(
 const orderSchema = new Schema(
   {
     orderNumber: { type: String, required: true, unique: true },
+    /* The payment intent this order is being paid through. Held so a shopper
+       who reloads checkout resumes the same intent instead of stacking up
+       abandoned orders, and so a webhook can find its order. */
+    paymentIntentId: { type: String, default: null, index: true },
+    /* The basket this order was built from. Held so a shopper who reloads
+       checkout resumes their pending order instead of leaving a trail of
+       abandoned ones. */
+    cartId: { type: Schema.Types.ObjectId, ref: 'Cart', default: null, index: true },
     userId: { type: Schema.Types.ObjectId, ref: 'User', default: null, index: true },
     email: { type: String, required: true, lowercase: true, trim: true, index: true },
     items: { type: [orderItemSchema], required: true },

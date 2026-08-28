@@ -244,18 +244,39 @@ body:has(.admin) {
   stroke-width: 1.5;
 }
 
+/* The identity and the two ways out.
+
+   On a phone this sits between the brand and the nav row — `order` lifts it,
+   so the exits are the first thing under the wordmark rather than something
+   found by scrolling a nav that never ends. It was previously display:none
+   below 64rem, which left a phone with no visible way out of the panel at all.
+   On the desktop the flex order puts it back at the foot of the spine. */
 .admin .rail__foot {
-  display: none;
-  padding-top: var(--ad-s-3);
-  border-top: 1px solid var(--ad-onink-line);
+  display: flex;
+  align-items: center;
+  gap: var(--ad-s-2);
+  flex-wrap: wrap;
+  /* Brand keeps the default 0, so 1 and 2 place these two after it. */
+  order: 1;
 }
+
+.admin .rail__scroll { order: 2; }
 
 @media (min-width: 64rem) {
-  .admin .rail__foot { display: block; }
+  .admin .rail__foot {
+    display: block;
+    order: 2;
+    padding-top: var(--ad-s-3);
+    border-top: 1px solid var(--ad-onink-line);
+  }
+
+  .admin .rail__scroll { order: 1; }
 }
 
+.admin .rail__who { min-width: 0; }
+
 .admin .rail__actor {
-  display: block;
+  display: none;
   padding-inline: 0.625rem;
   font-size: var(--ad-t-micro);
   letter-spacing: var(--ad-track-label);
@@ -263,28 +284,81 @@ body:has(.admin) {
   color: var(--ad-onink-2);
 }
 
-.admin .rail__email {
-  display: block;
-  padding: 0.125rem 0.625rem var(--ad-s-2);
-  font-size: var(--ad-t-small);
-  color: var(--ad-onink);
-  overflow-wrap: anywhere;
+@media (min-width: 64rem) {
+  .admin .rail__actor { display: block; }
 }
 
-.admin .rail__back {
+/* On a phone the address is a quiet single line that gives up its room to the
+   buttons; on the desktop it wraps rather than truncating, because there the
+   column is the only place it appears. */
+.admin .rail__email {
+  display: block;
+  max-width: 11rem;
+  padding-inline: 0.625rem;
+  font-size: var(--ad-t-small);
+  color: var(--ad-onink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (min-width: 64rem) {
+  .admin .rail__email {
+    max-width: none;
+    padding: 0.125rem 0.625rem var(--ad-s-2);
+    color: var(--ad-onink);
+    white-space: normal;
+    overflow: visible;
+    overflow-wrap: anywhere;
+  }
+}
+
+.admin .rail__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: auto;
+}
+
+@media (min-width: 64rem) {
+  .admin .rail__actions {
+    flex-direction: column;
+    align-items: stretch;
+    margin-left: 0;
+  }
+}
+
+.admin .rail__action {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
   padding: 0.4rem 0.625rem;
+  border: 0;
   border-radius: var(--ad-r-pill);
+  background: color-mix(in oklab, var(--ad-paper) 8%, transparent);
   color: var(--ad-onink-2);
+  font: inherit;
   font-size: var(--ad-t-small);
+  text-align: left;
   text-decoration: none;
-  transition: color var(--ad-fast) var(--ad-ease);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color var(--ad-fast) var(--ad-ease),
+    background-color var(--ad-fast) var(--ad-ease);
 }
 
-.admin .rail__back:hover { color: var(--ad-white); }
-.admin .rail__back svg { width: 0.875rem; height: 0.875rem; }
+/* The spine's own ground is enough separation once there is room for it. */
+@media (min-width: 64rem) {
+  .admin .rail__action { background: transparent; }
+}
+
+.admin .rail__action:hover:not(:disabled) {
+  color: var(--ad-white);
+  background: color-mix(in oklab, var(--ad-paper) 14%, transparent);
+}
+
+.admin .rail__action:disabled { opacity: 0.6; cursor: progress; }
+.admin .rail__action svg { flex: none; width: 0.875rem; height: 0.875rem; }
 
 /* --------------------------------------------------------------------------
    Page furniture

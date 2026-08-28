@@ -38,6 +38,47 @@ describe('createUser', () => {
     const user = await createUser({ ...input, role: 'admin' } as never);
     expect(user.role).toBe('customer');
   });
+
+  it('treats a differently-cased address as the same account', async () => {
+    await createUser(input);
+
+    // The schema lowercases on the way in, so 'Buyer@Example.com' and
+    // 'buyer@example.com' are one address and one account — not two.
+    await expect(
+      createUser({ ...input, email: 'Buyer@Example.COM' } as never),
+    ).rejects.toBeInstanceOf(EmailTakenError);
+
+    expect(await User.countDocuments({})).toBe(1);
+  });
+
+  it('leaves exactly one account behind when two registrations race', async () => {
+    const attempts = await Promise.allSettled([
+      createUser(input),
+      createUser(input),
+      createUser(input),
+    ]);
+
+    // The unique index is the real guarantee: the read-then-write check above
+    // it cannot see a sibling request's uncommitted insert.
+    expect(attempts.filter((a) => a.status === 'fulfilled')).toHaveLength(1);
+    expect(await User.countDocuments({ email: input.email })).toBe(1);
+  });
+
+  it('refuses a second account even when the service is bypassed', async () => {
+    await createUser(input);
+
+    await expect(
+      User.create({ email: input.email, passwordHash: 'x', role: 'customer' }),
+    ).rejects.toThrow(/duplicate key/);
+  });
+
+  it('will not create a customer on an admin address', async () => {
+    await User.create({ email: 'admin@example.com', passwordHash: 'x', role: 'admin' });
+
+    await expect(
+      createUser({ ...input, email: 'admin@example.com' }),
+    ).rejects.toBeInstanceOf(EmailTakenError);
+  });
 });
 
 describe('verifyCredentials', () => {

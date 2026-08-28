@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useTransition } from 'react';
+import { logoutAction } from '@/app/actions/auth';
 import {
   CategoriesIcon,
   CustomersIcon,
@@ -14,6 +16,7 @@ import {
   ProductsIcon,
   SettingsIcon,
   ShippingIcon,
+  StorefrontIcon,
 } from '@/components/admin/icons';
 
 const NAV = [
@@ -39,9 +42,16 @@ const NAV = [
  * Below the desktop breakpoint this becomes a dark header with the sections
  * scrolling horizontally — a recomposition rather than a squeeze, and one that
  * needs no toggle, no overlay and no JavaScript to open.
+ *
+ * The two ways out — back to the shop, and out of the session entirely — sit
+ * in the same block at both widths. On the phone flex `order` lifts that block
+ * directly under the brand, so leaving is never something you have to scroll a
+ * nav row to discover; on the desktop it drops to the foot of the spine where
+ * a signed-in identity belongs.
  */
 export function AdminRail({ actorEmail }: { actorEmail: string }) {
   const pathname = usePathname();
+  const [signingOut, startSignOut] = useTransition();
 
   function isCurrent(href: string): boolean {
     return href === '/admin' ? pathname === '/admin' : pathname.startsWith(href);
@@ -73,12 +83,27 @@ export function AdminRail({ actorEmail }: { actorEmail: string }) {
       </div>
 
       <div className="rail__foot">
-        <span className="rail__actor">Signed in</span>
-        <span className="rail__email">{actorEmail}</span>
-        <Link href="/" className="rail__back">
-          <ExitIcon />
-          View store
-        </Link>
+        <div className="rail__who">
+          <span className="rail__actor">Signed in</span>
+          <span className="rail__email">{actorEmail}</span>
+        </div>
+
+        <div className="rail__actions">
+          <Link href="/" className="rail__action">
+            <StorefrontIcon />
+            View store
+          </Link>
+
+          <button
+            type="button"
+            className="rail__action rail__action--out"
+            disabled={signingOut}
+            onClick={() => startSignOut(logoutAction)}
+          >
+            <ExitIcon />
+            {signingOut ? 'Signing out…' : 'Sign out'}
+          </button>
+        </div>
       </div>
     </div>
   );

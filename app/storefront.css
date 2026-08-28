@@ -3131,6 +3131,11 @@
   color: var(--color-muted-text);
 }
 
+/* Used both as a single paragraph and as a block of two offers; the grid keeps
+   the second case from inheriting a paragraph's default margins. */
+.authswap p { margin: 0; }
+.authswap p + p { margin-top: var(--space-2); }
+
 .deflist {
   display: grid;
   grid-template-columns: 8rem minmax(0, 1fr);
@@ -3226,3 +3231,159 @@
 }
 
 .admin label > small { padding-top: 0.3rem; }
+
+
+/* --------------------------------------------------------------------------
+   Checkout
+   The last page before money changes hands, so it borrows the cart's two-column
+   shape rather than inventing one: goods on the right where they were a moment
+   ago, the work on the left. Stripe's own elements sit inside `.checkoutform`
+   and are themed through the Appearance API in CheckoutFlow, so the only job
+   here is the frame around them.
+   -------------------------------------------------------------------------- */
+
+.checkout__head { padding-block: var(--space-2) var(--space-5); }
+
+.checkout__layout { display: grid; gap: var(--space-6); }
+
+@media (min-width: 56.25rem) {
+  .checkout__layout {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
+    gap: var(--space-7);
+  }
+}
+
+.checkout__main { min-width: 0; }
+
+.checkout__unavailable { max-width: 34rem; }
+
+.checkout__items {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.checkout__item {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: var(--text-meta);
+}
+
+.checkout__itemname { display: block; }
+
+.checkout__itemspec {
+  display: block;
+  padding-top: 0.2rem;
+  color: var(--color-muted-text);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* The one line on the page that has to survive a glance. */
+.checkout__total dt,
+.checkout__total dd {
+  font-size: var(--text-body);
+  font-weight: 500;
+  color: var(--color-ink);
+}
+
+.checkout__terms {
+  padding-top: var(--space-3);
+  font-size: var(--text-meta);
+  line-height: 1.6;
+  color: var(--color-muted-text);
+}
+
+.checkoutform { display: grid; gap: var(--space-5); }
+
+/* Sections rather than one long stack: contact, address and payment are three
+   different questions, and a rule between them is cheaper than a heading
+   nobody reads. */
+.checkoutform__section {
+  display: grid;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: var(--spacing-rule) solid var(--color-muted);
+}
+
+.checkoutform__section:first-child { padding-top: 0; border-top: 0; }
+
+.checkoutform__legend { color: var(--color-muted-text); }
+
+.checkoutform__hint {
+  display: block;
+  padding-top: 0.3rem;
+  font-size: var(--text-meta);
+  line-height: 1.5;
+  color: var(--color-muted-text);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.checkoutform__back { justify-self: center; }
+
+
+/* --------------------------------------------------------------------------
+   Order confirmation
+   Narrow and quiet. The shopper has finished; the page's whole job is to prove
+   it happened and then get out of the way.
+   -------------------------------------------------------------------------- */
+
+.confirm { max-width: 44rem; }
+
+.confirm__head { padding-block: var(--space-2) var(--space-4); }
+
+.confirm__note {
+  max-width: 46ch;
+  color: var(--color-muted-text);
+}
+
+.confirm__facts {
+  display: grid;
+  grid-template-columns: 9rem minmax(0, 1fr);
+  gap: var(--space-2) var(--space-4);
+  margin: 0;
+  padding-top: var(--space-5);
+  font-size: var(--text-meta);
+}
+
+.confirm__facts dt {
+  color: var(--color-muted-text);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.confirm__facts dd { margin: 0; }
+
+.confirm__rule { margin-block: var(--space-5); }
+
+.confirm__items {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.confirm__item { font-size: var(--text-meta); }
+
+.confirm__itemname { display: block; font-weight: 500; }
+
+.confirm__itemspec {
+  display: block;
+  padding-top: 0.2rem;
+  color: var(--color-muted-text);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.confirm__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+  padding-top: var(--space-6);
+}
