@@ -4,7 +4,7 @@ import {
   listNewArrivals,
   listProductsInCategory,
 } from '@/lib/services/products';
-import { BRAND_IMAGES, HERO_SLIDES, PRODUCT_IMAGES } from '@/lib/brand/images';
+import { categoryImage, getSiteMedia, type SiteMedia } from '@/lib/services/site-media';
 import { SHOPPABLE } from '@/lib/shop/navigation';
 import { HeroSlider, type HeroSlide } from '@/components/site/HeroSlider';
 import { CategoryGateway, type Gateway } from '@/components/shop/CategoryGateway';
@@ -24,46 +24,47 @@ const HERO_CAPTIONS = [
   'Heavyweight Tee — Black',
 ];
 
-/* Each claim sits on the frame that evidences it. */
-const WHY: Tile[] = [
+/* Each claim sits on the frame that evidences it. Built per request, because
+   the photographs are the admin's to change. */
+const why = ({ editorial }: SiteMedia): Tile[] => [
   {
     index: '01',
     title: 'Organic Cotton',
     body: 'Premium organic cotton, selected for everyday wear.',
-    image: BRAND_IMAGES.fabric,
+    image: editorial.fabric,
   },
   {
     index: '02',
     title: 'Garment Dyed',
     body: 'The finished garment is dyed for its character and its feel.',
-    image: BRAND_IMAGES.folded,
+    image: editorial.folded,
   },
   {
     index: '03',
     title: "Doesn't Shrink",
     body: 'Built to hold its fit and its proportions, wash after wash.',
-    image: BRAND_IMAGES.hanging,
+    image: editorial.hanging,
   },
   {
     index: '04',
     title: 'Made in USA',
     body: 'Cut and sewn in the United States.',
-    image: BRAND_IMAGES.craft,
+    image: editorial.craft,
   },
 ];
 
 /* The old statement band said this in type over an empty ground. */
-const STATEMENT: Tile[] = [
+const statement = ({ editorial }: SiteMedia): Tile[] => [
   {
     title: 'The tee that stays the same.',
     body: 'Pre-shrunk, then garment dyed at temperature — so the change happens in our facility, not in your machine.',
-    image: BRAND_IMAGES.torso,
+    image: editorial.torso,
     href: '/why-shrinkless',
   },
   {
     title: 'Worn in, not worn out.',
     body: 'Garment dyeing settles the colour into the cotton rather than sitting on top of it.',
-    image: BRAND_IMAGES.heather,
+    image: editorial.heather,
     href: '/our-story',
   },
 ];
@@ -85,13 +86,17 @@ const QUOTES: Quote[] = [
 ];
 
 export default async function HomePage() {
-  const [newArrivals, featured, ...categories] = await Promise.all([
+  const [media, newArrivals, featured, ...categories] = await Promise.all([
+    getSiteMedia(),
     listNewArrivals(6),
     listFeaturedProducts(3),
     ...SHOPPABLE.map(({ slug }) => listProductsInCategory(slug)),
   ]);
 
-  const slides: HeroSlide[] = HERO_SLIDES.map((image, index) => ({
+  // Captions are copy and stay in the code; the frames are media and come from
+  // the database. A carousel the admin has lengthened simply runs out of
+  // written captions and falls back to the brand name.
+  const slides: HeroSlide[] = media.hero.map((image, index) => ({
     image,
     caption: HERO_CAPTIONS[index] ?? 'Shrinkless',
   }));
@@ -103,6 +108,7 @@ export default async function HomePage() {
     slug,
     label,
     count: categories[index]?.length ?? 0,
+    image: categoryImage(media, slug),
   }));
 
   return (
@@ -143,10 +149,10 @@ export default async function HomePage() {
           read as three shops in a row. */}
       <LookbookRail />
 
-      <OverlayTiles tiles={STATEMENT} columns={2} tall />
+      <OverlayTiles tiles={statement(media)} columns={2} tall />
 
       <ImageBand
-        image={PRODUCT_IMAGES['mens-heavyweight-tee'][0]}
+        image={media.editorial.promise}
         eyebrow="The promise"
         headline="Wash it. Dry it. Wear it."
         body="The shrinking happens in our facility, not in your machine."
@@ -173,7 +179,7 @@ export default async function HomePage() {
       <OverlayTiles
         eyebrow="Why Shrinkless"
         heading="Four things, done properly."
-        tiles={WHY}
+        tiles={why(media)}
         columns={4}
       />
 

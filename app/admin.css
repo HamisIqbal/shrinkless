@@ -1654,3 +1654,145 @@ body:has(.admin) {
     animation-duration: 0.01ms !important;
   }
 }
+
+
+/* --------------------------------------------------------------------------
+   Media
+
+   Reuses the settings screen's group shape — a titled aside beside a column of
+   fields — because these two screens do the same kind of work and should not
+   look like two different applications. What is new is the slot card: a
+   preview large enough to judge a photograph by, with its fields beside it.
+   -------------------------------------------------------------------------- */
+
+.admin .media { display: grid; }
+
+.admin .mediaslot { margin-bottom: var(--ad-s-3); }
+.admin .mediaslot:last-child { margin-bottom: 0; }
+
+.admin .mediaslot__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ad-s-3);
+  padding-bottom: var(--ad-s-3);
+}
+
+.admin .mediaslot__title {
+  margin: 0;
+  font-size: var(--ad-t-body);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.admin .mediaslot__where {
+  margin: 0.2rem 0 0;
+  font-size: var(--ad-t-small);
+  line-height: 1.5;
+  color: var(--ad-ink-3);
+}
+
+/* Whether this slot is still showing what the site shipped with. Quiet by
+   default — "Original" is the resting state and should not shout. */
+.admin .mediaslot__state {
+  flex: none;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--ad-r-pill);
+  background: var(--ad-paper);
+  color: var(--ad-ink-3);
+  font-size: var(--ad-t-micro);
+  letter-spacing: var(--ad-track-label);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.admin .mediaslot__state--on {
+  background: var(--ad-acid);
+  color: var(--ad-ink);
+}
+
+.admin .mediaslot__body {
+  display: grid;
+  gap: var(--ad-s-3);
+  align-items: start;
+}
+
+@media (min-width: 48rem) {
+  .admin .mediaslot__body { grid-template-columns: 13rem minmax(0, 1fr); }
+}
+
+/* A fixed 4:5 window, which is the shape most of these slots are. It is a
+   judgement aid, not a rendition of the slot — the storefront's own aspect is
+   set by the layout and stated on the card. */
+.admin .mediaslot__preview {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: var(--ad-r-field);
+  background: var(--ad-paper);
+}
+
+.admin .mediaslot__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.admin .mediaslot__empty {
+  font-size: var(--ad-t-small);
+  color: var(--ad-ink-3);
+}
+
+.admin .mediaslot__fields { display: grid; gap: var(--ad-s-3); }
+
+/* The uploader is a label wrapping a hidden input, so it needs the button's
+   look without the button's default centring of a file control. */
+.admin .mediaslot__upload {
+  justify-self: start;
+  cursor: pointer;
+}
+
+.admin .mediaslot__frames {
+  display: grid;
+  gap: var(--ad-s-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin .mediaslot__frame {
+  padding-top: var(--ad-s-3);
+  border-top: 1px solid var(--ad-line);
+}
+
+.admin .mediaslot__frame:first-child { padding-top: 0; border-top: 0; }
+
+.admin .mediaslot__framehead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ad-s-2);
+  padding-bottom: var(--ad-s-2);
+}
+
+.admin .mediaslot__index {
+  font-size: var(--ad-t-micro);
+  letter-spacing: var(--ad-track-label);
+  text-transform: uppercase;
+  color: var(--ad-ink-3);
+}
+
+.admin .mediaslot__reorder { display: flex; gap: 0.25rem; }
+
+.admin .mediaslot__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ad-s-2);
+  padding-top: var(--ad-s-3);
+  margin-top: var(--ad-s-3);
+  border-top: 1px solid var(--ad-line);
+}

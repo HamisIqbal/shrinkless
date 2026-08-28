@@ -134,6 +134,17 @@ export function SettingsIcon({ className }: IconProps) {
   );
 }
 
+/** Media: a picture — a frame with a horizon and a sun. */
+export function MediaIcon({ className }: IconProps) {
+  return (
+    <svg {...base(className)}>
+      <rect x="3" y="4.75" width="14" height="10.5" rx="1.5" />
+      <circle cx="7.75" cy="8.5" r="1.25" />
+      <path d="M3.5 13.25 7.5 9.75l3 2.5 2.5-2 3.5 3" />
+    </svg>
+  );
+}
+
 /** The storefront: an awning over a doorway. Distinct from ExitIcon so
  *  "view the shop" and "leave the session" never read as the same act. */
 export function StorefrontIcon({ className }: IconProps) {

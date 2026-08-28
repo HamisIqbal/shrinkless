@@ -1,13 +1,15 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { NewsletterForm } from '@/components/site/NewsletterForm';
-import { BRAND_IMAGES } from '@/lib/brand/images';
+import { getSiteMedia } from '@/lib/services/site-media';
 
 const INSTAGRAM = 'https://www.instagram.com/shrinkless/';
 
 type Column = { title: string; links: { href: string; label: string; external?: boolean }[] };
 
-export function Footer({ storeEmail }: { storeEmail: string }) {
+export async function Footer({ storeEmail }: { storeEmail: string }) {
+  const { editorial } = await getSiteMedia();
+
   // Help links point at the FAQ anchors that exist rather than at pages that
   // do not. A footer full of dead routes is worse than a short footer.
   const columns: Column[] = [
@@ -47,7 +49,7 @@ export function Footer({ storeEmail }: { storeEmail: string }) {
       {/* Decorative: the footer says nothing the picture has to carry, so the
           alt is empty and screen readers skip straight to the signup. */}
       <Image
-        src={BRAND_IMAGES.craft.url}
+        src={editorial.craft.url}
         alt=""
         fill
         loading="lazy"

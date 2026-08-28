@@ -1,12 +1,15 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { CATEGORY_IMAGES, type CategorySlug } from '@/lib/brand/images';
+import type { BrandImage } from '@/lib/brand/images';
 
 export type Gateway = {
-  slug: CategorySlug;
+  slug: string;
   label: string;
   /** Real count, read from the catalogue. */
   count: number;
+  /** Resolved by the page, so this component stays a pure renderer and the
+   *  database read happens once rather than once per tile. */
+  image: BrandImage;
 };
 
 type Props = {
@@ -29,7 +32,7 @@ export function CategoryGateway({ gateways }: Props) {
 
       <ul className="gateway__grid">
         {gateways.map((gateway) => {
-          const image = CATEGORY_IMAGES[gateway.slug];
+          const image = gateway.image;
 
           return (
             <li key={gateway.slug} className="gateway__cell">

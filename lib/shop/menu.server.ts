@@ -1,6 +1,6 @@
 import { listProductsInCategory } from '@/lib/services/products';
 import { listVisibleCategories } from '@/lib/services/categories';
-import { CATEGORY_IMAGES, type BrandImage, type CategorySlug } from '@/lib/brand/images';
+import { categoryImage, getSiteMedia } from '@/lib/services/site-media';
 import { SHOPPABLE, type NavColumn, type NavFeature, type ShopMenu } from '@/lib/shop/navigation';
 
 export type ShoppableCategory = { slug: string; label: string };
@@ -21,12 +21,6 @@ export async function shoppableCategories(): Promise<ShoppableCategory[]> {
   return categories.map((category) => ({ slug: category.slug, label: category.name }));
 }
 
-/** Categories have their own art where we have it, and the men's frame as a
- *  neutral stand-in where we do not — an empty tile reads as a broken page. */
-function imageFor(slug: string): BrandImage {
-  return CATEGORY_IMAGES[slug as CategorySlug] ?? CATEGORY_IMAGES.men;
-}
-
 /**
  * The desktop mega menu, assembled from the catalogue rather than hard-coded.
  *
@@ -37,9 +31,13 @@ function imageFor(slug: string): BrandImage {
 export async function buildShopMenu(): Promise<ShopMenu> {
   const categories = await shoppableCategories();
 
-  const products = await Promise.all(
-    categories.map((category) => listProductsInCategory(category.slug)),
-  );
+  // The tiles are the admin's to change, so the menu reads them rather than a
+  // constant. Categories with no art of their own still get the stand-in —
+  // an empty tile reads as a broken page.
+  const [media, products] = await Promise.all([
+    getSiteMedia(),
+    Promise.all(categories.map((category) => listProductsInCategory(category.slug))),
+  ]);
 
   const columns: NavColumn[] = [
     {
@@ -68,7 +66,7 @@ export async function buildShopMenu(): Promise<ShopMenu> {
     href: `/shop/${category.slug}`,
     label: category.label,
     caption: `${products[index].length} ${products[index].length === 1 ? 'style' : 'styles'}`,
-    image: imageFor(category.slug),
+    image: categoryImage(media, category.slug),
   }));
 
   return { columns, features };

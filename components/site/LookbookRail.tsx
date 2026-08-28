@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { BRAND_IMAGES, PRODUCT_IMAGES } from '@/lib/brand/images';
+import { getSiteMedia, type SiteMedia } from '@/lib/services/site-media';
 
 type Frame = {
   href: string;
@@ -23,34 +23,43 @@ type Frame = {
  * one began. The second copy is `aria-hidden` and `inert` so each frame is
  * reachable exactly once.
  */
-const FRAMES: Frame[] = [
+/**
+ * Five of these tiles share a slot with an editorial band elsewhere on the
+ * site, which is deliberate: changing the fabric frame changes it everywhere
+ * it appears. The other three have slots of their own, because they used to
+ * reach into the product photography and a product's gallery is not the place
+ * to art-direct the home page from.
+ */
+const frames = ({ editorial }: SiteMedia): Frame[] => [
   {
     href: '/product/mens-heavyweight-tee',
     label: 'Heavyweight Tee',
-    image: PRODUCT_IMAGES['mens-heavyweight-tee'][1],
+    image: editorial.lookbookHeavyweight,
   },
-  { href: '/why-shrinkless', label: 'The cotton', image: BRAND_IMAGES.fabric },
+  { href: '/why-shrinkless', label: 'The cotton', image: editorial.fabric },
   {
     href: '/product/womens-boxy-tee',
     label: 'Boxy Tee',
-    image: PRODUCT_IMAGES['womens-boxy-tee'][1],
+    image: editorial.lookbookBoxy,
   },
-  { href: '/our-story', label: 'Cut and sewn', image: BRAND_IMAGES.craft },
+  { href: '/our-story', label: 'Cut and sewn', image: editorial.craft },
   {
     href: '/product/womens-organic-tee',
     label: 'Organic Tee',
-    image: PRODUCT_IMAGES['womens-organic-tee'][1],
+    image: editorial.lookbookOrganic,
   },
-  { href: '/why-shrinkless', label: "Doesn't shrink", image: BRAND_IMAGES.hanging },
+  { href: '/why-shrinkless', label: "Doesn't shrink", image: editorial.hanging },
   {
     href: '/product/mens-organic-tee',
     label: 'Organic Tee',
-    image: BRAND_IMAGES.torso,
+    image: editorial.torso,
   },
-  { href: '/shop', label: 'The collection', image: BRAND_IMAGES.heather },
+  { href: '/shop', label: 'The collection', image: editorial.heather },
 ];
 
-export function LookbookRail() {
+export async function LookbookRail() {
+  const tiles = frames(await getSiteMedia());
+
   return (
     <section className="lookbook" aria-labelledby="lookbook-heading">
       <div className="wrap lookbook__head">
@@ -72,7 +81,7 @@ export function LookbookRail() {
             aria-hidden={half === 1 || undefined}
             inert={half === 1 || undefined}
           >
-            {FRAMES.map((frame, index) => (
+            {tiles.map((frame, index) => (
               <Link key={`${half}-${index}`} href={frame.href} className="lookbook__tile">
                 <Image
                   src={frame.image.url}
