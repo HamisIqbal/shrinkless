@@ -61,13 +61,7 @@ export const HERO_SLIDES = [
     focus: '50% 30%',
   },
   {
-    url: frame('photo-1586790170083-2f9ceadc732d', 1800),
-    alt: 'A man in a plain white crew neck tee against an off-white wall.',
-    aspect: '2:3',
-    focus: '50% 45%',
-  },
-  {
-    url: 'https://res.cloudinary.com/dcsewsmhd/image/upload/v1787938928/website-image-1_vmmjcj.jpg',
+    url: 'https://res.cloudinary.com/dcsewsmhd/image/upload/v1787940856/website-image-1_zhdjtm.jpg',
     alt: 'A woman in an oversized olive tee against a weathered concrete wall.',
     aspect: '2:3',
     focus: '50% 48%',
@@ -77,6 +71,12 @@ export const HERO_SLIDES = [
     alt: 'A man in a black crew neck tee against a white plaster wall.',
     aspect: '4:5',
     focus: '50% 55%',
+  },
+  {
+    url: frame('photo-1586790170083-2f9ceadc732d', 1800),
+    alt: 'A man in a plain white crew neck tee against an off-white wall.',
+    aspect: '2:3',
+    focus: '50% 45%',
   },
 ] as const satisfies readonly BrandImage[];
 
