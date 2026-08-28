@@ -28,6 +28,8 @@ export const PERMISSIONS = [
   'shipping:read',
   'shipping:write',
   'payments:read',
+  'media:read',
+  'media:write',
   'settings:read',
   'settings:write',
 ] as const;

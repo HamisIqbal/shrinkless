@@ -1,4 +1,4 @@
-import { BRAND_IMAGES } from '@/lib/brand/images';
+import { getSiteMedia, type SiteMedia } from '@/lib/services/site-media';
 import { OverlayTiles, type Tile } from '@/components/editorial/OverlayTiles';
 import { SplitFeature } from '@/components/editorial/SplitFeature';
 import { FullBleedType } from '@/components/editorial/FullBleedType';
@@ -8,34 +8,38 @@ export const metadata = {
   description: 'Organic cotton, garment dyed, built to hold its fit. Made in USA.',
 };
 
-const POINTS: Tile[] = [
+/* Built per request rather than at module scope: the photographs are the
+   admin's to change, so they are data now, not constants. */
+const points = ({ editorial }: SiteMedia): Tile[] => [
   {
     index: '01',
     title: 'Organic Cotton',
     body: 'Premium organic cotton, selected for everyday wear. Certification: [TBC].',
-    image: BRAND_IMAGES.fabric,
+    image: editorial.fabric,
   },
   {
     index: '02',
     title: 'Garment Dyed',
     body: 'The finished garment is dyed for its distinctive character and feel.',
-    image: BRAND_IMAGES.folded,
+    image: editorial.folded,
   },
   {
     index: '03',
     title: "Doesn't Shrink",
     body: 'Built to maintain its fit and proportions wash after wash. Expected residual shrinkage: [TBC]%.',
-    image: BRAND_IMAGES.hanging,
+    image: editorial.hanging,
   },
   {
     index: '04',
     title: 'Made in USA',
     body: 'Proudly made in the USA.',
-    image: BRAND_IMAGES.craft,
+    image: editorial.craft,
   },
 ];
 
-export default function WhyShrinklessPage() {
+export default async function WhyShrinklessPage() {
+  const media = await getSiteMedia();
+
   return (
     <>
       <header className="band band--tight wrap pagehead">
@@ -46,10 +50,10 @@ export default function WhyShrinklessPage() {
         </p>
       </header>
 
-      <OverlayTiles tiles={POINTS} columns={4} />
+      <OverlayTiles tiles={points(media)} columns={4} />
 
       <SplitFeature
-        image={BRAND_IMAGES.heather}
+        image={media.editorial.heather}
         eyebrow="In practice"
         headline="The wash test."
         body="A tee that fits in the shop and not after laundry day was never the right size. Ours is finished at temperature before it reaches you, so what you try on is what you keep."

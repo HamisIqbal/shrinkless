@@ -1,4 +1,4 @@
-import { BRAND_IMAGES } from '@/lib/brand/images';
+import { getSiteMedia } from '@/lib/services/site-media';
 import { ImageBand } from '@/components/editorial/ImageBand';
 import { SplitFeature } from '@/components/editorial/SplitFeature';
 import { FullBleedType } from '@/components/editorial/FullBleedType';
@@ -8,11 +8,13 @@ export const metadata = {
   description: 'Why Shrinkless makes one tee, and makes it in the United States.',
 };
 
-export default function OurStoryPage() {
+export default async function OurStoryPage() {
+  const { editorial } = await getSiteMedia();
+
   return (
     <>
       <ImageBand
-        image={BRAND_IMAGES.craft}
+        image={editorial.craft}
         eyebrow="Our story"
         headline="One tee, made properly."
       />
@@ -27,14 +29,14 @@ export default function OurStoryPage() {
       </header>
 
       <SplitFeature
-        image={BRAND_IMAGES.hanging}
+        image={editorial.hanging}
         eyebrow="The process"
         headline="Shrunk before you own it."
         body="We pre-shrink the fabric and garment dye the finished tee at temperature, so the change that normally happens in your machine has already happened in ours."
       />
 
       <SplitFeature
-        image={BRAND_IMAGES.fabric}
+        image={editorial.fabric}
         eyebrow="The material"
         headline="Organic cotton, garment dyed."
         body="Garment dyeing gives each run its own depth and character — the colour settles into the cotton rather than sitting on top of it, and it wears in instead of wearing out."
@@ -42,7 +44,7 @@ export default function OurStoryPage() {
       />
 
       <ImageBand
-        image={BRAND_IMAGES.torso}
+        image={editorial.torso}
         eyebrow="Craft"
         glyph="🇺🇸"
         headline="Made in USA."
