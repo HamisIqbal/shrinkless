@@ -75,10 +75,25 @@ describe('saveMediaSlot', () => {
     expect(media.editorial.heather.focus).toBeUndefined();
   });
 
+  /* The regression that took the editorial band off the site, and this test
+     asserted it: an id was echoed back exactly as stored. But "as readily as a
+     URL" has to mean it renders, and every component hands `url` straight to
+     next/image — which read a bare id as a path relative to this site and
+     404ed. Uploading is the only way to get an id in here, so pasting a link
+     worked and it looked like an upload problem. */
   it('accepts a Cloudinary public id as readily as a URL', async () => {
     await saveMediaSlot(editorialSlotId('craft'), frame('shrinkless/site/abc123'));
 
-    expect((await getSiteMedia()).editorial.craft.url).toBe('shrinkless/site/abc123');
+    const url = (await getSiteMedia()).editorial.craft.url;
+
+    expect(url).toMatch(/^https:\/\/res\.cloudinary\.com\//);
+    expect(url).toMatch(/shrinkless\/site\/abc123$/);
+  });
+
+  it('leaves an address that is already one exactly as it is', async () => {
+    await saveMediaSlot(editorialSlotId('hanging'), frame('https://example.com/kept.jpg'));
+
+    expect((await getSiteMedia()).editorial.hanging.url).toBe('https://example.com/kept.jpg');
   });
 
   it('replaces rather than accumulating', async () => {

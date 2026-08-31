@@ -10,6 +10,7 @@ import {
 } from '@/lib/brand/images';
 import { HERO_MAX, HERO_MIN, type MediaFrameInput } from '@/lib/validation/media';
 import { normaliseZoom, type ViewRatios } from '@/lib/media/crop';
+import { imageUrl } from '@/lib/images';
 import { AdminOperationError } from '@/lib/admin/action';
 
 /* --------------------------------------------------------------------------
@@ -176,7 +177,18 @@ function merge(fallback: BrandImage, stored: StoredFrame | undefined): BrandImag
   if (!stored) return fallback;
 
   return {
-    url: stored.url,
+    /* Resolved here, once, rather than at each of the six places a frame is
+       rendered. A slot may hold either an absolute URL or a Cloudinary public
+       id, and every consumer hands `url` straight to `next/image` — so a bare
+       public id was being read as a path relative to this site and 404ing.
+       Nothing caught it because the shipped manifest is absolute URLs
+       throughout: it could only appear once somebody uploaded a file, which is
+       the one way to get a public id in here.
+
+       `imageUrl` is idempotent, so a value that is already absolute — a pasted
+       link, or one of these resolved and saved back — passes through
+       unchanged. */
+    url: imageUrl(stored.url),
     alt: stored.alt,
     aspect: fallback.aspect,
     ...(stored.focus ? { focus: stored.focus } : {}),

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
-import { imageUrl } from '@/lib/images';
+import { sizedImageUrl } from '@/lib/images';
 import {
   CENTRE,
   ZOOM_MAX,
@@ -34,8 +34,10 @@ type Props = {
 const NUDGE = 0.02;
 
 /** What a stage asks Cloudinary for. A scale, never a crop: the whole
- *  photograph has to be here for there to be anything to drag. Ignored for the
- *  `https://` frames, which `imageUrl` passes through untouched. */
+ *  photograph has to be here for there to be anything to drag. Applies to a
+ *  pasted Cloudinary link as much as to an upload, so neither hands a phone's
+ *  full-resolution original to a holder a few hundred pixels wide. Frames from
+ *  anywhere else are left exactly as they are. */
 const STAGE = 'w_1200,q_auto,f_auto';
 
 /* --------------------------------------------------------------------------
@@ -176,7 +178,7 @@ function CropStage({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           ref={image}
-          src={imageUrl(url, STAGE)}
+          src={sizedImageUrl(url, STAGE)}
           alt=""
           style={viewStyle(view)}
           draggable={false}
