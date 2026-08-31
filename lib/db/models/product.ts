@@ -11,6 +11,8 @@ const imageSchema = new Schema(
      *  a property of the photograph, exactly as it is for site media. */
     focus: { type: String, default: '' },
     zoom: { type: Number, default: 1, min: 1, max: 3 },
+    mobileFocus: { type: String, default: '' },
+    mobileZoom: { type: Number, min: 1, max: 3 },
   },
   { _id: false },
 );

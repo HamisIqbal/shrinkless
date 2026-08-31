@@ -21,7 +21,24 @@ export type Crop = {
   focus?: string;
   /** 1 is the frame as `cover` gives it. Never below 1 — that would letterbox. */
   zoom?: number;
+  /**
+   * The same two, for the phone.
+   *
+   * A wide frame and a tall one cannot honour one crop: the band that works
+   * across a 16:9 hero is most of a 9:16 one, and the subject placed nicely in
+   * the first is often out of the second entirely. So a photograph carries two
+   * placements and the layout picks — see `cropStyle`.
+   *
+   * Empty means "whatever desktop says", which is what every image starts as
+   * and what most of them stay. A mobile crop is stored only once someone has
+   * actually made one, so the two do not have to be kept in step by hand.
+   */
+  mobileFocus?: string;
+  mobileZoom?: number;
 };
+
+/** One resolved placement: what a single frame, at a single width, renders. */
+export type CropView = { focus: string; zoom: number };
 
 export const ZOOM_MIN = 1;
 export const ZOOM_MAX = 3;
@@ -51,33 +68,70 @@ export function pairToFocus(x: number, y: number): string {
   return `${clamp(x)}% ${clamp(y)}%`;
 }
 
+/** What this photograph does at a desk. */
+export function desktopView(crop: Crop | undefined): CropView {
+  return { focus: normaliseFocus(crop?.focus), zoom: normaliseZoom(crop?.zoom) };
+}
+
+/** What it does in a hand — its own placement, or the desktop one until
+ *  somebody gives it one of its own. */
+export function mobileView(crop: Crop | undefined): CropView {
+  return {
+    focus: normaliseFocus(crop?.mobileFocus || crop?.focus),
+    zoom: normaliseZoom(crop?.mobileZoom ?? crop?.zoom),
+  };
+}
+
+/** True once the phone has been cropped away from the desk. */
+export function hasMobileCrop(crop: Crop | undefined): boolean {
+  return Boolean(crop?.mobileFocus) || crop?.mobileZoom !== undefined;
+}
+
 /**
- * The one style a cropped frame is rendered with, admin and storefront alike.
+ * One placement, rendered directly.
  *
- * The zoom leaves as a custom property rather than as `transform` so the
- * storefront keeps its hover scale: those rules multiply `--crop-zoom` instead
- * of being overridden by an inline transform.
+ * For a frame whose shape is already decided — the admin's two crop stages,
+ * each of which is showing one view and nothing else.
+ */
+export function viewStyle(view: CropView): CSSProperties {
+  return {
+    objectPosition: view.focus,
+    transformOrigin: view.focus,
+    ['--crop-zoom' as string]: String(view.zoom),
+  };
+}
+
+/**
+ * Both placements, as custom properties for the storefront.
+ *
+ * The storefront cannot be handed a resolved `object-position`: which of the
+ * two applies is a question about the viewport, and the server does not know
+ * the viewport. So both travel down as custom properties and `storefront.css`
+ * picks between them at the same 48rem breakpoint the layouts turn at —
+ * `--crop-p` and `--crop-z` are the resolved pair every rule then reads.
+ *
+ * A property is only written when there is something to say, so an image
+ * nobody has cropped inherits the stylesheet's own placement — the hero sits
+ * its frames at `50% 35%`, and an inline `50% 50%` over every untouched frame
+ * would quietly undo that.
  */
 export function cropStyle(crop: Crop | undefined): CSSProperties {
-  const zoom = normaliseZoom(crop?.zoom);
+  // Custom properties are not part of `CSSProperties`, and React passes any
+  // key beginning with `--` through to the style attribute verbatim.
+  const style: Record<string, string> = {};
 
-  // An uncropped frame gets no inline style at all, so the composed defaults
-  // in the stylesheet still stand — the hero, for one, sits its frames at
-  // `50% 35%` because the type occupies the bottom half, and writing an inline
-  // `50% 50%` over every frame nobody has touched would quietly undo that.
-  if (!crop?.focus) {
-    return zoom > ZOOM_MIN
-      ? { transformOrigin: CENTRE, ['--crop-zoom' as string]: String(zoom) }
-      : {};
+  if (crop?.focus) style['--crop-pos'] = normaliseFocus(crop.focus);
+
+  const zoom = normaliseZoom(crop?.zoom);
+  if (zoom > ZOOM_MIN) style['--crop-zoom'] = String(zoom);
+
+  if (crop?.mobileFocus) style['--crop-pos-m'] = normaliseFocus(crop.mobileFocus);
+
+  if (crop?.mobileZoom !== undefined) {
+    style['--crop-zoom-m'] = String(normaliseZoom(crop.mobileZoom));
   }
 
-  const focus = normaliseFocus(crop.focus);
-
-  return {
-    objectPosition: focus,
-    transformOrigin: focus,
-    ['--crop-zoom' as string]: String(zoom),
-  };
+  return style as CSSProperties;
 }
 
 /* --------------------------------------------------------------------------

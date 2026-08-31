@@ -1795,21 +1795,20 @@ body:has(.admin) {
 }
 
 /* --------------------------------------------------------------------------
-   The crop stage
+   The crop stages
 
-   A holder in the shape the frame is actually seen in, the photograph dragged
-   inside it, and the two views it will be seen in underneath. Nothing here
-   cuts the file: the stage writes an `object-position` and a scale, and the
-   storefront renders from the same helper — `lib/media/crop.ts` — so what is
-   inside the holder is what ships.
+   Two holders, in the two shapes the frame is actually seen in, each dragged
+   and zoomed on its own. Nothing here cuts the file: a stage writes an
+   `object-position` and a scale, and the storefront renders from the same
+   helper — `lib/media/crop.ts` — so what is inside a holder is what ships.
 
    Every frame on this page therefore renders through the same three CSS
-   properties as the storefront does: `cover`, the position, and a scale of
+   properties the storefront uses: `cover`, the position, and a scale of
    `--crop-zoom`. A second way of drawing a crop would be a second thing to
    keep in agreement with the shop.
    -------------------------------------------------------------------------- */
 
-.admin .cropfield { display: grid; gap: var(--ad-s-2); }
+.admin .cropfield { display: grid; gap: var(--ad-s-3); }
 
 .admin .cropfield__head {
   display: flex;
@@ -1819,7 +1818,8 @@ body:has(.admin) {
   flex-wrap: wrap;
 }
 
-.admin .cropfield__label {
+.admin .cropfield__label,
+.admin .cropview__label {
   font-size: var(--ad-t-micro);
   font-weight: 600;
   letter-spacing: var(--ad-track-label);
@@ -1828,12 +1828,44 @@ body:has(.admin) {
 }
 
 .admin .cropfield__hint,
-.admin .cropfield__note {
+.admin .cropfield__note,
+.admin .cropfield__alt {
   font-size: var(--ad-t-small);
   color: var(--ad-ink-2);
 }
 
 .admin .cropfield__note { margin: 0; }
+
+/* The two views, side by side. Not behind a toggle: the reason to look at a
+   wide crop next to a tall one is that the tall one usually needs a different
+   decision, and a toggle hides exactly the comparison being asked for. The
+   desktop frame takes the larger share because it is usually the wider shape;
+   below 34rem they stack rather than shrink into uselessness. */
+.admin .cropviews {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: var(--ad-s-3);
+  align-items: start;
+}
+
+@media (max-width: 34rem) {
+  .admin .cropviews { grid-template-columns: minmax(0, 1fr); }
+}
+
+.admin .cropview { display: grid; gap: 0.4rem; min-width: 0; }
+
+.admin .cropview__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--ad-s-2);
+}
+
+.admin .cropview__ratio {
+  font-size: var(--ad-t-micro);
+  font-variant-numeric: tabular-nums;
+  color: var(--ad-ink-3);
+}
 
 /* The holder. A field you manipulate rather than type into, so it takes the
    same ink box as an input — and the same acid ring when it has the keyboard,
@@ -1856,8 +1888,17 @@ body:has(.admin) {
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--ad-acid) 70%, transparent);
 }
 
+/* Absolutely positioned, and deliberately: a `height: 100%` image inside a
+   holder whose own height comes from `aspect-ratio` resolves against a
+   containing block that is not definite, so it kept its natural shape instead
+   of filling the frame. `object-fit: cover` then had nothing to crop and
+   `object-position` did nothing at all — the frame answered a zoom, because
+   that is a transform, but not a drag. Filling the box by inset removes the
+   question. */
 .admin .cropstage img,
 .admin .cropframe img {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
@@ -1892,19 +1933,10 @@ body:has(.admin) {
 .admin .cropstage:focus-visible .cropstage__guides,
 .admin .cropstage--drag .cropstage__guides { opacity: 1; }
 
-.admin .cropfield__controls {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--ad-s-3);
-  flex-wrap: wrap;
-}
-
-.admin .cropfield__zoom {
+.admin .cropview__zoom {
   display: flex;
   align-items: center;
   gap: var(--ad-s-2);
-  flex: 1 1 12rem;
   font-size: var(--ad-t-micro);
   font-weight: 600;
   letter-spacing: var(--ad-track-label);
@@ -1912,14 +1944,14 @@ body:has(.admin) {
   color: var(--ad-ink-3);
 }
 
-.admin .cropfield__zoom input[type="range"] {
+.admin .cropview__zoom input[type="range"] {
   flex: 1 1 auto;
-  min-width: 6rem;
+  min-width: 4rem;
   accent-color: var(--ad-ink);
   cursor: pointer;
 }
 
-.admin .cropfield__zoomvalue {
+.admin .cropview__zoomvalue {
   min-width: 3.25rem;
   text-align: right;
   font-variant-numeric: tabular-nums;
@@ -1928,25 +1960,15 @@ body:has(.admin) {
   color: var(--ad-ink-2);
 }
 
-/* The two views. Side by side rather than behind a toggle: the whole point is
-   that a crop which works wide can fail tall, and a toggle hides exactly the
-   comparison being asked for. */
-.admin .cropviews {
-  display: grid;
-  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+.admin .cropfield__controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: var(--ad-s-3);
-  align-items: start;
+  flex-wrap: wrap;
 }
 
-.admin .cropviews__view { margin: 0; display: grid; gap: 0.35rem; }
-
-.admin .cropviews figcaption {
-  font-size: var(--ad-t-micro);
-  font-weight: 600;
-  letter-spacing: var(--ad-track-label);
-  text-transform: uppercase;
-  color: var(--ad-ink-3);
-}
+.admin .cropfield__buttons { display: flex; gap: 0.35rem; flex-wrap: wrap; }
 
 .admin .cropframe {
   position: relative;

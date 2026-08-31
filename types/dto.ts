@@ -5,9 +5,13 @@ export type ImageDTO = {
   alt: string;
   /** `object-position` — which part of the photograph the frame keeps. */
   focus: string;
-  /** How far it is scaled up about that point. 1 is untouched `cover`.
-   *  Both are set by the crop stage in the admin; see `lib/media/crop.ts`. */
+  /** How far it is scaled up about that point. 1 is untouched `cover`. */
   zoom: number;
+  /** The same pair for the phone, empty and undefined while it follows the
+   *  desktop crop. All four are set by the crop stages in the admin; see
+   *  `lib/media/crop.ts`. */
+  mobileFocus: string;
+  mobileZoom?: number;
 };
 
 export type VariantDTO = {

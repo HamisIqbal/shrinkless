@@ -13,7 +13,15 @@ import { ZOOM_MIN, type ViewRatios } from '@/lib/media/crop';
 import { HERO_MAX, HERO_MIN } from '@/lib/validation/media';
 import type { MediaLibrary, MediaSlotView } from '@/lib/services/site-media';
 
-type Frame = { url: string; alt: string; focus: string; zoom: number };
+type Frame = {
+  url: string;
+  alt: string;
+  focus: string;
+  zoom: number;
+  /** Empty and undefined while the phone follows the desktop crop. */
+  mobileFocus: string;
+  mobileZoom?: number;
+};
 
 function toFrames(slot: MediaSlotView): Frame[] {
   return slot.frames.map((frame) => ({
@@ -21,6 +29,8 @@ function toFrames(slot: MediaSlotView): Frame[] {
     alt: frame.alt,
     focus: frame.focus ?? '',
     zoom: frame.zoom ?? ZOOM_MIN,
+    mobileFocus: frame.mobileFocus ?? '',
+    mobileZoom: frame.mobileZoom,
   }));
 }
 
@@ -87,9 +97,16 @@ function FrameFields({
         <ImageCropField
           url={frame.url}
           alt={frame.alt}
-          crop={{ focus: frame.focus, zoom: frame.zoom }}
+          crop={frame}
           ratios={ratios}
-          onChange={(crop) => onChange({ focus: crop.focus ?? '', zoom: crop.zoom ?? ZOOM_MIN })}
+          onChange={(crop) =>
+            onChange({
+              focus: crop.focus ?? '',
+              zoom: crop.zoom ?? ZOOM_MIN,
+              mobileFocus: crop.mobileFocus ?? '',
+              mobileZoom: crop.mobileZoom,
+            })
+          }
         />
       </div>
 
@@ -250,7 +267,10 @@ function HeroCard({ slot }: { slot: MediaSlotView }) {
 
   function add() {
     if (frames.length >= HERO_MAX) return;
-    setFrames([...frames, { url: '', alt: '', focus: '', zoom: ZOOM_MIN }]);
+    setFrames([
+      ...frames,
+      { url: '', alt: '', focus: '', zoom: ZOOM_MIN, mobileFocus: '', mobileZoom: undefined },
+    ]);
   }
 
   function remove(index: number) {

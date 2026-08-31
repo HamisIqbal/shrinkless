@@ -47,6 +47,7 @@ export function ImageUploader({ images, onChange }: Props) {
           alt: '',
           focus: '',
           zoom: ZOOM_MIN,
+          mobileFocus: '',
         },
       ]);
     } catch (cause) {
@@ -111,7 +112,7 @@ export function ImageUploader({ images, onChange }: Props) {
                 <ImageCropField
                   url={image.publicId}
                   alt={image.alt}
-                  crop={{ focus: image.focus, zoom: image.zoom }}
+                  crop={image}
                   ratios={PRODUCT_RATIOS}
                   onChange={(crop) =>
                     onChange(
@@ -121,6 +122,8 @@ export function ImageUploader({ images, onChange }: Props) {
                               ...current,
                               focus: crop.focus ?? '',
                               zoom: crop.zoom ?? ZOOM_MIN,
+                              mobileFocus: crop.mobileFocus ?? '',
+                              mobileZoom: crop.mobileZoom,
                             }
                           : current,
                       ),

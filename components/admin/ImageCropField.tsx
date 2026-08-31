@@ -7,12 +7,15 @@ import {
   ZOOM_MAX,
   ZOOM_MIN,
   ZOOM_STEP,
-  cropStyle,
+  desktopView,
   focusToPair,
-  normaliseZoom,
+  hasMobileCrop,
+  mobileView,
   pairToFocus,
   ratioValue,
+  viewStyle,
   type Crop,
+  type CropView,
   type Ratio,
   type ViewRatios,
 } from '@/lib/media/crop';
@@ -21,8 +24,7 @@ type Props = {
   url: string;
   alt: string;
   crop: Crop;
-  /** The two shapes this photograph is actually seen in. The desktop one is
-   *  the stage's own shape, so the holder is the frame being filled. */
+  /** The two shapes this photograph is actually seen in — one stage each. */
   ratios: ViewRatios;
   onChange: (crop: Crop) => void;
 };
@@ -31,67 +33,40 @@ type Props = {
  *  overflow. Small enough to place a face, large enough to cross the frame. */
 const NUDGE = 0.02;
 
-/** What the stage asks Cloudinary for. A scale, never a crop: the whole
+/** What a stage asks Cloudinary for. A scale, never a crop: the whole
  *  photograph has to be here for there to be anything to drag. Ignored for the
  *  `https://` frames, which `imageUrl` passes through untouched. */
 const STAGE = 'w_1200,q_auto,f_auto';
 
 /* --------------------------------------------------------------------------
-   One rendered frame — the stage and both previews are this
+   One view, croppable
    -------------------------------------------------------------------------- */
 
-function CropFrame({
+function CropStage({
   url,
-  alt,
-  crop,
+  label,
   ratio,
+  view,
+  onChange,
 }: {
   url: string;
-  alt: string;
-  crop: Crop;
+  label: string;
   ratio: Ratio;
+  view: CropView;
+  onChange: (view: CropView) => void;
 }) {
-  return (
-    <div className="cropframe" style={{ aspectRatio: ratioValue(ratio) }}>
-      {/* Not next/image: the source changes as the admin types or uploads, and
-          this is a rehearsal of a crop rather than a rendered page. */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={imageUrl(url, STAGE)} alt={alt} style={cropStyle(crop)} draggable={false} />
-    </div>
-  );
-}
-
-/* --------------------------------------------------------------------------
-   The field
-   -------------------------------------------------------------------------- */
-
-/**
- * A fixed-ratio holder the admin drags the photograph inside, and the two
- * views it will be seen in.
- *
- * The stage is the slot's desktop shape at the slot's own aspect ratio, so
- * what is inside the holder is what the storefront renders — the previews use
- * the identical style helper, only at a different shape. Nothing is cut from
- * the file: dragging writes an `object-position`, the slider writes a scale,
- * and both are stored with the image. See `lib/media/crop.ts` for why the two
- * agree geometrically.
- */
-export function ImageCropField({ url, alt, crop, ratios, onChange }: Props) {
   const stage = useRef<HTMLDivElement>(null);
   const image = useRef<HTMLImageElement>(null);
   const drag = useRef<{ x: number; y: number } | null>(null);
   const [dragging, setDragging] = useState(false);
 
-  const focus = crop.focus || CENTRE;
-  const zoom = normaliseZoom(crop.zoom);
-
   /**
-   * How far the photograph can travel inside the frame, in pixels, per axis.
+   * How far the photograph can travel inside this frame, in pixels, per axis.
    *
    * `cover` scales the source until it covers the frame; the zoom scales it
    * again. What is left over on each axis is the whole range a drag has to
-   * work with — and dividing by it is what makes the photograph keep pace
-   * with the pointer instead of sliding faster or slower than it.
+   * work with — and dividing by it is what makes the photograph keep pace with
+   * the pointer instead of sliding faster or slower than it.
    */
   const overflow = useCallback((): [number, number] => {
     const frame = stage.current?.getBoundingClientRect();
@@ -102,30 +77,28 @@ export function ImageCropField({ url, alt, crop, ratios, onChange }: Props) {
     const cover = Math.max(frame.width / img.naturalWidth, frame.height / img.naturalHeight);
 
     return [
-      img.naturalWidth * cover * zoom - frame.width,
-      img.naturalHeight * cover * zoom - frame.height,
+      img.naturalWidth * cover * view.zoom - frame.width,
+      img.naturalHeight * cover * view.zoom - frame.height,
     ];
-  }, [zoom]);
+  }, [view.zoom]);
 
   const nudge = useCallback(
     (dx: number, dy: number) => {
       const [overflowX, overflowY] = overflow();
-      const [x, y] = focusToPair(focus);
+      const [x, y] = focusToPair(view.focus);
 
       onChange({
         focus: pairToFocus(
           overflowX > 0 ? x - dx / overflowX : x,
           overflowY > 0 ? y - dy / overflowY : y,
         ),
-        zoom,
+        zoom: view.zoom,
       });
     },
-    [focus, onChange, overflow, zoom],
+    [onChange, overflow, view.focus, view.zoom],
   );
 
   function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
-    if (!url) return;
-
     drag.current = { x: event.clientX, y: event.clientY };
     setDragging(true);
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -168,6 +141,88 @@ export function ImageCropField({ url, alt, crop, ratios, onChange }: Props) {
     nudge(move[0], move[1]);
   }
 
+  return (
+    <div className="cropview">
+      <div className="cropview__head">
+        <span className="cropview__label">{label}</span>
+        <span className="cropview__ratio">
+          {ratio.w}:{ratio.h}
+        </span>
+      </div>
+
+      <div
+        ref={stage}
+        className={`cropstage${dragging ? ' cropstage--drag' : ''}`}
+        style={{ aspectRatio: ratioValue(ratio) }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        onKeyDown={handleKeyDown}
+        tabIndex={0}
+        role="group"
+        aria-label={`${label} crop. Drag the photograph, or use the arrow keys, to choose what this frame keeps.`}
+      >
+        {/* Not next/image: the source changes as the admin types or uploads,
+            and this is a rehearsal of a crop rather than a rendered page. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          ref={image}
+          src={imageUrl(url, STAGE)}
+          alt=""
+          style={viewStyle(view)}
+          draggable={false}
+        />
+
+        {/* Thirds. The holder is the frame, so the guides are for placing a
+            subject inside it, not for showing where it ends. */}
+        <span className="cropstage__guides" aria-hidden="true" />
+      </div>
+
+      <label className="cropview__zoom">
+        <span>Zoom</span>
+        <input
+          type="range"
+          min={ZOOM_MIN}
+          max={ZOOM_MAX}
+          step={ZOOM_STEP}
+          value={view.zoom}
+          onChange={(event) =>
+            onChange({ focus: view.focus, zoom: Number(event.target.value) })
+          }
+          aria-label={`${label} zoom`}
+        />
+        <span className="cropview__zoomvalue">{view.zoom.toFixed(2)}×</span>
+      </label>
+    </div>
+  );
+}
+
+/* --------------------------------------------------------------------------
+   The field
+   -------------------------------------------------------------------------- */
+
+/**
+ * The two frames a photograph is seen in, each croppable on its own.
+ *
+ * These were one crop stage plus two previews, and the previews were the wrong
+ * shape of thing: the reason to look at a wide crop beside a tall one is that
+ * the tall one usually needs a different decision, and a preview is exactly
+ * the control that cannot make it. So both are stages now.
+ *
+ * The phone follows the desk until somebody moves it, and the field says which
+ * it is doing. That default is what keeps the common case — one photograph,
+ * one placement, two shapes it happens to survive — from being two jobs.
+ *
+ * Neither stage cuts the file. Each writes an `object-position` and a scale;
+ * `storefront.css` picks between the pair at the same breakpoint the layouts
+ * turn at. See `lib/media/crop.ts`.
+ */
+export function ImageCropField({ url, alt, crop, ratios, onChange }: Props) {
+  const separate = hasMobileCrop(crop);
+  const untouched =
+    !separate && (!crop.focus || crop.focus === CENTRE) && (crop.zoom ?? ZOOM_MIN) === ZOOM_MIN;
+
   if (!url) {
     return (
       <div className="cropfield cropfield--empty">
@@ -175,7 +230,7 @@ export function ImageCropField({ url, alt, crop, ratios, onChange }: Props) {
           <span className="cropframe__empty">No image yet</span>
         </div>
         <p className="cropfield__note">
-          Add a photograph and the crop holder appears here, in the shape this
+          Add a photograph and its crop holders appear here, in the shapes this
           frame is actually seen in.
         </p>
       </div>
@@ -185,77 +240,62 @@ export function ImageCropField({ url, alt, crop, ratios, onChange }: Props) {
   return (
     <div className="cropfield">
       <div className="cropfield__head">
-        <span className="cropfield__label">
-          Crop · {ratios.desktop.w}:{ratios.desktop.h}
+        <span className="cropfield__label">Crop</span>
+        <span className="cropfield__hint">
+          Drag either frame. Arrow keys nudge.{' '}
+          {separate
+            ? 'The phone has a crop of its own.'
+            : 'The phone follows the desktop until you move it.'}
         </span>
-        <span className="cropfield__hint">Drag the photograph. Arrow keys nudge it.</span>
-      </div>
-
-      <div
-        ref={stage}
-        className={`cropstage${dragging ? ' cropstage--drag' : ''}`}
-        style={{ aspectRatio: ratioValue(ratios.desktop) }}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={endDrag}
-        onPointerCancel={endDrag}
-        onKeyDown={handleKeyDown}
-        tabIndex={0}
-        role="group"
-        aria-label="Crop. Drag the photograph, or use the arrow keys, to choose what the frame keeps."
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          ref={image}
-          src={imageUrl(url, STAGE)}
-          alt=""
-          style={cropStyle({ focus, zoom })}
-          draggable={false}
-        />
-
-        {/* Thirds. The holder is the frame, so the guides are for placing a
-            subject inside it, not for showing where it ends. */}
-        <span className="cropstage__guides" aria-hidden="true" />
-      </div>
-
-      <div className="cropfield__controls">
-        <label className="cropfield__zoom">
-          <span>Zoom</span>
-          <input
-            type="range"
-            min={ZOOM_MIN}
-            max={ZOOM_MAX}
-            step={ZOOM_STEP}
-            value={zoom}
-            onChange={(event) => onChange({ focus, zoom: Number(event.target.value) })}
-          />
-          <span className="cropfield__zoomvalue">{zoom.toFixed(2)}×</span>
-        </label>
-
-        <button
-          type="button"
-          className="abtn abtn--quiet abtn--sm"
-          onClick={() => onChange({ focus: CENTRE, zoom: ZOOM_MIN })}
-          disabled={focus === CENTRE && zoom === ZOOM_MIN}
-        >
-          Reset crop
-        </button>
       </div>
 
       <div className="cropviews">
-        <figure className="cropviews__view cropviews__view--desktop">
-          <CropFrame url={url} alt={alt} crop={{ focus, zoom }} ratio={ratios.desktop} />
-          <figcaption>
-            Desktop · {ratios.desktop.w}:{ratios.desktop.h}
-          </figcaption>
-        </figure>
+        <CropStage
+          url={url}
+          label="Desktop"
+          ratio={ratios.desktop}
+          view={desktopView(crop)}
+          onChange={(view) => onChange({ ...crop, focus: view.focus, zoom: view.zoom })}
+        />
 
-        <figure className="cropviews__view cropviews__view--mobile">
-          <CropFrame url={url} alt={alt} crop={{ focus, zoom }} ratio={ratios.mobile} />
-          <figcaption>
-            Mobile · {ratios.mobile.w}:{ratios.mobile.h}
-          </figcaption>
-        </figure>
+        <CropStage
+          url={url}
+          label="Mobile"
+          ratio={ratios.mobile}
+          /* Shows the desktop placement until it is given one of its own, so
+             what is on screen before the first drag is what the phone will
+             actually render. */
+          view={mobileView(crop)}
+          onChange={(view) =>
+            onChange({ ...crop, mobileFocus: view.focus, mobileZoom: view.zoom })
+          }
+        />
+      </div>
+
+      <div className="cropfield__controls">
+        <span className="cropfield__alt">{alt ? `“${alt}”` : 'No alt text yet'}</span>
+
+        <span className="cropfield__buttons">
+          <button
+            type="button"
+            className="abtn abtn--quiet abtn--sm"
+            onClick={() => onChange({ ...crop, mobileFocus: '', mobileZoom: undefined })}
+            disabled={!separate}
+          >
+            Match desktop
+          </button>
+
+          <button
+            type="button"
+            className="abtn abtn--quiet abtn--sm"
+            onClick={() =>
+              onChange({ focus: CENTRE, zoom: ZOOM_MIN, mobileFocus: '', mobileZoom: undefined })
+            }
+            disabled={untouched}
+          >
+            Reset crop
+          </button>
+        </span>
       </div>
     </div>
   );

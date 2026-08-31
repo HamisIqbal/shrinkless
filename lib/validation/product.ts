@@ -22,6 +22,16 @@ const imageSchema = z.object({
     )
     .default(''),
   zoom: z.coerce.number().min(ZOOM_MIN).max(ZOOM_MAX).default(ZOOM_MIN),
+  mobileFocus: z
+    .string()
+    .trim()
+    .refine(
+      (value) => value === '' || /^\d{1,3}% \d{1,3}%$/.test(value),
+      'Focus looks like "50% 30%"',
+    )
+    .default(''),
+  /* Absent, not 1, until the phone has a zoom of its own. */
+  mobileZoom: z.coerce.number().min(ZOOM_MIN).max(ZOOM_MAX).optional(),
 });
 
 export const seoInputSchema = z.object({

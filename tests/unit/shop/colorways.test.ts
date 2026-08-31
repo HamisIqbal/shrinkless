@@ -39,6 +39,7 @@ const product: ProductDTO = {
       alt: 'Black tee',
       focus: '',
       zoom: 1,
+      mobileFocus: '',
     },
     {
       publicId: 'https://img/white.jpg',
@@ -47,6 +48,7 @@ const product: ProductDTO = {
       alt: 'White tee',
       focus: '',
       zoom: 1,
+      mobileFocus: '',
     },
   ],
   sizes: ['s', 'm', 'l'],

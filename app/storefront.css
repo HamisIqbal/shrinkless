@@ -67,7 +67,7 @@
 
 .tiles__tile--link:hover .tiles__image,
 .tiles__tile--link:focus-visible .tiles__image {
-  transform: scale(calc(var(--crop-zoom, 1) * 1.04));
+  transform: scale(calc(var(--crop-z, 1) * 1.04));
 }
 
 /* Weighted to the foot, where the type is. A flat tint strong enough to carry
@@ -236,7 +236,7 @@
 }
 
 .lookbook__tile:hover .lookbook__image {
-  transform: scale(calc(var(--crop-zoom, 1) * 1.04));
+  transform: scale(calc(var(--crop-z, 1) * 1.04));
 }
 
 /* The label sits on the photograph, so it carries its own ground rather than
@@ -1090,9 +1090,10 @@
 .hero__image {
   object-fit: cover;
   /* Bias above centre: the subject is in the upper half and the type occupies
-     the lower half of the frame anyway. Per-frame values in the manifest
-     override this. */
-  object-position: 50% 35%;
+     the lower half of the frame anyway. Declared as the crop's fallback rather
+     than as a position, so a frame nobody has cropped still sits here and one
+     that has been cropped is not fighting a literal value below. */
+  --crop-pos-default: 50% 35%;
 }
 
 .hero__scrim {
@@ -1280,7 +1281,7 @@
 
 .gateway__tile:hover .gateway__image,
 .gateway__tile:focus-visible .gateway__image {
-  transform: scale(calc(var(--crop-zoom, 1) * 1.04));
+  transform: scale(calc(var(--crop-z, 1) * 1.04));
 }
 
 /* Same reasoning as the hero: the label and its "3 styles" caption sit at the
@@ -1428,7 +1429,7 @@
 
 @media (hover: hover) {
   .pcard__reel { cursor: grab; }
-  .pcard:hover .pcard__frame img { transform: scale(calc(var(--crop-zoom, 1) * 1.03)); }
+  .pcard:hover .pcard__frame img { transform: scale(calc(var(--crop-z, 1) * 1.03)); }
 }
 
 /* --- corners ------------------------------------------------------------- */
@@ -3397,11 +3398,17 @@
 /* --------------------------------------------------------------------------
    The admin's crop
 
-   Every editable photograph carries an `object-position` and a `--crop-zoom`,
-   set on the element by `cropStyle` in `lib/media/crop.ts`. The position is an
-   inline style and needs nothing here; the zoom is a custom property rather
-   than an inline `transform` precisely so these rules — and the hover scales
-   above, which multiply it — keep working instead of being overridden.
+   An editable photograph carries up to four custom properties, written by
+   `cropStyle` in `lib/media/crop.ts`: a position and a zoom for the desk, and
+   the same pair for the phone. Which applies is a question about the viewport,
+   which the server cannot answer — so both travel down and the switch happens
+   here, at the 48rem the layouts themselves turn at.
+
+   Everything downstream reads the resolved pair, `--crop-p` and `--crop-z`, so
+   the hover scales above multiply the crop that is actually showing rather
+   than the desktop one. A frame nobody has cropped sets none of the four and
+   falls all the way through to `--crop-pos-default`, which is how the hero
+   keeps sitting its frames above centre.
    -------------------------------------------------------------------------- */
 
 .hero__image,
@@ -3411,5 +3418,25 @@
 .imageband__image,
 .pdp__shot img,
 .pcard__frame img {
-  transform: scale(var(--crop-zoom, 1));
+  --crop-p: var(--crop-pos, var(--crop-pos-default, 50% 50%));
+  --crop-z: var(--crop-zoom, 1);
+
+  object-position: var(--crop-p);
+  transform: scale(var(--crop-z));
+  transform-origin: var(--crop-p);
+}
+
+/* The phone. Each half falls back on its own: a photograph given a mobile
+   position but no mobile zoom keeps the desktop zoom, rather than losing it. */
+@media (max-width: 47.999rem) {
+  .hero__image,
+  .tiles__image,
+  .gateway__image,
+  .lookbook__image,
+  .imageband__image,
+  .pdp__shot img,
+  .pcard__frame img {
+    --crop-p: var(--crop-pos-m, var(--crop-pos, var(--crop-pos-default, 50% 50%)));
+    --crop-z: var(--crop-zoom-m, var(--crop-zoom, 1));
+  }
 }

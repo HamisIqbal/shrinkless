@@ -58,6 +58,14 @@ const zoom = z.coerce
   .max(ZOOM_MAX, `Zoom stops at ${ZOOM_MAX}`)
   .default(ZOOM_MIN);
 
+/** The phone's zoom is absent, not 1, until it has one of its own — 1 is a
+ *  decision ("do not scale here"), and absent is "follow the desktop". */
+const mobileZoom = z.coerce
+  .number()
+  .min(ZOOM_MIN, 'Zoom starts at 1 — the frame filled')
+  .max(ZOOM_MAX, `Zoom stops at ${ZOOM_MAX}`)
+  .optional();
+
 export const mediaFrameSchema = z.object({
   url,
   alt: z
@@ -67,6 +75,8 @@ export const mediaFrameSchema = z.object({
     .max(200, 'Keep alt text under 200 characters'),
   focus,
   zoom,
+  mobileFocus: focus,
+  mobileZoom,
 });
 
 /** One single-image slot. The slot id is checked against the registry by the

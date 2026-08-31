@@ -154,7 +154,14 @@ export type SiteMedia = {
   editorial: Record<EditorialSlot, BrandImage>;
 };
 
-type StoredFrame = { url: string; alt: string; focus?: string; zoom?: number };
+type StoredFrame = {
+  url: string;
+  alt: string;
+  focus?: string;
+  zoom?: number;
+  mobileFocus?: string;
+  mobileZoom?: number;
+};
 
 /**
  * An override merged onto a default.
@@ -174,6 +181,8 @@ function merge(fallback: BrandImage, stored: StoredFrame | undefined): BrandImag
     aspect: fallback.aspect,
     ...(stored.focus ? { focus: stored.focus } : {}),
     ...(stored.zoom && stored.zoom > 1 ? { zoom: normaliseZoom(stored.zoom) } : {}),
+    ...(stored.mobileFocus ? { mobileFocus: stored.mobileFocus } : {}),
+    ...(stored.mobileZoom ? { mobileZoom: normaliseZoom(stored.mobileZoom) } : {}),
   };
 }
 
@@ -190,6 +199,8 @@ async function loadOverrides(): Promise<Map<string, StoredFrame[]>> {
         alt: frame.alt,
         focus: frame.focus ?? '',
         zoom: normaliseZoom(frame.zoom ?? 1),
+        mobileFocus: frame.mobileFocus ?? '',
+        ...(frame.mobileZoom ? { mobileZoom: normaliseZoom(frame.mobileZoom) } : {}),
       })),
     ]),
   );
@@ -357,7 +368,10 @@ function assertKnown(slotId: string): void {
  * test, an older client — writes an uncropped frame rather than a rejected
  * one.
  */
-type MediaFrameWrite = Omit<MediaFrameInput, 'zoom'> & { zoom?: number };
+type MediaFrameWrite = Omit<MediaFrameInput, 'zoom' | 'mobileFocus'> & {
+  zoom?: number;
+  mobileFocus?: string;
+};
 
 /** Replaces the photograph in one single-image slot. */
 export async function saveMediaSlot(

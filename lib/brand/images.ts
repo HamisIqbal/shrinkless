@@ -36,6 +36,10 @@ export type BrandImage = {
    * admin's crop stage is what sets anything else. See `lib/media/crop.ts`.
    */
   zoom?: number;
+  /** The same pair for the phone. Absent means it follows the desktop crop,
+   *  which is what every frame in this manifest does. */
+  mobileFocus?: string;
+  mobileZoom?: number;
 };
 
 const UNSPLASH = 'https://images.unsplash.com';

@@ -14,6 +14,11 @@ const frameSchema = new Schema(
     /** How far the photograph is scaled up inside the frame, about `focus`.
      *  1 is the frame as `object-fit: cover` gives it. */
     zoom: { type: Number, default: 1, min: 1, max: 3 },
+    /** The same pair for the phone, where the frame is usually a different
+     *  shape. Unset — not 50%/1 — means "whatever desktop says", so an image
+     *  that only ever needed one placement stores one. */
+    mobileFocus: { type: String, default: '' },
+    mobileZoom: { type: Number, min: 1, max: 3 },
   },
   { _id: false },
 );

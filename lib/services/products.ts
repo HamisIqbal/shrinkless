@@ -45,6 +45,8 @@ function toProductDTO(product: WithId<ProductDoc>, variants: WithId<VariantDoc>[
       alt: image.alt,
       focus: image.focus ?? '',
       zoom: image.zoom ?? 1,
+      mobileFocus: image.mobileFocus ?? '',
+      ...(image.mobileZoom ? { mobileZoom: image.mobileZoom } : {}),
     })),
     sizes: product.optionSets?.sizes ?? [],
     colors: product.optionSets?.colors ?? [],
@@ -365,9 +367,14 @@ export async function saveProduct(
     /* The crop is optional here and defaulted by the schema, so a caller that
        predates it — a seed, a test, an import — still type-checks and still
        gets an uncropped image rather than an invalid one. */
-    images: (Omit<ProductInput['images'][number], 'focus' | 'zoom'> & {
+    images: (Omit<
+      ProductInput['images'][number],
+      'focus' | 'zoom' | 'mobileFocus' | 'mobileZoom'
+    > & {
       focus?: string;
       zoom?: number;
+      mobileFocus?: string;
+      mobileZoom?: number;
     })[];
     id?: string;
   },
