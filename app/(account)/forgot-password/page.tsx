@@ -16,8 +16,7 @@ export default async function ForgotPasswordPage() {
 
       <p className="lede authform__step">
         Give us the email on your account and we will send a link that lets you
-        set a new password. Admin accounts sign in with their emailed code
-        instead.
+        set a new password.
       </p>
 
       <ForgotPasswordForm />
