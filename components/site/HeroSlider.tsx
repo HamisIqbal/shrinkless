@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import type { BrandImage } from '@/lib/brand/images';
+import { cropStyle } from '@/lib/media/crop';
 
 export type HeroSlide = {
   image: BrandImage;
@@ -169,7 +170,7 @@ export function HeroSlider({
                 fetchPriority={index === 0 ? 'high' : 'low'}
                 sizes="100vw"
                 className="hero__image"
-                style={slide.image.focus ? { objectPosition: slide.image.focus } : undefined}
+                style={cropStyle(slide.image)}
               />
             </div>
           ))}

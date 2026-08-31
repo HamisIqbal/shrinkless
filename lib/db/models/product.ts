@@ -6,6 +6,11 @@ const imageSchema = new Schema(
     width: { type: Number, required: true },
     height: { type: Number, required: true },
     alt: { type: String, default: '' },
+    /** Where the frame crops, and how far in. A photograph is shown in more
+     *  than one shape — a 2:3 card, a 4:5 gallery — so which part survives is
+     *  a property of the photograph, exactly as it is for site media. */
+    focus: { type: String, default: '' },
+    zoom: { type: Number, default: 1, min: 1, max: 3 },
   },
   { _id: false },
 );

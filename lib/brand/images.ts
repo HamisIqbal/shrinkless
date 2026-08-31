@@ -30,6 +30,12 @@ export type BrandImage = {
    * of the photograph, not of the component.
    */
   focus?: string;
+  /**
+   * How far the frame is scaled up about `focus`. 1 — the default everywhere
+   * in this manifest — is the photograph as `object-fit: cover` gives it; the
+   * admin's crop stage is what sets anything else. See `lib/media/crop.ts`.
+   */
+  zoom?: number;
 };
 
 const UNSPLASH = 'https://images.unsplash.com';

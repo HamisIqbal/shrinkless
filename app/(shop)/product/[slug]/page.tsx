@@ -8,6 +8,7 @@ import {
 import { imageUrl } from '@/lib/images';
 import { VariantPicker } from '@/components/shop/VariantPicker';
 import { ProductGrid } from '@/components/shop/ProductGrid';
+import { cropStyle } from '@/lib/media/crop';
 
 // Native <details> so the accordions work without JavaScript and are keyboard
 // accessible by default. Factual claims are [TBC] until confirmed — spec §11.2.
@@ -89,12 +90,13 @@ export default async function ProductPage(props: PageProps<'/product/[slug]'>) {
             gallery.map((image, index) => (
               <div key={image.publicId} className="frame frame--45 pdp__shot">
                 <Image
-                  src={imageUrl(image.publicId, 'c_fill,w_1400,h_1750,q_auto,f_auto')}
+                  src={imageUrl(image.publicId, 'w_1400,q_auto,f_auto')}
                   alt={image.alt || product.title}
                   fill
                   priority={index === 0}
                   loading={index === 0 ? undefined : 'lazy'}
                   sizes="(min-width: 56.25rem) 58vw, 100vw"
+                  style={cropStyle(image)}
                 />
               </div>
             ))

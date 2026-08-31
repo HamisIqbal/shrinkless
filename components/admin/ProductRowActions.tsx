@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { archiveProductAction, setProductStatusAction } from '@/app/actions/admin/products';
 
@@ -12,11 +13,15 @@ type Props = {
 };
 
 /**
- * Publish, unpublish and archive, from the list.
+ * Edit, publish, unpublish and archive, from the list.
  *
- * Every one of these is a server action that re-checks the permission — the
- * buttons are a convenience, not the authorization. Archiving asks first,
- * because it is the closest thing to a delete this store offers.
+ * Edit is a plain link to the same place the product's name goes. It is here
+ * because a name that happens to be a link is a thing you have to already know
+ * — the row should say where editing is, not rely on a hover.
+ *
+ * The rest are server actions that re-check the permission — the buttons are a
+ * convenience, not the authorization. Archiving asks first, because it is the
+ * closest thing to a delete this store offers.
  */
 export function ProductRowActions({ id, status, archived, title }: Props) {
   const router = useRouter();
@@ -50,6 +55,10 @@ export function ProductRowActions({ id, status, archived, title }: Props) {
 
   return (
     <span className="rowactions">
+      <Link href={`/admin/products/${id}`} className="abtn abtn--ghost abtn--sm">
+        Edit
+      </Link>
+
       {!archived ? (
         <button
           type="button"

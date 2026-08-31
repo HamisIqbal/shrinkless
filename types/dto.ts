@@ -3,6 +3,11 @@ export type ImageDTO = {
   width: number;
   height: number;
   alt: string;
+  /** `object-position` — which part of the photograph the frame keeps. */
+  focus: string;
+  /** How far it is scaled up about that point. 1 is untouched `cover`.
+   *  Both are set by the crop stage in the admin; see `lib/media/crop.ts`. */
+  zoom: number;
 };
 
 export type VariantDTO = {

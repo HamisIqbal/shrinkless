@@ -8,25 +8,19 @@ import {
   saveMediaSlotAction,
 } from '@/app/actions/admin/media';
 import { uploadEndpoint } from '@/lib/cloudinary/config';
-import { imageUrl } from '@/lib/images';
+import { ImageCropField } from '@/components/admin/ImageCropField';
+import { ZOOM_MIN, type ViewRatios } from '@/lib/media/crop';
 import { HERO_MAX, HERO_MIN } from '@/lib/validation/media';
 import type { MediaLibrary, MediaSlotView } from '@/lib/services/site-media';
 
-type Frame = { url: string; alt: string; focus: string };
-
-const FOCUS_PRESETS = [
-  { value: '', label: 'Centre' },
-  { value: '50% 20%', label: 'Top' },
-  { value: '50% 35%', label: 'Upper' },
-  { value: '50% 65%', label: 'Lower' },
-  { value: '50% 85%', label: 'Bottom' },
-];
+type Frame = { url: string; alt: string; focus: string; zoom: number };
 
 function toFrames(slot: MediaSlotView): Frame[] {
   return slot.frames.map((frame) => ({
     url: frame.url,
     alt: frame.alt,
     focus: frame.focus ?? '',
+    zoom: frame.zoom ?? ZOOM_MIN,
   }));
 }
 
@@ -61,10 +55,12 @@ async function upload(file: File): Promise<string> {
 
 function FrameFields({
   frame,
+  ratios,
   onChange,
   onError,
 }: {
   frame: Frame;
+  ratios: ViewRatios;
   onChange: (patch: Partial<Frame>) => void;
   onError: (message: string) => void;
 }) {
@@ -88,19 +84,13 @@ function FrameFields({
   return (
     <div className="mediaslot__body">
       <div className="mediaslot__preview">
-        {frame.url ? (
-          /* Not next/image: the source changes as the admin types, and this is
-             a proof that the address resolves, not a rendered frame. */
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={imageUrl(frame.url)}
-            alt=""
-            className="mediaslot__image"
-            style={frame.focus ? { objectPosition: frame.focus } : undefined}
-          />
-        ) : (
-          <span className="mediaslot__empty">No image</span>
-        )}
+        <ImageCropField
+          url={frame.url}
+          alt={frame.alt}
+          crop={{ focus: frame.focus, zoom: frame.zoom }}
+          ratios={ratios}
+          onChange={(crop) => onChange({ focus: crop.focus ?? '', zoom: crop.zoom ?? ZOOM_MIN })}
+        />
       </div>
 
       <div className="mediaslot__fields">
@@ -140,23 +130,6 @@ function FrameFields({
           <small>Describe what is in the picture. Screen readers read this.</small>
         </label>
 
-        <label className="adfield">
-          Crop
-          <select
-            value={FOCUS_PRESETS.some((preset) => preset.value === frame.focus) ? frame.focus : ''}
-            onChange={(event) => onChange({ focus: event.target.value })}
-          >
-            {FOCUS_PRESETS.map((preset) => (
-              <option key={preset.label} value={preset.value}>
-                {preset.label}
-              </option>
-            ))}
-          </select>
-          <small>
-            Which part of the photograph to keep when the frame is a different
-            shape.
-          </small>
-        </label>
       </div>
     </div>
   );
@@ -222,6 +195,7 @@ function SlotCard({ slot }: { slot: MediaSlotView }) {
 
       <FrameFields
         frame={frame}
+        ratios={slot.ratios}
         onChange={(patch) => setFrame({ ...frame, ...patch })}
         onError={setError}
       />
@@ -276,7 +250,7 @@ function HeroCard({ slot }: { slot: MediaSlotView }) {
 
   function add() {
     if (frames.length >= HERO_MAX) return;
-    setFrames([...frames, { url: '', alt: '', focus: '' }]);
+    setFrames([...frames, { url: '', alt: '', focus: '', zoom: ZOOM_MIN }]);
   }
 
   function remove(index: number) {
@@ -370,6 +344,7 @@ function HeroCard({ slot }: { slot: MediaSlotView }) {
 
             <FrameFields
               frame={frame}
+              ratios={slot.ratios}
               onChange={(change) => patch(index, change)}
               onError={setError}
             />

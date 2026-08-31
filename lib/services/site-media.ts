@@ -9,6 +9,7 @@ import {
   type BrandImage,
 } from '@/lib/brand/images';
 import { HERO_MAX, HERO_MIN, type MediaFrameInput } from '@/lib/validation/media';
+import { normaliseZoom, type ViewRatios } from '@/lib/media/crop';
 import { AdminOperationError } from '@/lib/admin/action';
 
 /* --------------------------------------------------------------------------
@@ -36,6 +37,32 @@ type EditorialDefinition = {
    *  "torso" means nothing without it. */
   where: string;
   default: BrandImage;
+  /** The two shapes this frame is actually seen in, so the admin crops
+   *  against the layout rather than against a guess. Several of these frames
+   *  appear in more than one place; the shape named is the largest use, which
+   *  is the one a bad crop shows up in first. */
+  ratios: ViewRatios;
+};
+
+/* The shapes `app/storefront.css` renders these slots at. Named once here so
+   the crop stage and the two previews cannot drift from the layout. */
+const WIDE: ViewRatios = { desktop: { w: 3, h: 2 }, mobile: { w: 4, h: 5 } };
+const TILE: ViewRatios = { desktop: { w: 4, h: 5 }, mobile: { w: 4, h: 5 } };
+const RAIL: ViewRatios = { desktop: { w: 3, h: 2 }, mobile: { w: 3, h: 2 } };
+const BAND: ViewRatios = { desktop: { w: 3, h: 1 }, mobile: { w: 4, h: 5 } };
+
+/** The carousel is the viewport itself — landscape at a desk, portrait in a
+ *  hand. No other slot changes shape this hard, which is why it is the one
+ *  worth previewing before it is saved. */
+export const HERO_RATIOS: ViewRatios = {
+  desktop: { w: 16, h: 9 },
+  mobile: { w: 9, h: 16 },
+};
+
+/** `.gateway__frame` and `.tiles__frame` — 3:4 from 48rem up, 4:5 below. */
+export const CATEGORY_RATIOS: ViewRatios = {
+  desktop: { w: 3, h: 4 },
+  mobile: { w: 4, h: 5 },
 };
 
 /**
@@ -51,51 +78,61 @@ const EDITORIAL: Record<string, EditorialDefinition> = {
     label: 'Fabric macro',
     where: 'Home, Why Shrinkless, and the lookbook rail',
     default: BRAND_IMAGES.fabric,
+    ratios: WIDE,
   },
   craft: {
     label: 'Cut and sew',
     where: 'Home, Our Story, Why Shrinkless, the lookbook rail, and the footer backdrop',
     default: BRAND_IMAGES.craft,
+    ratios: WIDE,
   },
   hanging: {
     label: 'On the hanger',
     where: 'Home, Our Story, Why Shrinkless, and the lookbook rail',
     default: BRAND_IMAGES.hanging,
+    ratios: WIDE,
   },
   folded: {
     label: 'Flat lay',
     where: 'Home and Why Shrinkless',
     default: BRAND_IMAGES.folded,
+    ratios: TILE,
   },
   heather: {
     label: 'Heather grey',
     where: 'Home, Why Shrinkless, and the lookbook rail',
     default: BRAND_IMAGES.heather,
+    ratios: WIDE,
   },
   torso: {
     label: 'Studio torso',
     where: 'Home, Our Story, and the lookbook rail',
     default: BRAND_IMAGES.torso,
+    ratios: WIDE,
   },
   promise: {
     label: 'The promise band',
     where: 'Home — the “Wash it. Dry it.” full-bleed band',
     default: PRODUCT_IMAGES['mens-heavyweight-tee'][0],
+    ratios: BAND,
   },
   lookbookHeavyweight: {
     label: 'Lookbook — Heavyweight Tee',
     where: 'Home, the first tile on the lookbook rail',
     default: PRODUCT_IMAGES['mens-heavyweight-tee'][1],
+    ratios: RAIL,
   },
   lookbookBoxy: {
     label: 'Lookbook — Boxy Tee',
     where: 'Home, the third tile on the lookbook rail',
     default: PRODUCT_IMAGES['womens-boxy-tee'][1],
+    ratios: RAIL,
   },
   lookbookOrganic: {
     label: 'Lookbook — Organic Tee',
     where: 'Home, the fifth tile on the lookbook rail',
     default: PRODUCT_IMAGES['womens-organic-tee'][1],
+    ratios: RAIL,
   },
 };
 
@@ -117,7 +154,7 @@ export type SiteMedia = {
   editorial: Record<EditorialSlot, BrandImage>;
 };
 
-type StoredFrame = { url: string; alt: string; focus?: string };
+type StoredFrame = { url: string; alt: string; focus?: string; zoom?: number };
 
 /**
  * An override merged onto a default.
@@ -136,6 +173,7 @@ function merge(fallback: BrandImage, stored: StoredFrame | undefined): BrandImag
     alt: stored.alt,
     aspect: fallback.aspect,
     ...(stored.focus ? { focus: stored.focus } : {}),
+    ...(stored.zoom && stored.zoom > 1 ? { zoom: normaliseZoom(stored.zoom) } : {}),
   };
 }
 
@@ -151,6 +189,7 @@ async function loadOverrides(): Promise<Map<string, StoredFrame[]>> {
         url: frame.url,
         alt: frame.alt,
         focus: frame.focus ?? '',
+        zoom: normaliseZoom(frame.zoom ?? 1),
       })),
     ]),
   );
@@ -215,6 +254,9 @@ export type MediaSlotView = {
   label: string;
   where: string;
   frames: BrandImage[];
+  /** The shapes this slot renders at — the crop stage and the desktop and
+   *  mobile previews are all drawn from these. */
+  ratios: ViewRatios;
   /** False when the slot is still showing what the site shipped with. */
   overridden: boolean;
 };
@@ -252,6 +294,7 @@ export async function listMediaSlots(): Promise<MediaLibrary> {
       label: 'Campaign carousel',
       where: `Home — the frames behind the headline. ${HERO_MIN}–${HERO_MAX} of them.`,
       frames: media.hero,
+      ratios: HERO_RATIOS,
       overridden: overrides.has(HERO_SLOT),
     },
 
@@ -260,6 +303,7 @@ export async function listMediaSlots(): Promise<MediaLibrary> {
       label: `${label} tile`,
       where: 'Home — the shopping doors, and the desktop menu',
       frames: [categoryImage(media, slug)],
+      ratios: CATEGORY_RATIOS,
       overridden: overrides.has(categorySlotId(slug)),
     })),
 
@@ -268,6 +312,7 @@ export async function listMediaSlots(): Promise<MediaLibrary> {
       label: EDITORIAL[slot].label,
       where: EDITORIAL[slot].where,
       frames: [media.editorial[slot]],
+      ratios: EDITORIAL[slot].ratios,
       overridden: overrides.has(editorialSlotId(slot)),
     })),
   };
@@ -304,10 +349,20 @@ function assertKnown(slotId: string): void {
   }
 }
 
+/**
+ * A frame as it arrives from a caller.
+ *
+ * The zoom is optional here, and only here: the validator defaults it and the
+ * schema defaults it again, so a caller that never heard of a crop — a seed, a
+ * test, an older client — writes an uncropped frame rather than a rejected
+ * one.
+ */
+type MediaFrameWrite = Omit<MediaFrameInput, 'zoom'> & { zoom?: number };
+
 /** Replaces the photograph in one single-image slot. */
 export async function saveMediaSlot(
   slotId: string,
-  frame: MediaFrameInput,
+  frame: MediaFrameWrite,
 ): Promise<void> {
   assertKnown(slotId);
 
@@ -325,7 +380,7 @@ export async function saveMediaSlot(
 }
 
 /** Replaces the whole carousel — reorder, add and remove are all this. */
-export async function saveHeroFrames(frames: MediaFrameInput[]): Promise<void> {
+export async function saveHeroFrames(frames: MediaFrameWrite[]): Promise<void> {
   if (frames.length < HERO_MIN || frames.length > HERO_MAX) {
     throw new AdminOperationError(
       `The carousel takes between ${HERO_MIN} and ${HERO_MAX} frames.`,

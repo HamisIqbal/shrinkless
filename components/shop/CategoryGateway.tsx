@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import type { BrandImage } from '@/lib/brand/images';
+import { cropStyle } from '@/lib/media/crop';
 
 export type Gateway = {
   slug: string;
@@ -45,7 +46,7 @@ export function CategoryGateway({ gateways }: Props) {
                     loading="lazy"
                     sizes="(min-width: 48rem) 50vw, 100vw"
                     className="gateway__image"
-                    style={image.focus ? { objectPosition: image.focus } : undefined}
+                    style={cropStyle(image)}
                   />
                   <span className="gateway__wash" aria-hidden="true" />
                 </div>

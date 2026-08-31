@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { BrandImage } from '@/lib/brand/images';
 import { Reveal } from '@/components/ui/Reveal';
+import { cropStyle } from '@/lib/media/crop';
 
 export type Tile = {
   image: BrandImage;
@@ -66,7 +67,7 @@ export function OverlayTiles({ eyebrow, heading, tiles, columns = 2, tall = fals
                   loading="lazy"
                   sizes={columns >= 3 ? '(min-width: 48rem) 25vw, 50vw' : '(min-width: 48rem) 50vw, 100vw'}
                   className="tiles__image"
-                  style={tile.image.focus ? { objectPosition: tile.image.focus } : undefined}
+                  style={cropStyle(tile.image)}
                 />
                 <span className="tiles__wash" aria-hidden="true" />
               </div>

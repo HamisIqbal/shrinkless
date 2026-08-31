@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import type { BrandImage } from '@/lib/brand/images';
+import { cropStyle } from '@/lib/media/crop';
 
 type Props = {
   image: BrandImage;
@@ -25,6 +26,7 @@ export function ImageBand({ image, eyebrow, headline, body, glyph }: Props) {
         fill
         sizes="100vw"
         className="imageband__image"
+        style={cropStyle(image)}
       />
 
       <div className="imageband__scrim" aria-hidden="true" />

@@ -11,6 +11,9 @@ const frameSchema = new Schema(
     /** `object-position`, e.g. `50% 30%`. Where to crop is a property of the
      *  photograph, so it travels with it. */
     focus: { type: String, default: '' },
+    /** How far the photograph is scaled up inside the frame, about `focus`.
+     *  1 is the frame as `object-fit: cover` gives it. */
+    zoom: { type: Number, default: 1, min: 1, max: 3 },
   },
   { _id: false },
 );

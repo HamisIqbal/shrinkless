@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { createUploadSignatureAction } from '@/app/actions/admin/products';
 import { uploadEndpoint } from '@/lib/cloudinary/config';
-import { cloudinaryUrl } from '@/lib/cloudinary/url';
+import { ImageCropField } from '@/components/admin/ImageCropField';
+import { PRODUCT_RATIOS, ZOOM_MIN } from '@/lib/media/crop';
 import type { ImageDTO } from '@/types/dto';
 
 type Props = {
@@ -39,7 +40,14 @@ export function ImageUploader({ images, onChange }: Props) {
 
       onChange([
         ...images,
-        { publicId: uploaded.public_id, width: uploaded.width, height: uploaded.height, alt: '' },
+        {
+          publicId: uploaded.public_id,
+          width: uploaded.width,
+          height: uploaded.height,
+          alt: '',
+          focus: '',
+          zoom: ZOOM_MIN,
+        },
       ]);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Upload failed.');
@@ -64,21 +72,16 @@ export function ImageUploader({ images, onChange }: Props) {
       {images.length ? (
         <ul className="uploader__grid">
           {images.map((image, index) => (
-            <li key={image.publicId}>
-              <div className="uploader__item">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={cloudinaryUrl(image.publicId, 'w_320,h_400,c_fill,q_auto,f_auto')}
-                  alt={image.alt}
-                  width={160}
-                  height={200}
-                />
-
-                {index === 0 ? <span className="uploader__badge">Featured</span> : null}
+            <li key={image.publicId} className="uploader__shot">
+              <div className="uploader__head">
+                <span className="uploader__index">
+                  {index === 0 ? 'Featured' : `Image ${index + 1}`}
+                </span>
 
                 <div className="uploader__tools">
                   <button
                     type="button"
+                    className="abtn abtn--quiet abtn--sm"
                     onClick={() => move(index, -1)}
                     disabled={index === 0}
                     aria-label="Move image earlier"
@@ -87,6 +90,7 @@ export function ImageUploader({ images, onChange }: Props) {
                   </button>
                   <button
                     type="button"
+                    className="abtn abtn--quiet abtn--sm"
                     onClick={() => move(index, 1)}
                     disabled={index === images.length - 1}
                     aria-label="Move image later"
@@ -95,16 +99,39 @@ export function ImageUploader({ images, onChange }: Props) {
                   </button>
                   <button
                     type="button"
+                    className="abtn abtn--quiet abtn--sm"
                     onClick={() => onChange(images.filter((_, i) => i !== index))}
-                    aria-label="Remove image"
                   >
-                    &times;
+                    Remove
                   </button>
                 </div>
               </div>
 
-              <label className="adfield" style={{ marginTop: '0.5rem' }}>
-                <span className="visually-hidden">Alt text</span>
+              <div className="uploader__item">
+                <ImageCropField
+                  url={image.publicId}
+                  alt={image.alt}
+                  crop={{ focus: image.focus, zoom: image.zoom }}
+                  ratios={PRODUCT_RATIOS}
+                  onChange={(crop) =>
+                    onChange(
+                      images.map((current, i) =>
+                        i === index
+                          ? {
+                              ...current,
+                              focus: crop.focus ?? '',
+                              zoom: crop.zoom ?? ZOOM_MIN,
+                            }
+                          : current,
+                      ),
+                    )
+                  }
+                />
+
+              </div>
+
+              <label className="adfield uploader__alt">
+                Alt text
                 <input
                   value={image.alt}
                   placeholder="Alt text"

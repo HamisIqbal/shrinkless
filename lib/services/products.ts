@@ -43,6 +43,8 @@ function toProductDTO(product: WithId<ProductDoc>, variants: WithId<VariantDoc>[
       width: image.width,
       height: image.height,
       alt: image.alt,
+      focus: image.focus ?? '',
+      zoom: image.zoom ?? 1,
     })),
     sizes: product.optionSets?.sizes ?? [],
     colors: product.optionSets?.colors ?? [],
@@ -339,6 +341,7 @@ async function assertSkusAreFree(
 export async function saveProduct(
   input: Omit<
     ProductInput,
+    | 'images'
     | 'featured'
     | 'badge'
     | 'rating'
@@ -359,6 +362,13 @@ export async function saveProduct(
     baseSku?: string;
     seo?: { title: string; description: string; keywords: string[] };
     quantityRule?: { min: number; step: number; max: number | null };
+    /* The crop is optional here and defaulted by the schema, so a caller that
+       predates it — a seed, a test, an import — still type-checks and still
+       gets an uncropped image rather than an invalid one. */
+    images: (Omit<ProductInput['images'][number], 'focus' | 'zoom'> & {
+      focus?: string;
+      zoom?: number;
+    })[];
     id?: string;
   },
   actor: SaveActor = { id: '', email: 'system' },

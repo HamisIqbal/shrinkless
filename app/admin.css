@@ -33,6 +33,13 @@
   --ad-line: color-mix(in oklab, var(--ad-ink) 12%, transparent);
   --ad-line-2: color-mix(in oklab, var(--ad-ink) 7%, transparent);
 
+  /* Fields are the exception, and deliberately so. A hairline at 12% is
+     punctuation between regions; on a control it is invisible against the
+     sheet, which left every input reading as a piece of the page until it was
+     focused and the acid ring appeared. Somewhere you can type is drawn as a
+     box, at rest, in ink. */
+  --ad-field-line: var(--ad-ink);
+
   /* On the dark spine. */
   --ad-onink: color-mix(in oklab, var(--ad-paper) 92%, var(--ad-ink));
   --ad-onink-2: color-mix(in oklab, var(--ad-paper) 55%, var(--ad-ink));
@@ -831,18 +838,19 @@ body:has(.admin) {
   line-height: 1.5;
 }
 
-.admin input[type="text"],
-.admin input[type="email"],
-.admin input[type="password"],
-.admin input[type="search"],
-.admin input[type="number"],
-.admin input[type="date"],
-.admin input[type="url"],
+/* Every control you can type into, addressed by what it is NOT.
+   The typed list this replaces missed the commonest case in the panel: an
+   `<input>` with no `type` at all is a text field, and `input[type="text"]`
+   does not match one — so the product title, the slug, the alt text and every
+   other bare input picked up no border and no padding, and sat on the sheet as
+   loose text until it was focused. */
+.admin input:not([type="checkbox"], [type="radio"], [type="file"], [type="range"],
+  [type="submit"], [type="button"], [type="image"], [type="hidden"]),
 .admin select,
 .admin textarea {
   width: 100%;
   padding: 0.6rem 0.75rem;
-  border: 1px solid var(--ad-line);
+  border: 1px solid var(--ad-field-line);
   border-radius: var(--ad-r-field);
   background: var(--ad-white);
   color: var(--ad-ink);
@@ -860,6 +868,27 @@ body:has(.admin) {
   min-height: 5rem;
   line-height: 1.55;
 }
+
+/* The file control is a field as well: it holds the one action in the row,
+   so it is drawn as a box rather than left as browser chrome on the sheet. */
+.admin input[type="file"] {
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--ad-field-line);
+  border-radius: var(--ad-r-field);
+  background: var(--ad-white);
+  color: var(--ad-ink);
+  font: inherit;
+  font-size: var(--ad-t-small);
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+  cursor: pointer;
+}
+
+/* Except the ones a label is wearing as a button — those are already a
+   control, and a box around a box reads as a mistake. */
+.admin .abtn input[type="file"] { display: none; }
 
 .admin input::placeholder,
 .admin textarea::placeholder {
@@ -1496,68 +1525,53 @@ body:has(.admin) {
 .admin .matrix input[type="text"],
 .admin .matrix input[type="number"] { min-width: 5rem; }
 
+/* Product photography used to be a contact sheet of thumbnails: small, dense,
+   and enough to confirm an upload landed. It is now a stack, because each
+   frame carries a crop stage that has to be big enough to place a garment in.
+   Two across on a wide screen is as many as stays workable. */
 .admin .uploader__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
-  gap: var(--ad-s-3);
-  margin: 0 0 var(--ad-s-3);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+  gap: var(--ad-s-4);
+  margin: 0 0 var(--ad-s-4);
   padding: 0;
   list-style: none;
 }
 
-.admin .uploader__item {
-  position: relative;
+.admin .uploader__shot {
+  padding: var(--ad-s-3);
   border-radius: var(--ad-r-inner);
-  overflow: hidden;
   background: var(--ad-paper);
-  aspect-ratio: 4 / 5;
 }
 
-.admin .uploader__item img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
+.admin .uploader__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ad-s-2);
+  margin-bottom: var(--ad-s-2);
 }
 
 /* Position one is the featured image everywhere else in the store, so the
    list says so rather than leaving it to be discovered. */
-.admin .uploader__badge {
-  position: absolute;
-  top: 0.4rem;
-  left: 0.4rem;
-  padding: 0.15rem 0.45rem;
+.admin .uploader__index {
+  font-size: var(--ad-t-micro);
+  font-weight: 600;
+  letter-spacing: var(--ad-track-label);
+  text-transform: uppercase;
+  color: var(--ad-ink-3);
+}
+
+.admin .uploader__shot:first-child .uploader__index {
+  padding: 0.15rem 0.5rem;
   border-radius: var(--ad-r-pill);
   background: var(--ad-acid);
   color: var(--ad-ink);
-  font-size: 0.625rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
-.admin .uploader__tools {
-  position: absolute;
-  inset: auto 0 0 0;
-  display: flex;
-  gap: 0.25rem;
-  padding: 0.35rem;
-  background: linear-gradient(to top, rgba(23, 25, 25, 0.72), transparent);
-}
+.admin .uploader__tools { display: flex; gap: 0.25rem; }
 
-.admin .uploader__tools button {
-  flex: 1;
-  padding: 0.2rem;
-  border: 0;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.9);
-  color: var(--ad-ink);
-  font-size: 0.625rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.admin .uploader__tools button:hover { background: var(--ad-white); }
+.admin .uploader__alt { margin: var(--ad-s-3) 0 0; }
 
 /* --------------------------------------------------------------------------
    Managers (categories, discounts, shipping): a list beside its form
@@ -1717,33 +1731,16 @@ body:has(.admin) {
   align-items: start;
 }
 
-@media (min-width: 48rem) {
-  .admin .mediaslot__body { grid-template-columns: 13rem minmax(0, 1fr); }
+/* The crop stage leads and takes the wider column: it is the decision on this
+   card, and the address and alt text beside it are its bookkeeping. Below
+   62rem they stack, because a crop stage in a 13rem column is not one. */
+@media (min-width: 62rem) {
+  .admin .mediaslot__body {
+    grid-template-columns: minmax(0, 1.2fr) minmax(17rem, 1fr);
+  }
 }
 
-/* A fixed 4:5 window, which is the shape most of these slots are. It is a
-   judgement aid, not a rendition of the slot — the storefront's own aspect is
-   set by the layout and stated on the card. */
-.admin .mediaslot__preview {
-  position: relative;
-  aspect-ratio: 4 / 5;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-  border-radius: var(--ad-r-field);
-  background: var(--ad-paper);
-}
-
-.admin .mediaslot__image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.admin .mediaslot__empty {
-  font-size: var(--ad-t-small);
-  color: var(--ad-ink-3);
-}
+.admin .mediaslot__preview { min-width: 0; }
 
 .admin .mediaslot__fields { display: grid; gap: var(--ad-s-3); }
 
@@ -1795,4 +1792,172 @@ body:has(.admin) {
   padding-top: var(--ad-s-3);
   margin-top: var(--ad-s-3);
   border-top: 1px solid var(--ad-line);
+}
+
+/* --------------------------------------------------------------------------
+   The crop stage
+
+   A holder in the shape the frame is actually seen in, the photograph dragged
+   inside it, and the two views it will be seen in underneath. Nothing here
+   cuts the file: the stage writes an `object-position` and a scale, and the
+   storefront renders from the same helper — `lib/media/crop.ts` — so what is
+   inside the holder is what ships.
+
+   Every frame on this page therefore renders through the same three CSS
+   properties as the storefront does: `cover`, the position, and a scale of
+   `--crop-zoom`. A second way of drawing a crop would be a second thing to
+   keep in agreement with the shop.
+   -------------------------------------------------------------------------- */
+
+.admin .cropfield { display: grid; gap: var(--ad-s-2); }
+
+.admin .cropfield__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--ad-s-2);
+  flex-wrap: wrap;
+}
+
+.admin .cropfield__label {
+  font-size: var(--ad-t-micro);
+  font-weight: 600;
+  letter-spacing: var(--ad-track-label);
+  text-transform: uppercase;
+  color: var(--ad-ink-3);
+}
+
+.admin .cropfield__hint,
+.admin .cropfield__note {
+  font-size: var(--ad-t-small);
+  color: var(--ad-ink-2);
+}
+
+.admin .cropfield__note { margin: 0; }
+
+/* The holder. A field you manipulate rather than type into, so it takes the
+   same ink box as an input — and the same acid ring when it has the keyboard,
+   because the arrow keys do something here. */
+.admin .cropstage {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--ad-field-line);
+  border-radius: var(--ad-r-field);
+  background: var(--ad-paper);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.admin .cropstage--drag { cursor: grabbing; }
+
+.admin .cropstage:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ad-acid) 70%, transparent);
+}
+
+.admin .cropstage img,
+.admin .cropframe img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(var(--crop-zoom, 1));
+  -webkit-user-drag: none;
+}
+
+/* Thirds, at the weight of a pencil line. Visible enough to place a subject
+   against, faint enough not to be read as part of the photograph. */
+.admin .cropstage__guides {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    linear-gradient(to right, transparent calc(33.333% - 0.5px),
+      rgba(255, 255, 255, 0.5) calc(33.333% - 0.5px) calc(33.333% + 0.5px),
+      transparent calc(33.333% + 0.5px) calc(66.666% - 0.5px),
+      rgba(255, 255, 255, 0.5) calc(66.666% - 0.5px) calc(66.666% + 0.5px),
+      transparent calc(66.666% + 0.5px)),
+    linear-gradient(to bottom, transparent calc(33.333% - 0.5px),
+      rgba(255, 255, 255, 0.5) calc(33.333% - 0.5px) calc(33.333% + 0.5px),
+      transparent calc(33.333% + 0.5px) calc(66.666% - 0.5px),
+      rgba(255, 255, 255, 0.5) calc(66.666% - 0.5px) calc(66.666% + 0.5px),
+      transparent calc(66.666% + 0.5px));
+  transition: opacity var(--ad-fast) var(--ad-ease);
+}
+
+/* Only while the crop is being decided. */
+.admin .cropstage:hover .cropstage__guides,
+.admin .cropstage:focus-visible .cropstage__guides,
+.admin .cropstage--drag .cropstage__guides { opacity: 1; }
+
+.admin .cropfield__controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ad-s-3);
+  flex-wrap: wrap;
+}
+
+.admin .cropfield__zoom {
+  display: flex;
+  align-items: center;
+  gap: var(--ad-s-2);
+  flex: 1 1 12rem;
+  font-size: var(--ad-t-micro);
+  font-weight: 600;
+  letter-spacing: var(--ad-track-label);
+  text-transform: uppercase;
+  color: var(--ad-ink-3);
+}
+
+.admin .cropfield__zoom input[type="range"] {
+  flex: 1 1 auto;
+  min-width: 6rem;
+  accent-color: var(--ad-ink);
+  cursor: pointer;
+}
+
+.admin .cropfield__zoomvalue {
+  min-width: 3.25rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--ad-ink-2);
+}
+
+/* The two views. Side by side rather than behind a toggle: the whole point is
+   that a crop which works wide can fail tall, and a toggle hides exactly the
+   comparison being asked for. */
+.admin .cropviews {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: var(--ad-s-3);
+  align-items: start;
+}
+
+.admin .cropviews__view { margin: 0; display: grid; gap: 0.35rem; }
+
+.admin .cropviews figcaption {
+  font-size: var(--ad-t-micro);
+  font-weight: 600;
+  letter-spacing: var(--ad-track-label);
+  text-transform: uppercase;
+  color: var(--ad-ink-3);
+}
+
+.admin .cropframe {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--ad-r-field);
+  background: var(--ad-paper);
+  display: grid;
+  place-items: center;
+}
+
+.admin .cropframe__empty {
+  font-size: var(--ad-t-small);
+  color: var(--ad-ink-3);
 }

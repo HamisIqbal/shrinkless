@@ -1,11 +1,15 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { getSiteMedia, type SiteMedia } from '@/lib/services/site-media';
+import { cropStyle } from '@/lib/media/crop';
+import type { BrandImage } from '@/lib/brand/images';
 
 type Frame = {
   href: string;
   label: string;
-  image: { url: string; alt: string };
+  /** The whole frame, crop included — these tiles are wider than the sources
+   *  they are cut from, so where they crop is not incidental. */
+  image: BrandImage;
 };
 
 /**
@@ -90,6 +94,7 @@ export async function LookbookRail() {
                   loading="lazy"
                   sizes="(min-width: 62rem) 38rem, 80vw"
                   className="lookbook__image"
+                  style={cropStyle(frame.image)}
                 />
                 <span className="lookbook__label">{frame.label}</span>
               </Link>

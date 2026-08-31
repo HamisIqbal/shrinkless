@@ -66,7 +66,9 @@
 }
 
 .tiles__tile--link:hover .tiles__image,
-.tiles__tile--link:focus-visible .tiles__image { transform: scale(1.04); }
+.tiles__tile--link:focus-visible .tiles__image {
+  transform: scale(calc(var(--crop-zoom, 1) * 1.04));
+}
 
 /* Weighted to the foot, where the type is. A flat tint strong enough to carry
    white text over a pale frame would grey out the whole photograph. */
@@ -233,7 +235,9 @@
   transition: transform var(--dur-4) var(--ease-out);
 }
 
-.lookbook__tile:hover .lookbook__image { transform: scale(1.04); }
+.lookbook__tile:hover .lookbook__image {
+  transform: scale(calc(var(--crop-zoom, 1) * 1.04));
+}
 
 /* The label sits on the photograph, so it carries its own ground rather than
    relying on whatever happens to be in the bottom left of the frame. */
@@ -1275,7 +1279,9 @@
 }
 
 .gateway__tile:hover .gateway__image,
-.gateway__tile:focus-visible .gateway__image { transform: scale(1.04); }
+.gateway__tile:focus-visible .gateway__image {
+  transform: scale(calc(var(--crop-zoom, 1) * 1.04));
+}
 
 /* Same reasoning as the hero: the label and its "3 styles" caption sit at the
    bottom of the frame, so that is where the weight goes. */
@@ -1422,7 +1428,7 @@
 
 @media (hover: hover) {
   .pcard__reel { cursor: grab; }
-  .pcard:hover .pcard__frame img { transform: scale(1.03); }
+  .pcard:hover .pcard__frame img { transform: scale(calc(var(--crop-zoom, 1) * 1.03)); }
 }
 
 /* --- corners ------------------------------------------------------------- */
@@ -3386,4 +3392,24 @@
   align-items: center;
   gap: var(--space-4);
   padding-top: var(--space-6);
+}
+
+/* --------------------------------------------------------------------------
+   The admin's crop
+
+   Every editable photograph carries an `object-position` and a `--crop-zoom`,
+   set on the element by `cropStyle` in `lib/media/crop.ts`. The position is an
+   inline style and needs nothing here; the zoom is a custom property rather
+   than an inline `transform` precisely so these rules — and the hover scales
+   above, which multiply it — keep working instead of being overridden.
+   -------------------------------------------------------------------------- */
+
+.hero__image,
+.tiles__image,
+.gateway__image,
+.lookbook__image,
+.imageband__image,
+.pdp__shot img,
+.pcard__frame img {
+  transform: scale(var(--crop-zoom, 1));
 }

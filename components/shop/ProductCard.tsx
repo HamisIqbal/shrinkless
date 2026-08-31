@@ -8,6 +8,7 @@ import { imageUrl } from '@/lib/images';
 import { toColorways } from '@/lib/shop/colorways';
 import { EyeIcon, StarIcon } from '@/components/site/icons';
 import type { ProductDTO } from '@/types/dto';
+import { cropStyle } from '@/lib/media/crop';
 
 type Props = {
   product: ProductDTO;
@@ -189,13 +190,17 @@ export function ProductCard({ product, index = 0, onQuickView }: Props) {
                 draggable={false}
               >
                 <Image
-                  src={imageUrl(frame.publicId, 'c_fill,w_1200,h_1800,q_auto,f_auto')}
+                  /* A scale, not a fill: the crop belongs to the image and
+                     is applied in CSS, so a server-side centre crop here would
+                     silently overrule what the admin chose. */
+                  src={imageUrl(frame.publicId, 'w_1200,q_auto,f_auto')}
                   alt=""
                   fill
                   loading={index < 2 && position === 0 ? undefined : 'lazy'}
                   priority={index < 2 && position === 0}
                   sizes="(min-width: 75rem) 33vw, (min-width: 48rem) 50vw, 100vw"
                   draggable={false}
+                  style={cropStyle(frame)}
                 />
               </Link>
             ))

@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { ZOOM_MAX, ZOOM_MIN } from '@/lib/media/crop';
+
 const optionValue = z.string().trim().toLowerCase().min(1);
 const cents = z.number().int().min(0);
 
@@ -8,6 +10,18 @@ const imageSchema = z.object({
   width: z.number().int().positive(),
   height: z.number().int().positive(),
   alt: z.string().trim().default(''),
+  /* The crop. Percentages only, because this value ends up in a style
+     attribute — the same rule `lib/validation/media.ts` applies to site
+     media, for the same reason. */
+  focus: z
+    .string()
+    .trim()
+    .refine(
+      (value) => value === '' || /^\d{1,3}% \d{1,3}%$/.test(value),
+      'Focus looks like "50% 30%"',
+    )
+    .default(''),
+  zoom: z.coerce.number().min(ZOOM_MIN).max(ZOOM_MAX).default(ZOOM_MIN),
 });
 
 export const seoInputSchema = z.object({

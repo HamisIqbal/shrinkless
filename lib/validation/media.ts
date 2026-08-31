@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { ZOOM_MAX, ZOOM_MIN } from '@/lib/media/crop';
+
 /** How many frames the campaign carousel will accept. Two is the fewest that
  *  is still a carousel; six is more than any visitor will ever sit through. */
 export const HERO_MIN = 2;
@@ -44,6 +46,18 @@ const focus = z
   )
   .default('');
 
+/**
+ * How far the photograph is scaled up inside its frame, about `focus`.
+ *
+ * Coerced because it arrives from a range input, and bounded because a value
+ * below 1 would letterbox the frame the crop was meant to fill.
+ */
+const zoom = z.coerce
+  .number()
+  .min(ZOOM_MIN, 'Zoom starts at 1 — the frame filled')
+  .max(ZOOM_MAX, `Zoom stops at ${ZOOM_MAX}`)
+  .default(ZOOM_MIN);
+
 export const mediaFrameSchema = z.object({
   url,
   alt: z
@@ -52,6 +66,7 @@ export const mediaFrameSchema = z.object({
     .min(1, 'Alt text is required — describe what is in the picture')
     .max(200, 'Keep alt text under 200 characters'),
   focus,
+  zoom,
 });
 
 /** One single-image slot. The slot id is checked against the registry by the
