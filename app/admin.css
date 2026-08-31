@@ -1836,23 +1836,35 @@ body:has(.admin) {
 
 .admin .cropfield__note { margin: 0; }
 
-/* The two views, side by side. Not behind a toggle: the reason to look at a
-   wide crop next to a tall one is that the tall one usually needs a different
-   decision, and a toggle hides exactly the comparison being asked for. The
-   desktop frame takes the larger share because it is usually the wider shape;
-   below 34rem they stack rather than shrink into uselessness. */
+/* The two views, stacked — mobile under desktop. Not behind a toggle: the
+   reason to see a wide crop and a tall one together is that the tall one
+   usually needs a different decision, and a toggle hides exactly the
+   comparison being asked for.
+
+   They were side by side and it was wrong. This field sits in a column beside
+   the address and alt text, and two frames sharing that column left the tall
+   one too narrow to place anything in — and pushed into its neighbour. A
+   column has vertical room to spare and none across, so the stack is what the
+   layout was already asking for. */
 .admin .cropviews {
   display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
   gap: var(--ad-s-3);
-  align-items: start;
+  justify-items: start;
 }
 
-@media (max-width: 34rem) {
-  .admin .cropviews { grid-template-columns: minmax(0, 1fr); }
+.admin .cropview {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+  width: 100%;
 }
 
-.admin .cropview { display: grid; gap: 0.4rem; min-width: 0; }
+/* How tall a holder may stand. A 9:16 phone frame given the full width of a
+   column is most of a screen of its own, so the height is what is capped and
+   the width follows from the frame's own shape — see the inline `max-width`,
+   which is this times the ratio. Capping the height directly would hold the
+   width at 100% and quietly render a shape the storefront never shows. */
+.admin .cropfield { --crop-max-h: 20rem; }
 
 .admin .cropview__head {
   display: flex;

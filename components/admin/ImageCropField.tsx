@@ -142,7 +142,15 @@ function CropStage({
   }
 
   return (
-    <div className="cropview">
+    /* The height a holder may stand is capped in the stylesheet; the width
+       follows from this frame's own shape, so a tall phone frame stays a usable
+       size instead of taking the whole column. It is set here rather than on
+       the holder so the label and the zoom row are the same width as the
+       photograph they belong to. */
+    <div
+      className="cropview"
+      style={{ maxWidth: `calc(${(ratio.w / ratio.h).toFixed(4)} * var(--crop-max-h))` }}
+    >
       <div className="cropview__head">
         <span className="cropview__label">{label}</span>
         <span className="cropview__ratio">
