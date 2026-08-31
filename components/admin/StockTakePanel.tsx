@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { setLowStockThresholdAction, setStockAction } from '@/app/actions/admin/inventory';
+import { MAX_STOCK } from '@/lib/inventory/limits';
 
 /**
  * The absolute-set half of inventory: a stock take, and the low-stock
@@ -90,6 +91,7 @@ export function StockTakePanel({
           <input
             type="number"
             min={0}
+            max={MAX_STOCK}
             step={1}
             value={count}
             onChange={(event) => setCount(event.target.value)}
@@ -118,6 +120,7 @@ export function StockTakePanel({
           <input
             type="number"
             min={0}
+            max={MAX_STOCK}
             step={1}
             value={override}
             onChange={(event) => setOverride(event.target.value)}

@@ -6,6 +6,7 @@ import { Variant } from '@/lib/db/models/variant';
 import {
   InsufficientStockError,
   VariantNotFoundError,
+  MAX_STOCK,
   adjustStock,
   commitStockForOrder,
   countStockStates,
@@ -135,6 +136,55 @@ describe('adjustStock', () => {
     await expect(
       adjustStock({ variantId: '64b7f3c2a1b2c3d4e5f60718', delta: 1, reason: 'manual' }),
     ).rejects.toBeInstanceOf(VariantNotFoundError);
+  });
+});
+
+describe('the stock ceiling', () => {
+  /* `Number.isInteger(1e21)` is true, so an adjustment that size used to be
+     applied. Past 2^53 a double no longer holds every whole number, and the
+     correction that should undo it computes a delta that rounds to the whole
+     figure — asking to set the variant back to 18 sets it to 0. There is no
+     way back through the panel, and a mistyped adjustment is the only thing
+     needed to get there. */
+  it('refuses an adjustment past the point arithmetic still works', async () => {
+    const { variant } = await seedVariant(5);
+
+    await expect(
+      adjustStock({ variantId: String(variant._id), delta: 1e21, reason: 'correction', actor: ACTOR }),
+    ).rejects.toThrow(/whole number of units/);
+
+    expect((await Variant.findById(variant._id).lean())!.stock).toBe(5);
+  });
+
+  it('refuses one that would carry a variant over the ceiling', async () => {
+    const { variant } = await seedVariant(5);
+
+    await expect(
+      adjustStock({
+        variantId: String(variant._id),
+        delta: MAX_STOCK,
+        reason: 'restock',
+        actor: ACTOR,
+      }),
+    ).rejects.toThrow(/would go past/);
+
+    expect((await Variant.findById(variant._id).lean())!.stock).toBe(5);
+  });
+
+  it('refuses an absolute figure past it too', async () => {
+    const { variant } = await seedVariant(5);
+
+    await expect(
+      setVariantStock({ variantId: String(variant._id), stock: MAX_STOCK + 1, actor: ACTOR }),
+    ).rejects.toThrow(/no more than/);
+  });
+
+  it('still allows a figure a real warehouse might hold', async () => {
+    const { variant } = await seedVariant(0);
+
+    expect(
+      await setVariantStock({ variantId: String(variant._id), stock: 250_000, actor: ACTOR }),
+    ).toBe(250_000);
   });
 });
 

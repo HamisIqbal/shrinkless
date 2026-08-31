@@ -80,10 +80,14 @@ const variantInputSchema = z.object({
 });
 
 export const productInputSchema = z.object({
-  title: z.string().trim().min(1, 'Title is required'),
+  title: z.string().trim().min(1, 'Title is required').max(200, 'Keep the title under 200 characters'),
   slug: z.string().trim().toLowerCase().min(1, 'Slug is required')
     .regex(/^[a-z0-9-]+$/, 'Slug may contain lowercase letters, numbers and dashes only'),
-  description: z.string().trim().default(''),
+  description: z
+    .string()
+    .trim()
+    .max(20_000, 'That description is longer than any product page needs')
+    .default(''),
   category: z.string().trim().toLowerCase().min(1, 'Category is required'),
   status: z.enum(['draft', 'published']),
   featured: z.boolean().default(false),

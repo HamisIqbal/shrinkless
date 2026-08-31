@@ -1,6 +1,7 @@
 'use client';
 
 import type { MatrixRow } from '@/lib/admin/variant-matrix';
+import { MAX_STOCK } from '@/lib/inventory/limits';
 
 type Props = {
   rows: MatrixRow[];
@@ -68,6 +69,7 @@ export function VariantMatrix({ rows, onRowChange }: Props) {
                 <input
                   type="number"
                   min={0}
+                  max={MAX_STOCK}
                   step={1}
                   aria-label={'Stock for ' + row.size + ' ' + row.color}
                   value={row.stock}

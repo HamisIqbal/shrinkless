@@ -1,5 +1,6 @@
 import { Types } from 'mongoose';
 import { connectToDatabase } from '@/lib/db/connection';
+import { MAX_STOCK, STOCK_RANGE_ERROR } from '@/lib/inventory/limits';
 import { InventoryAdjustment, type AdjustmentReason } from '@/lib/db/models/inventory-adjustment';
 import { Order } from '@/lib/db/models/order';
 import { Product } from '@/lib/db/models/product';
@@ -13,6 +14,9 @@ import {
   type Paged,
 } from '@/lib/admin/query';
 import type { InventoryAdjustmentDTO, InventoryRowDTO, LowStockRowDTO } from '@/types/dto';
+
+/** Re-exported so callers reaching for the service get the bound too. */
+export { MAX_STOCK } from '@/lib/inventory/limits';
 
 export class InsufficientStockError extends Error {
   constructor(
@@ -63,7 +67,8 @@ export async function adjustStock(input: AdjustInput): Promise<number> {
   const actor = input.actor ?? SYSTEM;
 
   if (!Types.ObjectId.isValid(variantId)) throw new VariantNotFoundError(variantId);
-  if (!Number.isInteger(delta)) throw new Error('A stock adjustment has to be a whole number');
+  if (!Number.isSafeInteger(delta)) throw new Error(STOCK_RANGE_ERROR);
+  if (Math.abs(delta) > MAX_STOCK) throw new Error(STOCK_RANGE_ERROR);
   if (delta === 0) {
     const current = await Variant.findById(variantId).select('stock').lean();
     if (!current) throw new VariantNotFoundError(variantId);
@@ -75,6 +80,10 @@ export async function adjustStock(input: AdjustInput): Promise<number> {
   const filter: Record<string, unknown> = { _id: new Types.ObjectId(variantId) };
   // Overselling is not supported: the floor is zero and the filter enforces it.
   if (delta < 0) filter.stock = { $gte: -delta };
+  // And the ceiling is enforced in the same breath, for the same reason it is
+  // a filter rather than a check: a concurrent adjustment must not be able to
+  // carry the total over the top between the read and the write.
+  if (delta > 0) filter.stock = { $lte: MAX_STOCK - delta };
 
   const updated = await Variant.findOneAndUpdate(
     filter,
@@ -83,10 +92,18 @@ export async function adjustStock(input: AdjustInput): Promise<number> {
   ).lean();
 
   if (!updated) {
-    // Either the variant is gone or there was not enough stock. Distinguish
-    // the two so the caller can say something true.
+    // The variant is gone, there was not enough stock, or this would have
+    // taken it over the ceiling. Distinguish them so the caller can say
+    // something true.
     const existing = await Variant.findById(variantId).select('sku stock').lean();
     if (!existing) throw new VariantNotFoundError(variantId);
+
+    if (delta > 0) {
+      throw new Error(
+        `${existing.sku} would go past ${MAX_STOCK.toLocaleString('en-US')} units. ` +
+          'Check the figure — that is a warehouse, not a shelf.',
+      );
+    }
 
     throw new InsufficientStockError(existing.sku, existing.stock, -delta);
   }
@@ -134,6 +151,9 @@ export async function setVariantStock(input: {
   if (!Number.isInteger(stock) || stock < 0) {
     throw new Error('Stock has to be a whole number of units, and cannot be negative');
   }
+  // Checked after the sign, so a figure that is merely too large is told it is
+  // too large rather than being accused of being negative.
+  if (!Number.isSafeInteger(stock) || stock > MAX_STOCK) throw new Error(STOCK_RANGE_ERROR);
 
   await connectToDatabase();
 

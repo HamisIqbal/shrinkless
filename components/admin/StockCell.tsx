@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { adjustStockAction } from '@/app/actions/admin/inventory';
+import { MAX_STOCK } from '@/lib/inventory/limits';
 
 const REASONS = [
   { value: 'restock', label: 'Restock' },
@@ -81,11 +82,13 @@ export function StockCell({
         <span className="visually-hidden">Adjustment for {sku}</span>
         <input
           type="number"
+          min={-MAX_STOCK}
+          max={MAX_STOCK}
+          step={1}
           value={delta}
           onChange={(event) => setDelta(event.target.value)}
           placeholder="+/-"
           autoFocus
-          step={1}
         />
       </label>
 
