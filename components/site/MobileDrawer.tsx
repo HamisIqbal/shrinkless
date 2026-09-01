@@ -180,15 +180,11 @@ export function MobileDrawer({
               </div>
             </li>
 
-            {/* Flagged here for the same reason it is flagged in the bar. The
-                accordion rows are all categories; this one is a different
-                shop, and the rule above it is what says so. */}
-            <li className="drawer__item drawer__item--flag">
+            <li className="drawer__item">
               <div className="drawer__row">
                 <Link href="/wholesale" className="drawer__link" onClick={onClose}>
                   Wholesale
                 </Link>
-                <span className="drawer__tag">Trade</span>
               </div>
             </li>
           </ul>

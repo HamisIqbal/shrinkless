@@ -3446,63 +3446,58 @@
 /* ==========================================================================
    Flagged navigation
    Wholesale is not another way into the same shop, so it is not drawn as
-   another link into it. A pill, with a dot, at the end of the bar.
+   another link into it. A solid orange pill at the end of the bar.
 
-   Every colour here is `currentColor`. The masthead is ink on paper when the
-   page has moved and white over photography when it has not, and a flag that
-   named either one would be invisible in the other state — inheriting means
-   the pill is simply whatever the bar is, in both.
+   The one place on the storefront outside the Buy now button where the accent
+   is allowed out. It earns it for the same reason that button does: the entry
+   has to be told apart from its neighbours at a glance, and in a monochrome
+   bar there is nothing left to say it with. Black on this orange is 10.4:1 —
+   higher than white on it — which is why the label is ink.
+
+   Fixed colours rather than `currentColor`, unlike everything else in the
+   masthead. The pill is the same orange over the homepage photography as it
+   is on the paper bar, because a flag that changed with its ground would stop
+   reading as one fixed destination.
    ========================================================================== */
 
 .navflag {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.4rem 0.85rem;
-  border: var(--spacing-rule) solid currentColor;
+  padding: 0.4rem 0.9rem;
+  border: var(--spacing-rule) solid var(--color-accent);
   border-radius: 999px;
-  color: inherit;
+  background: var(--color-accent);
+  color: var(--color-ink);
   font-size: var(--text-meta);
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   text-decoration: none;
   white-space: nowrap;
-  transition: background var(--dur-2) var(--ease-out);
+  transition:
+    background var(--dur-2) var(--ease-out),
+    border-color var(--dur-2) var(--ease-out);
 }
 
-.navflag::before {
-  content: "";
-  width: 0.35rem;
-  height: 0.35rem;
-  border-radius: 999px;
-  background: currentColor;
-}
+/* Lifts rather than darkens. The label stays ink, so the hover has to move
+   away from black to keep the contrast it started with.
 
-/* A wash of the bar's own colour: the only fill that cannot clash with a
-   ground this component is not allowed to know. */
+   The current page is deliberately NOT included. Every other entry in the bar
+   marks itself with a rule when you are on it, but this one is already the
+   loudest thing in the masthead — and the lift is a paler orange, so wearing
+   it on /wholesale left the flag washed out on the one page it should be at
+   full strength. Being where you are is not a hover state. */
 .navflag:hover,
-.navflag:focus-visible,
-.navflag[aria-current="page"] {
-  background: color-mix(in srgb, currentColor 14%, transparent);
+.navflag:focus-visible {
+  border-color: var(--color-accent-deep);
+  background: var(--color-accent-deep);
 }
 
-/* The drawer's own flag. The rule above it does the separating that the pill
-   does in the bar — a pill in a column of full-width rows would read as a
-   button that does something other than navigate. */
-.drawer__item--flag {
-  margin-top: var(--space-2);
-  border-top: var(--spacing-rule) solid var(--color-muted);
-}
-
-.drawer__tag {
-  padding: 0.2rem 0.55rem;
-  border: var(--spacing-rule) solid currentColor;
-  border-radius: 999px;
-  font-size: 0.6875rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  opacity: 0.7;
+/* The ink focus ring sits on an orange ground here, where its default
+   offset puts it half on the pill. Pushed clear instead. */
+.navflag:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 3px;
 }
 
 /* ==========================================================================
