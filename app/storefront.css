@@ -3417,7 +3417,8 @@
 .lookbook__image,
 .imageband__image,
 .pdp__shot img,
-.pcard__frame img {
+.pcard__frame img,
+.sheetrow__frame img {
   --crop-p: var(--crop-pos, var(--crop-pos-default, 50% 50%));
   --crop-z: var(--crop-zoom, 1);
 
@@ -3435,8 +3436,532 @@
   .lookbook__image,
   .imageband__image,
   .pdp__shot img,
-  .pcard__frame img {
+  .pcard__frame img,
+  .sheetrow__frame img {
     --crop-p: var(--crop-pos-m, var(--crop-pos, var(--crop-pos-default, 50% 50%)));
     --crop-z: var(--crop-zoom-m, var(--crop-zoom, 1));
   }
+}
+
+/* ==========================================================================
+   Flagged navigation
+   Wholesale is not another way into the same shop, so it is not drawn as
+   another link into it. A pill, with a dot, at the end of the bar.
+
+   Every colour here is `currentColor`. The masthead is ink on paper when the
+   page has moved and white over photography when it has not, and a flag that
+   named either one would be invisible in the other state — inheriting means
+   the pill is simply whatever the bar is, in both.
+   ========================================================================== */
+
+.navflag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.85rem;
+  border: var(--spacing-rule) solid currentColor;
+  border-radius: 999px;
+  color: inherit;
+  font-size: var(--text-meta);
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background var(--dur-2) var(--ease-out);
+}
+
+.navflag::before {
+  content: "";
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+/* A wash of the bar's own colour: the only fill that cannot clash with a
+   ground this component is not allowed to know. */
+.navflag:hover,
+.navflag:focus-visible,
+.navflag[aria-current="page"] {
+  background: color-mix(in srgb, currentColor 14%, transparent);
+}
+
+/* The drawer's own flag. The rule above it does the separating that the pill
+   does in the bar — a pill in a column of full-width rows would read as a
+   button that does something other than navigate. */
+.drawer__item--flag {
+  margin-top: var(--space-2);
+  border-top: var(--spacing-rule) solid var(--color-muted);
+}
+
+.drawer__tag {
+  padding: 0.2rem 0.55rem;
+  border: var(--spacing-rule) solid currentColor;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+/* ==========================================================================
+   Wholesale — the trade line sheet
+   The one page in the storefront that is a document rather than a display.
+
+   Retail leads with photography and files the numbers behind a filter panel,
+   because a shopper is choosing a thing to wear. A wholesale buyer is reading
+   down a column, comparing ten styles against five order sizes, so the
+   priorities invert: the frame shrinks to a thumbnail, the figures come
+   forward, and everything sits in tabular numerals so the decimal points line
+   up between one row and the next.
+
+   Two grounds, and the split is the whole idea. The sheet is ink — the
+   catalogue you were sent — and the enquiry panel is paper, the order form
+   clipped to the front of it. Nothing else in the storefront puts the two
+   next to each other, which is exactly why this page does not read as the
+   shop with a different heading on it.
+   ========================================================================== */
+
+.tradesheet {
+  /* The gutter between the sheet and the panel, and the rhythm inside a row.
+     Declared once here so the two halves stay in step at every width. */
+  --trade-gap: var(--space-5);
+  --trade-rule: var(--spacing-rule) solid rgba(245, 244, 240, 0.16);
+}
+
+.tradesheet__head {
+  max-width: 60rem;
+  padding-bottom: var(--space-5);
+  border-bottom: var(--trade-rule);
+}
+
+.tradesheet__title {
+  margin-top: var(--space-2);
+}
+
+.tradesheet__intro {
+  margin-top: var(--space-4);
+  max-width: 52ch;
+  color: var(--color-paper);
+}
+
+/* Four facts a buyer checks before they read a single price. A definition
+   list because that is what they are, and a grid because a stack of eight
+   lines would push the line sheet itself below the fold. */
+.tradesheet__terms {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3) var(--space-4);
+  margin-top: var(--space-5);
+}
+
+.tradesheet__term dt {
+  font-size: var(--text-meta);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.tradesheet__term dd {
+  margin-top: 0.35rem;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+}
+
+.tradesheet__empty {
+  margin-top: var(--space-6);
+  color: var(--color-muted);
+}
+
+@media (min-width: 48rem) {
+  .tradesheet__terms { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* --------------------------------------------------------------------------
+   Board — the sheet and the order form beside it
+   -------------------------------------------------------------------------- */
+
+.tradeboard {
+  display: grid;
+  gap: var(--trade-gap);
+  margin-top: var(--space-5);
+  align-items: start;
+}
+
+/* The panel only earns its own column once there is room for the sheet to
+   keep its five tier buttons in a row beside it. Below that it follows the
+   sheet down the page, which is the right order to read them in anyway. */
+@media (min-width: 68rem) {
+  .tradeboard {
+    grid-template-columns: minmax(0, 1fr) 22rem;
+    gap: var(--space-6);
+  }
+}
+
+.tradeboard__legend {
+  display: none;
+  justify-content: space-between;
+  padding-bottom: var(--space-2);
+  border-bottom: var(--trade-rule);
+  font-size: var(--text-meta);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+@media (min-width: 62rem) {
+  .tradeboard__legend { display: flex; }
+}
+
+.tradeboard__rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* --------------------------------------------------------------------------
+   One style
+   -------------------------------------------------------------------------- */
+
+.sheetrow {
+  display: grid;
+  grid-template-columns: 5rem minmax(0, 1fr);
+  grid-template-areas:
+    "frame body"
+    "tiers tiers";
+  gap: var(--space-3);
+  padding-block: var(--space-4);
+  border-bottom: var(--trade-rule);
+  transition: background var(--dur-2) var(--ease-out);
+}
+
+/* A chosen row lifts a shade out of the ground, and the bleed takes the wash
+   past the text so it reads as the row being marked rather than as a box
+   drawn around it. */
+.sheetrow--chosen {
+  background: rgba(245, 244, 240, 0.05);
+  box-shadow: -0.75rem 0 0 rgba(245, 244, 240, 0.05), 0.75rem 0 0 rgba(245, 244, 240, 0.05);
+}
+
+.sheetrow__frame {
+  grid-area: frame;
+  aspect-ratio: 2 / 3;
+  background: rgba(245, 244, 240, 0.08);
+}
+
+.sheetrow__body { grid-area: body; min-width: 0; }
+
+.sheetrow__title {
+  font-size: 1.125rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.sheetrow__spec {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+  font-size: var(--text-meta);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+/* The gender is a placeholder assignment and will be corrected in the admin,
+   so it is drawn as a chip rather than folded in with the sizes — visible
+   enough to be spotted and changed, quiet enough not to lead the row. */
+.sheetrow__gender {
+  padding: 0.15rem 0.5rem;
+  border: var(--spacing-rule) solid rgba(245, 244, 240, 0.28);
+  border-radius: 999px;
+  color: var(--color-paper);
+}
+
+.sheetrow__fact::before {
+  content: "";
+  display: inline-block;
+  width: 0.75rem;
+  margin-right: 0.5rem;
+  border-top: var(--spacing-rule) solid currentColor;
+  vertical-align: 0.25em;
+}
+
+.sheetrow__copy {
+  margin-top: var(--space-2);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  max-width: 60ch;
+  color: rgba(245, 244, 240, 0.72);
+
+  /* The lead paragraph, clamped. The full copy belongs on a product page and
+     these rows have to stay comparable down the column — a row that ran four
+     lines while its neighbour ran two would break the scan the sheet exists
+     for. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+
+/* --------------------------------------------------------------------------
+   The five tiers
+   -------------------------------------------------------------------------- */
+
+.sheetrow__tiers {
+  grid-area: tiers;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--spacing-rule);
+  margin-top: var(--space-2);
+}
+
+.tierbtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.6rem 0.35rem;
+  border: var(--spacing-rule) solid rgba(245, 244, 240, 0.2);
+  background: none;
+  color: var(--color-paper);
+  cursor: pointer;
+  transition:
+    background var(--dur-1) var(--ease-out),
+    border-color var(--dur-1) var(--ease-out),
+    color var(--dur-1) var(--ease-out);
+}
+
+/* Three figures, three weights, so the eye can pick one line and run down it.
+   The quantity is what a buyer scans for, the unit price is what they compare,
+   and the line total is the consequence — in that order of prominence. */
+.tierbtn__qty {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.tierbtn__unit {
+  font-size: var(--text-meta);
+  color: var(--color-paper);
+}
+
+.tierbtn__line {
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+  color: var(--color-muted);
+}
+
+.tierbtn:hover {
+  border-color: rgba(245, 244, 240, 0.55);
+  background: rgba(245, 244, 240, 0.07);
+}
+
+/* Chosen inverts outright. A border or a tint would be one more shade in a
+   page already built from six of them; a solid paper fill is unmistakable at
+   a glance across ten rows. */
+.tierbtn--on,
+.tierbtn--on:hover {
+  border-color: var(--color-paper);
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+.tierbtn--on .tierbtn__unit { color: var(--color-ink); }
+.tierbtn--on .tierbtn__line { color: var(--color-muted-text); }
+
+/* The ink ground would swallow the default ink focus ring. */
+.tierbtn:focus-visible {
+  outline: 2px solid var(--color-paper);
+  outline-offset: 2px;
+}
+
+@media (min-width: 62rem) {
+  .sheetrow {
+    grid-template-columns: 9rem minmax(0, 1fr) 26rem;
+    grid-template-areas: "frame body tiers";
+    align-items: start;
+    gap: var(--space-4);
+  }
+
+  .sheetrow__tiers { margin-top: 0; }
+}
+
+/* --------------------------------------------------------------------------
+   The order form
+   Paper on ink: the sheet is the catalogue, this is the form clipped to it.
+   -------------------------------------------------------------------------- */
+
+.tradepanel__inner {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  padding: var(--space-4);
+  border-radius: var(--radius-card);
+}
+
+/* Follows the sheet down, but only where there is a second column for it to
+   sit in and enough height that a sticky panel does not trap the page. */
+@media (min-width: 68rem) {
+  .tradepanel { position: sticky; top: var(--space-5); }
+  .tradepanel__inner { padding: var(--space-5); }
+}
+
+.tradepanel__title {
+  font-size: var(--text-meta);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted-text);
+}
+
+.tradepanel__empty {
+  margin-top: var(--space-3);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--color-muted-text);
+}
+
+.tradepanel__lines {
+  list-style: none;
+  margin: var(--space-3) 0 0;
+  padding: 0;
+}
+
+.tradepanel__line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.15rem var(--space-2);
+  padding-block: var(--space-2);
+  border-bottom: var(--spacing-rule) solid var(--color-warm);
+}
+
+.tradepanel__style {
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+.tradepanel__qty {
+  grid-column: 1;
+  font-size: var(--text-meta);
+  color: var(--color-muted-text);
+}
+
+.tradepanel__money {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  font-size: 0.9375rem;
+}
+
+.tradepanel__total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  font-size: 1.0625rem;
+  font-weight: 500;
+}
+
+.tradepanel__totallabel {
+  display: flex;
+  flex-direction: column;
+  font-size: var(--text-meta);
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-muted-text);
+}
+
+.tradepanel__units { color: var(--color-ink); }
+
+/* --------------------------------------------------------------------------
+   Contact fields
+   -------------------------------------------------------------------------- */
+
+.tradeform {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: var(--spacing-rule) solid var(--color-warm);
+}
+
+.tradeform__pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+}
+
+@media (min-width: 30rem) {
+  .tradeform__pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.tradeform__field {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.tradeform__field label {
+  font-size: var(--text-meta);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted-text);
+}
+
+.tradeform__hint {
+  letter-spacing: 0.06em;
+  text-transform: none;
+  color: var(--color-muted);
+}
+
+/* Underlines rather than boxes. Seven boxed fields in a panel this narrow
+   read as a form to be endured; a rule under each one keeps the panel looking
+   like the rest of the page. */
+.tradeform__field input,
+.tradeform__field textarea {
+  width: 100%;
+  padding: 0.5rem 0;
+  border: 0;
+  border-bottom: var(--spacing-rule) solid var(--color-muted);
+  border-radius: 0;
+  background: none;
+  color: var(--color-ink);
+  font: inherit;
+  font-size: 0.9375rem;
+  transition: border-color var(--dur-1) var(--ease-out);
+}
+
+.tradeform__field textarea { resize: vertical; }
+
+.tradeform__field input:focus,
+.tradeform__field textarea:focus {
+  border-color: var(--color-ink);
+  outline: none;
+}
+
+.tradeform__field input:focus-visible,
+.tradeform__field textarea:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 4px;
+}
+
+.tradeform__field ::placeholder { color: var(--color-muted); }
+
+.tradeform__send { margin-top: var(--space-2); }
+
+/* Disabled means "there is nothing to send yet", which the note underneath
+   explains. Kept legible rather than greyed to nothing, because it is the
+   normal state of this button when the page loads. */
+.tradeform__send:disabled {
+  border-color: var(--color-muted);
+  background: var(--color-muted);
+  cursor: not-allowed;
+}
+
+.tradeform__note {
+  font-size: var(--text-meta);
+  line-height: 1.5;
+  color: var(--color-muted-text);
 }

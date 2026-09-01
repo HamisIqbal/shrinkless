@@ -3,6 +3,7 @@ import { connectToDatabase } from '@/lib/db/connection';
 import { Product, type ProductDoc } from '@/lib/db/models/product';
 import { Variant, type VariantDoc } from '@/lib/db/models/variant';
 import type { ProductFilter } from '@/lib/validation/catalogue';
+import { WHOLESALE_TAG } from '@/lib/wholesale/catalogue';
 import type { ProductInput, VariantInput } from '@/lib/validation/product';
 import { pageWindow, searchRegex, sortStage, toPaged, type ListParams, type Paged } from '@/lib/admin/query';
 import type { AdminProductRowDTO, ProductDTO, VariantDTO } from '@/types/dto';
@@ -88,7 +89,17 @@ export async function listPublishedProducts(
 
   // Archived products leave the storefront entirely. They keep their
   // documents so old orders and carts still resolve, but nothing lists them.
-  const query: Record<string, unknown> = { status: 'published', archivedAt: null };
+  //
+  // Wholesale styles leave it too, and for a different reason: they are
+  // genuinely published — they have to be, or they could not be edited in the
+  // product editor — but they are sold by the quote, at a tier, on /wholesale.
+  // Letting one onto the retail grid would offer a shopper a single tee at a
+  // price that only exists at 150 units.
+  const query: Record<string, unknown> = {
+    status: 'published',
+    archivedAt: null,
+    tags: { $ne: WHOLESALE_TAG },
+  };
   if (category) query.category = category;
 
   const products = (await Product.find(query).lean()) as WithId<ProductDoc>[];
@@ -185,10 +196,14 @@ export async function listProductsInCategory(
 export async function getPublishedProductBySlug(slug: string): Promise<ProductDTO | null> {
   await connectToDatabase();
 
+  // Same exclusion as the grid, and it matters more here: without it a
+  // wholesale slug guessed from the line sheet would render a retail product
+  // page, complete with an Add to cart button for one unit.
   const product = (await Product.findOne({
     slug,
     status: 'published',
     archivedAt: null,
+    tags: { $ne: WHOLESALE_TAG },
   }).lean()) as WithId<ProductDoc> | null;
   if (!product) return null;
 

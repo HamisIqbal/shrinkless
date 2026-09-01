@@ -8,7 +8,19 @@
  */
 import type { BrandImage, CategorySlug } from '@/lib/brand/images';
 
-export type NavLink = { href: string; label: string };
+export type NavLink = {
+  href: string;
+  label: string;
+  /**
+   * Draws this entry apart from the rest of the bar rather than beside it.
+   *
+   * Reserved for a destination that is not another way into the same shop —
+   * wholesale sells by the mill run, to a different buyer, at a price a
+   * retail shopper cannot have. A plain link would file it under "more
+   * categories", which is the one thing it is not.
+   */
+  highlight?: boolean;
+};
 
 export type NavColumn = {
   /** Column heading. Links to the category landing page where there is one. */
@@ -41,4 +53,8 @@ export const PRIMARY_NAV: NavLink[] = [
   { href: '/shop/men', label: 'Men' },
   { href: '/shop/women', label: 'Women' },
   { href: '/our-story', label: 'About' },
+  // Last, and flagged. Trade sits at the end of the bar because it is the
+  // end of the retail journey for the people it is aimed at, and because the
+  // pill needs a neighbour on one side only to read as deliberate.
+  { href: '/wholesale', label: 'Wholesale', highlight: true },
 ];

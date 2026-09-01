@@ -230,7 +230,7 @@ export function Header({ menu, cart, signedIn, isAdmin, storeEmail }: Props) {
                     ) : (
                       <Link
                         href={item.href}
-                        className="ulink"
+                        className={item.highlight ? 'navflag' : 'ulink'}
                         aria-current={current ? 'page' : undefined}
                       >
                         {item.label}

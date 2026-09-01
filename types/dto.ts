@@ -348,3 +348,52 @@ export type AdminStatsDTO = {
   bestSellers: BestSellerRowDTO[];
   recentOrders: OrderRowDTO[];
 };
+
+/** One rung of a style's price ladder, as the wholesale page prints it. */
+export type WholesaleTierDTO = {
+  tier: number;
+  discountPercent: number;
+  unitPriceCents: number;
+  totalCents: number;
+};
+
+/**
+ * A wholesale style. Deliberately not a `ProductDTO`: the trade page shows no
+ * variants, no stock and no retail price, and sending the whole product would
+ * ship a sold-out flag to a page where being sold out means nothing.
+ */
+export type WholesaleProductDTO = {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  category: string;
+  image: ImageDTO | null;
+  colors: string[];
+  sizes: string[];
+  /** The retail price the ladder is struck from. Shown as the comparison. */
+  retailCents: number;
+  tiers: WholesaleTierDTO[];
+};
+
+export type WholesaleEnquiryLineDTO = {
+  slug: string;
+  title: string;
+  tier: number;
+  unitPriceCents: number;
+  totalCents: number;
+};
+
+export type WholesaleEnquiryDTO = {
+  id: string;
+  company: string;
+  contactName: string;
+  email: string;
+  phone: string;
+  country: string;
+  message: string;
+  lines: WholesaleEnquiryLineDTO[];
+  units: number;
+  totalCents: number;
+  status: 'new' | 'answered' | 'closed';
+};
