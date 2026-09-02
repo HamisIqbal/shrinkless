@@ -2820,17 +2820,17 @@
 
 .cartsheet--open .cartsheet__scrim { opacity: 1; }
 
-/* Rises from the foot of the window at every width. On a wide screen it stops
-   at a readable measure and stays against the right edge, under the cart icon
-   that opened it, rather than stretching a five-line list across a metre of
-   monitor. */
+/* Rises from the foot of the window at every width and takes the lower half of
+   it — full-bleed on a phone, a tablet and a monitor alike. The list inside
+   scrolls, so a long cart costs the sheet no height. */
 .cartsheet__panel {
   position: absolute;
   inset-inline: 0;
   bottom: 0;
   display: flex;
   flex-direction: column;
-  max-height: 92dvh;
+  height: 50dvh;
+  max-height: 50dvh;
   background: var(--cart-ground);
   color: var(--cart-type);
   border-top-left-radius: var(--radius-slab);
@@ -2841,15 +2841,6 @@
 }
 
 .cartsheet--open .cartsheet__panel { transform: none; }
-
-@media (min-width: 48rem) {
-  .cartsheet__panel {
-    inset-inline: auto 0;
-    width: min(30rem, 100%);
-    margin-inline-end: var(--space-4);
-    max-height: min(46rem, 88dvh);
-  }
-}
 
 @media (prefers-reduced-motion: reduce) {
   .cartsheet__panel { transition: none; }
@@ -3061,6 +3052,12 @@
   padding: var(--space-6) var(--space-5)
     calc(var(--space-6) + env(safe-area-inset-bottom));
   text-align: center;
+
+  /* The sheet is a fixed half-viewport now; on a short screen even this can
+     run past it. */
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .cartsheet__emptyhead { font-size: var(--text-sub); font-weight: 500; }
@@ -4231,6 +4228,16 @@
 
   --btn-fill: var(--color-white);
   --btn-fill-ink: var(--color-ink);
+}
+
+/* This file is unlayered, so the rule above outranks the layered `.btn:hover`
+   colour no matter its specificity — which left the label white under the
+   white fill that rises on hover, and stuck that way after a tap on a phone.
+   The interaction states are restated here, in the same cascade. */
+.buybar__actions .btn:not(.btn--accent):hover,
+.buybar__actions .btn:not(.btn--accent):focus-visible,
+.buybar__actions .btn:not(.btn--accent):active {
+  color: var(--btn-fill-ink);
 }
 
 /* On a phone the name and the money take their own line above the buttons

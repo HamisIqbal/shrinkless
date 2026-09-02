@@ -162,6 +162,9 @@ export function CartSheet({ cart, open, onClose }: Props) {
 
       <div
         className="cartsheet__panel"
+        // Lenis owns the wheel globally; without this the list inside a
+        // half-height sheet cannot be scrolled with a trackpad.
+        data-lenis-prevent
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
