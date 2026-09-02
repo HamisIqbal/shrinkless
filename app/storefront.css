@@ -1594,6 +1594,10 @@
   color: var(--color-muted-text);
 }
 
+/* The trade sheet runs the same card on an ink ground, where the shop's muted
+   ink reads as a smudge. */
+.band--ink .pcard__price { color: var(--color-muted); }
+
 .pcard__colors { display: flex; flex-wrap: wrap; gap: var(--space-1); }
 
 

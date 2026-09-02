@@ -14,7 +14,14 @@ type Props = {
   product: ProductDTO;
   /** Grid position, so the first row can skip lazy loading. */
   index?: number;
-  onQuickView: (product: ProductDTO) => void;
+  /** Omitted where there is nothing to quick-view — the trade sheet has no
+   *  cart, so its cards carry no eye. */
+  onQuickView?: (product: ProductDTO) => void;
+  /** Where the card points, when it is not a retail product page. */
+  href?: string;
+  /** Replaces the derived price, for a sheet that quotes a ladder rather
+   *  than a single figure. */
+  priceLabel?: string;
 };
 
 /** How far a mouse has to travel before a drag stops counting as a click. */
@@ -46,7 +53,13 @@ const DRAG_SLOP = 5;
  * scroll the reel rather than setting it — but the price, the link and the
  * picture still agree, because they are all still reading one number.
  */
-export function ProductCard({ product, index = 0, onQuickView }: Props) {
+export function ProductCard({
+  product,
+  index = 0,
+  onQuickView,
+  href: hrefOverride,
+  priceLabel,
+}: Props) {
   const colorways = useMemo(() => toColorways(product), [product]);
   const reelRef = useRef<HTMLDivElement>(null);
 
@@ -64,10 +77,14 @@ export function ProductCard({ product, index = 0, onQuickView }: Props) {
   const safeShot = Math.min(shot, Math.max(frames.length - 1, 0));
   const colorway = colorways[Math.min(safeShot, colorways.length - 1)] ?? colorways[0];
 
-  const soldOut = colorways.every((option) => !option.inStock);
-  const href = colorway
-    ? `/product/${product.slug}?color=${encodeURIComponent(colorway.color)}`
-    : `/product/${product.slug}`;
+  // A product with no colourways has no stock to read, which is not the same
+  // as being out of it.
+  const soldOut = colorways.length > 0 && colorways.every((option) => !option.inStock);
+  const href =
+    hrefOverride ??
+    (colorway
+      ? `/product/${product.slug}?color=${encodeURIComponent(colorway.color)}`
+      : `/product/${product.slug}`);
 
   const show = useCallback((target: number) => {
     const reel = reelRef.current;
@@ -221,14 +238,16 @@ export function ProductCard({ product, index = 0, onQuickView }: Props) {
             with. On a phone the photograph is the whole screen and tapping it
             goes to the real product page, which is better than a miniature of
             it. */}
-        <button
-          type="button"
-          className="pcard__preview"
-          onClick={() => onQuickView(product)}
-        >
-          <EyeIcon />
-          <span className="visually-hidden">Quick view: {product.title}</span>
-        </button>
+        {onQuickView ? (
+          <button
+            type="button"
+            className="pcard__preview"
+            onClick={() => onQuickView(product)}
+          >
+            <EyeIcon />
+            <span className="visually-hidden">Quick view: {product.title}</span>
+          </button>
+        ) : null}
 
         <div className="pcard__foot--over">
           {/* One flag at a time, and sold out outranks new: a shopper who
@@ -262,7 +281,7 @@ export function ProductCard({ product, index = 0, onQuickView }: Props) {
         </h3>
 
         <p className="pcard__price tnum">
-          {formatCents(colorway?.priceCents ?? product.minPriceCents)}
+          {priceLabel ?? formatCents(colorway?.priceCents ?? product.minPriceCents)}
         </p>
       </div>
 

@@ -1,10 +1,6 @@
-import Image from 'next/image';
-import Link from 'next/link';
 import { listWholesaleProducts } from '@/lib/services/wholesale';
 import { WHOLESALE_TIERS } from '@/lib/wholesale/pricing';
-import { formatCents } from '@/lib/money';
-import { imageUrl } from '@/lib/images';
-import { cropStyle } from '@/lib/media/crop';
+import { WholesaleGrid } from '@/components/shop/WholesaleGrid';
 
 export const metadata = {
   title: 'Wholesale',
@@ -69,49 +65,7 @@ export default async function WholesalePage() {
         </header>
 
         {styles.length ? (
-          <ol className="tradecards">
-            {styles.map((style, index) => {
-              const opening = style.tiers[0];
-
-              return (
-                <li key={style.slug} className="tradecards__item">
-                  {/* The whole card is the link: one target, one hover, and
-                      nothing inside it competing for the same click. */}
-                  <Link href={`/wholesale/${style.slug}`} className="tradecard">
-                    <div className="tradecard__frame frame">
-                      {style.image ? (
-                        <Image
-                          src={imageUrl(style.image.publicId)}
-                          alt={style.image.alt}
-                          fill
-                          sizes="(min-width: 62rem) 22rem, (min-width: 40rem) 45vw, 92vw"
-                          /* The first row is above the fold on a laptop. */
-                          loading={index < 3 ? 'eager' : 'lazy'}
-                          style={cropStyle(style.image)}
-                        />
-                      ) : null}
-                    </div>
-
-                    <h2 className="tradecard__title">{style.title}</h2>
-
-                    <p className="tradecard__price tnum">
-                      {opening ? (
-                        <>
-                          <span className="tradecard__from">From</span>
-                          {formatCents(opening.unitPriceCents)}
-                          <span className="tradecard__per">
-                            {` per unit at ${UNITS.format(opening.tier)}`}
-                          </span>
-                        </>
-                      ) : (
-                        <span className="tradecard__from">Price on request</span>
-                      )}
-                    </p>
-                  </Link>
-                </li>
-              );
-            })}
-          </ol>
+          <WholesaleGrid styles={styles} />
         ) : (
           <p className="tradesheet__empty">
             The line sheet is being updated. Email us and we will send the current one.

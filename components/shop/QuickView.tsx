@@ -146,6 +146,11 @@ export function QuickView({ product, onClose }: Props) {
         aria-modal="true"
         aria-labelledby="quick-title"
         ref={panelRef}
+        /* Lenis owns the page's wheel and swallows the event before a nested
+           scroller sees it, which left this panel draggable by its scrollbar
+           and immovable by a trackpad. The attribute is Lenis's own opt-out:
+           a wheel over the panel stays with the browser. */
+        data-lenis-prevent
         initial={{ opacity: 0, scale: 0.96, y: 12 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.97, y: 8 }}
