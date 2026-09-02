@@ -3418,7 +3418,9 @@
 .imageband__image,
 .pdp__shot img,
 .pcard__frame img,
-.sheetrow__frame img {
+.sheetrow__frame img,
+.tradecard__frame img,
+.tradestyle__shot img {
   --crop-p: var(--crop-pos, var(--crop-pos-default, 50% 50%));
   --crop-z: var(--crop-zoom, 1);
 
@@ -3437,7 +3439,9 @@
   .imageband__image,
   .pdp__shot img,
   .pcard__frame img,
-  .sheetrow__frame img {
+  .sheetrow__frame img,
+  .tradecard__frame img,
+  .tradestyle__shot img {
     --crop-p: var(--crop-pos-m, var(--crop-pos, var(--crop-pos-default, 50% 50%)));
     --crop-z: var(--crop-zoom-m, var(--crop-zoom, 1));
   }
@@ -3571,6 +3575,74 @@
 
 @media (min-width: 48rem) {
   .tradesheet__terms { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* --------------------------------------------------------------------------
+   The contents of the sheet
+   One card per style: the frame, the name, the opening figure. A buyer at this
+   stage is choosing which style to price, not pricing it — the ladder, the
+   spec and the enquiry are one click away on the style's own page, where the
+   figures have the room to be read as a column rather than as a row.
+   -------------------------------------------------------------------------- */
+
+.tradecards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5) var(--space-4);
+  margin-top: var(--space-6);
+  list-style: none;
+  padding: 0;
+}
+
+@media (min-width: 62rem) {
+  .tradecards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* The whole card is the anchor, so the hit area is the picture and the price
+   as well as the name — and the frame's own hover scale, which globals.css
+   hangs off `a:hover > .frame > img`, comes along without a second rule. */
+.tradecard {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.tradecard__frame {
+  aspect-ratio: 2 / 3;
+  background: rgba(245, 244, 240, 0.08);
+}
+
+.tradecard__title {
+  margin-top: var(--space-3);
+  font-size: 1.0625rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.tradecard:hover .tradecard__title { text-decoration: underline; }
+
+.tradecard__price {
+  margin-top: 0.35rem;
+  font-size: 0.9375rem;
+  color: var(--color-paper);
+}
+
+/* The two qualifiers the figure needs and cannot be read without — kept quiet
+   so the money is what the eye lands on first. */
+.tradecard__from,
+.tradecard__per {
+  font-size: var(--text-meta);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.tradecard__from { margin-right: 0.4rem; }
+
+.tradecard__per {
+  display: block;
+  margin-top: 0.25rem;
+  letter-spacing: 0.08em;
 }
 
 /* --------------------------------------------------------------------------
@@ -3960,3 +4032,89 @@
   line-height: 1.5;
   color: var(--color-muted-text);
 }
+
+/* --------------------------------------------------------------------------
+   One style's own page
+   The same two columns as the sheet — ink on the left, the paper enquiry
+   panel sticky on the right — with the row's contents unpacked into the left
+   column: the gallery at full size, the copy unclamped, and the ladder given
+   its own block rather than squeezed beside a thumbnail.
+   -------------------------------------------------------------------------- */
+
+.tradestyle__crumbs {
+  font-size: var(--text-meta);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.tradestyle-page .tradeboard { margin-top: var(--space-5); }
+
+.tradestyle__head {
+  padding-bottom: var(--space-4);
+  border-bottom: var(--trade-rule);
+}
+
+.tradestyle__title {
+  font-size: var(--text-sub);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.tradestyle__spec { margin-top: var(--space-3); }
+
+.tradestyle__price {
+  margin-top: var(--space-3);
+  font-size: 1.25rem;
+  color: var(--color-paper);
+}
+
+.tradestyle__basis {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: var(--text-meta);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.tradestyle__gallery {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+@media (min-width: 48rem) {
+  .tradestyle__gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.tradestyle__shot {
+  aspect-ratio: 2 / 3;
+  background: rgba(245, 244, 240, 0.08);
+}
+
+/* The description component is written for paper; on the ink ground it needs
+   the copy colour the sheet rows use, and its bullets follow the text. */
+.tradestyle .story {
+  margin-top: var(--space-5);
+  max-width: 60ch;
+  color: rgba(245, 244, 240, 0.72);
+}
+
+.tradestyle .story__item::before { background: currentColor; }
+
+.tradestyle__ladder {
+  margin-top: var(--space-6);
+  padding-top: var(--space-4);
+  border-top: var(--trade-rule);
+}
+
+/* The sheet's legend is a desktop-only header over ten rows; over one ladder
+   it is the label for the figures directly beneath it, so it shows at every
+   width and sits tight to them. */
+.tradestyle__legend {
+  display: flex;
+  margin-bottom: var(--space-3);
+}
+
+.tradestyle__ladder .sheetrow__tiers { margin-top: 0; }

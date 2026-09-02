@@ -1,6 +1,10 @@
+import Image from 'next/image';
+import Link from 'next/link';
 import { listWholesaleProducts } from '@/lib/services/wholesale';
 import { WHOLESALE_TIERS } from '@/lib/wholesale/pricing';
-import { WholesaleBoard } from '@/components/shop/WholesaleBoard';
+import { formatCents } from '@/lib/money';
+import { imageUrl } from '@/lib/images';
+import { cropStyle } from '@/lib/media/crop';
 
 export const metadata = {
   title: 'Wholesale',
@@ -16,14 +20,14 @@ const UNITS = new Intl.NumberFormat('en-US');
  * Deliberately not the shop with different numbers on it. The retail pages
  * lead with photography and hide everything else behind a filter panel,
  * because a shopper is choosing a thing to wear; a wholesale buyer is reading
- * a document, comparing per-unit figures across ten styles and five order
- * sizes, and wants them in a column they can run their eye down. So this page
- * is a sheet: ink ground, tabular figures, one row per style, and the frame
- * shrunk to a thumbnail rather than given the page.
+ * a document, comparing styles before they compare quantities. So this page is
+ * the contents of the sheet — ink ground, one card per style, a frame, a name
+ * and the opening figure — and the ladder, the spec and the enquiry itself
+ * live on the style's own page, where a buyer is asking about one thing.
  *
  * Nothing here can be bought. At 150 units a price is the opening of a
- * conversation, not a checkout — so the page collects an enquiry and the store
- * replies with real terms.
+ * conversation, not a checkout — so the sheet collects an enquiry and the
+ * store replies with real terms.
  */
 export default async function WholesalePage() {
   const styles = await listWholesaleProducts();
@@ -65,7 +69,49 @@ export default async function WholesalePage() {
         </header>
 
         {styles.length ? (
-          <WholesaleBoard styles={styles} />
+          <ol className="tradecards">
+            {styles.map((style, index) => {
+              const opening = style.tiers[0];
+
+              return (
+                <li key={style.slug} className="tradecards__item">
+                  {/* The whole card is the link: one target, one hover, and
+                      nothing inside it competing for the same click. */}
+                  <Link href={`/wholesale/${style.slug}`} className="tradecard">
+                    <div className="tradecard__frame frame">
+                      {style.image ? (
+                        <Image
+                          src={imageUrl(style.image.publicId)}
+                          alt={style.image.alt}
+                          fill
+                          sizes="(min-width: 62rem) 22rem, (min-width: 40rem) 45vw, 92vw"
+                          /* The first row is above the fold on a laptop. */
+                          loading={index < 3 ? 'eager' : 'lazy'}
+                          style={cropStyle(style.image)}
+                        />
+                      ) : null}
+                    </div>
+
+                    <h2 className="tradecard__title">{style.title}</h2>
+
+                    <p className="tradecard__price tnum">
+                      {opening ? (
+                        <>
+                          <span className="tradecard__from">From</span>
+                          {formatCents(opening.unitPriceCents)}
+                          <span className="tradecard__per">
+                            {` per unit at ${UNITS.format(opening.tier)}`}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="tradecard__from">Price on request</span>
+                      )}
+                    </p>
+                  </Link>
+                </li>
+              );
+            })}
+          </ol>
         ) : (
           <p className="tradesheet__empty">
             The line sheet is being updated. Email us and we will send the current one.

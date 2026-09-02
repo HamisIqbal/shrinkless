@@ -6,7 +6,7 @@ import {
   type WholesaleEnquiryState,
 } from '@/app/actions/wholesale';
 import { useToast } from '@/components/ui/Toast';
-import type { ChosenLine } from '@/components/shop/WholesaleBoard';
+import type { ChosenLine } from '@/components/shop/WholesaleStyleBoard';
 
 type Props = {
   lines: ChosenLine[];
@@ -148,7 +148,7 @@ export function WholesaleEnquiryForm({ lines, onSent }: Props) {
 
       <p className="tradeform__note" aria-live="polite">
         {empty
-          ? 'Choose at least one style and quantity above.'
+          ? 'Choose a quantity above.'
           : 'We reply to trade enquiries within one business day.'}
       </p>
     </form>

@@ -8,8 +8,10 @@ import { enquiryTotal, quoteForTier, tierLadder } from '@/lib/wholesale/pricing'
 import type { WholesaleEnquiryInput } from '@/lib/validation/wholesale';
 import type {
   AdminWholesaleRowDTO,
+  ImageDTO,
   WholesaleEnquiryDTO,
   WholesaleProductDTO,
+  WholesaleProductDetailDTO,
 } from '@/types/dto';
 
 type WithId<T> = T & { _id: Types.ObjectId };
@@ -107,6 +109,44 @@ export async function listWholesaleProducts(): Promise<WholesaleProductDTO[]> {
   return products.map((product) =>
     toWholesaleDTO(product, grouped.get(String(product._id)) ?? []),
   );
+}
+
+/**
+ * One style, with everything the line sheet card leaves out.
+ *
+ * The listing shows a frame, a title and the opening figure; the style's own
+ * page has to carry the whole gallery and the full description. Both are built
+ * from the same record and the same `ON_THE_LINE_SHEET` query, so a style that
+ * has been pulled 404s here rather than staying reachable by its old URL.
+ */
+export async function getWholesaleProductBySlug(
+  slug: string,
+): Promise<WholesaleProductDetailDTO | null> {
+  await connectToDatabase();
+
+  const product = (await Product.findOne({
+    ...ON_THE_LINE_SHEET,
+    slug,
+  }).lean()) as WithId<ProductDoc> | null;
+
+  if (!product) return null;
+
+  const variants = (await Variant.find({
+    productId: product._id,
+  }).lean()) as WithId<VariantDoc>[];
+
+  const images: ImageDTO[] = product.images.map((frame) => ({
+    publicId: frame.publicId,
+    width: frame.width,
+    height: frame.height,
+    alt: frame.alt ?? '',
+    focus: frame.focus ?? '',
+    zoom: frame.zoom ?? 1,
+    mobileFocus: frame.mobileFocus ?? '',
+    ...(frame.mobileZoom ? { mobileZoom: frame.mobileZoom } : {}),
+  }));
+
+  return { ...toWholesaleDTO(product, variants), images };
 }
 
 /**

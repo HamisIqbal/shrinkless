@@ -377,6 +377,19 @@ export type WholesaleProductDTO = {
 };
 
 /**
+ * One wholesale style as its own page draws it.
+ *
+ * The line sheet card needs a frame, a title and an opening figure; the style
+ * page needs everything the row used to carry inline — the whole gallery and
+ * the full description rather than the clamped lead. Same shape plus the two
+ * fields the listing has no use for, so the card and the page are never
+ * reading two different records of the same style.
+ */
+export type WholesaleProductDetailDTO = WholesaleProductDTO & {
+  images: ImageDTO[];
+};
+
+/**
  * One row of the wholesale line sheet, as the admin list draws it.
  *
  * Carries the derived opening tier alongside the retail basis, because the
