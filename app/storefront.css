@@ -4466,3 +4466,83 @@
   .lightbox__image,
   .zoomshot__hint { transition-duration: 1ms; animation-duration: 1ms; }
 }
+
+
+/* --------------------------------------------------------------------------
+   One style's own page
+   The retail product page's structure — gallery beside a sticky column, price,
+   story, spec, the choice, the action, then the accordion — drawn on the line
+   sheet's ink ground. Only colour is restated here; every rule of layout is
+   the shop's own, so the two pages cannot drift apart.
+   -------------------------------------------------------------------------- */
+
+.pdp--trade .pdp__shot { background: rgba(245, 244, 240, 0.08); }
+
+.pdp--trade .pdp__title,
+.pdp--trade .picker__price { color: var(--color-paper); }
+
+.pdp--trade .picker__spec,
+.pdp--trade .picker__legend,
+.pdp--trade .swatch__name,
+.pdp--trade .crumbs__sep { color: var(--color-muted); }
+
+.pdp--trade .accordion,
+.pdp--trade .accordion__item { border-color: rgba(245, 244, 240, 0.2); }
+
+.pdp--trade .accordion__body { color: rgba(245, 244, 240, 0.72); }
+
+/* The quantity control. Retail steps through singles, so it gets a stepper;
+   trade is sold by the run, so it gets this style's own tiers and nothing in
+   between them. Same slot in the column either way. */
+.picker__select {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.5rem 0.75rem;
+  border: var(--spacing-rule) solid var(--color-muted);
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.875rem;
+}
+
+.picker__select:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+
+/* The native menu paints on the system ground, so its rows are set as paper
+   rather than inheriting the ink column's own colour. */
+.pdp--trade .picker__select {
+  border-color: rgba(245, 244, 240, 0.35);
+  color: var(--color-paper);
+}
+
+.pdp--trade .picker__select option { background: var(--color-paper); color: var(--color-ink); }
+
+.picker__total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-top: var(--space-2);
+  font-size: var(--text-meta);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Colours and sizes are stated, not chosen: a trade run carries the whole
+   range, and the ratio is settled in the quote. */
+.chip--static,
+.swatch--static { cursor: default; }
+
+.pdp--trade .chip--static {
+  border-color: rgba(245, 244, 240, 0.25);
+  color: var(--color-paper);
+}
+
+.pdp--trade .swatch__dot { border-color: rgba(245, 244, 240, 0.35); }
+
+/* The enquiry is the trade purchase action, so it sits where Add to cart's
+   consequences would: directly under the buttons, in the sheet's paper panel. */
+.pdp__enquiry {
+  margin-top: var(--space-3);
+  scroll-margin-top: 5.5rem;
+}

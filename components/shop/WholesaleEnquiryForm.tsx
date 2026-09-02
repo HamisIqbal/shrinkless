@@ -6,7 +6,16 @@ import {
   type WholesaleEnquiryState,
 } from '@/app/actions/wholesale';
 import { useToast } from '@/components/ui/Toast';
-import type { ChosenLine } from '@/components/shop/WholesaleStyleBoard';
+import type { WholesaleTier } from '@/lib/wholesale/pricing';
+
+/** What a chosen quantity contributes to the enquiry. */
+export type ChosenLine = {
+  slug: string;
+  title: string;
+  tier: WholesaleTier;
+  unitPriceCents: number;
+  totalCents: number;
+};
 
 type Props = {
   lines: ChosenLine[];
