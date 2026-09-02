@@ -2764,19 +2764,20 @@
 /* --------------------------------------------------------------------------
    Cart sheet
    A surface of its own, on purpose. The rest of the storefront is ink on
-   paper; this is a warm near-black with sand type, so the sheet reads as
-   something laid over the shop rather than as another panel of it — and so
-   its one primary action cannot be confused with the page's own buttons.
-   The palette is declared once, here, and used nowhere else.
+   paper; this is flat black with white type and orange for the asides, so the
+   sheet reads as something laid over the shop rather than as another panel of
+   it — and so its one primary action cannot be confused with the page's own
+   buttons. The palette is declared once, here, and used nowhere else.
    -------------------------------------------------------------------------- */
 
 .cartsheet {
-  --cart-ground: #16150f;
-  --cart-raised: #211f17;
-  --cart-line:   #38352a;
-  --cart-type:   #f3efe3;
-  --cart-dim:    #a8a08c;
-  --cart-spot:   #d8d2c7;
+  --cart-ground: #000000;
+  --cart-raised: #000000;
+  --cart-line:   #3a3a3a;
+  --cart-type:   #ffffff;
+  --cart-dim:    #ff8a3d;
+  --cart-spot:   #ffffff;
+  --cart-mute:   #6d6d6d;
 
   position: fixed;
   inset: 0;
@@ -2903,7 +2904,7 @@
 
 .cartsheet__lines > .cartsheet__line:last-child { border-bottom: 0; }
 
-.cartsheet__plate { display: block; background: var(--cart-raised); }
+.cartsheet__plate { display: block; background: #141414; }
 
 .cartsheet__thumb { width: 100%; height: auto; object-fit: cover; }
 
@@ -2946,7 +2947,7 @@
 }
 
 .cartsheet__stepper button:hover:not(:disabled) { border-color: var(--cart-spot); }
-.cartsheet__stepper button:disabled { color: var(--cart-dim); cursor: not-allowed; }
+.cartsheet__stepper button:disabled { color: var(--cart-mute); border-color: var(--cart-mute); cursor: not-allowed; }
 
 /* Not a stepper control, so it drops the box the three beside it wear. */
 .cartsheet__stepper .cartsheet__remove {
@@ -3008,7 +3009,7 @@
   transition: background-color var(--dur-1) var(--ease-out);
 }
 
-.cartsheet__cta:hover { background: var(--cart-type); }
+.cartsheet__cta:hover { background: var(--cart-dim); }
 
 .cartsheet__keep {
   display: block;
@@ -3050,6 +3051,39 @@
 }
 
 .cartsheet__empty .cartsheet__cta { margin-top: var(--space-5); }
+
+/* On a desktop the half-height sheet put the one thing a shopper came to press
+   below the fold. At 62rem and up it takes the whole viewport instead: the
+   lines (or the empty state) scroll inside it, and the foot — subtotal,
+   checkout — stays where it lands. */
+@media (min-width: 62rem) {
+  .cartsheet__panel {
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+  }
+
+  .cartsheet__grip { display: none; }
+
+  .cartsheet__lines,
+  .cartsheet__empty {
+    margin-inline: auto;
+    width: 100%;
+    max-width: 56rem;
+  }
+
+  /* The empty state has room to breathe now, and "Shop tees" sits well inside
+     the first screen. */
+  .cartsheet__empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cartsheet__foot > * { margin-inline: auto; max-width: 56rem; }
+}
 
 /* The global focus ring is ink, which is invisible here. */
 .cartsheet :focus-visible { outline: 2px solid var(--cart-spot); outline-offset: 2px; }
