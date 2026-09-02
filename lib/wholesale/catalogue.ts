@@ -1,19 +1,18 @@
 /**
- * The wholesale line sheet: which styles trade sells, and which retail style
- * each one is built from.
+ * The wholesale line sheet: which styles trade sells.
  *
- * Nothing here holds copy, photography, colourways or a price. Every wholesale
- * product BORROWS those from its `source` — a retail style that already exists
- * in the catalogue — and the seed reads them off the live product rather than
- * restating them. A second copy of the Organic Tee's description would drift
- * from the first the day someone edited one of them, and the `copy:refresh`
- * script only knows about the retail one.
+ * Nothing here holds copy or a price. Every wholesale style BORROWS its
+ * description from a men's retail product that already exists in the store,
+ * and the seed reads it off that product rather than restating it. A second
+ * copy of the fabric paragraph would drift from the first the day anyone
+ * edited one of them.
  *
  * `category` is a placeholder split, five and five, so the two shoppable
- * genders each have a full line to look at. It is expected to be corrected in
- * the admin product editor; nothing here depends on a particular assignment.
+ * genders each have a full line. It is expected to be corrected in the admin
+ * product editor; nothing here depends on a particular assignment, and
+ * `seed:wholesale` never overwrites a style that already exists, so a
+ * correction made there survives the next run.
  */
-import type { ProductSlug } from '@/lib/brand/images';
 
 /**
  * The tag that keeps these off the retail storefront.
@@ -25,79 +24,50 @@ import type { ProductSlug } from '@/lib/brand/images';
  */
 export const WHOLESALE_TAG = 'wholesale';
 
+/**
+ * Where the shared description comes from, in order of preference.
+ *
+ * The four men's styles are one garment in four colourways and carry the same
+ * copy word for word, so which one is read is immaterial — but naming a single
+ * slug would break the seed the day that colourway was archived. The seed
+ * walks this list and uses the first that resolves.
+ */
+export const WHOLESALE_COPY_SOURCES = [
+  'mens-oversized-tshirt-mocha',
+  'mens-oversized-tshirt-white',
+  'mens-oversized-tshirt-charcoal',
+  'mens-oversized-tshirt-grey',
+];
+
+/**
+ * The size run every wholesale style is offered in.
+ *
+ * Stated here rather than copied from the source product because the men's
+ * colourways do not agree with each other — three run s–xxl and one runs
+ * xs–xl — and a line sheet quotes one run. The ratio inside it is broken to
+ * the buyer's spec, which is what the page says under "Sizing".
+ */
+export const WHOLESALE_SIZES = ['s', 'm', 'l', 'xl', 'xxl'];
+
+/** The four colourways the men's line is dyed in, offered across the sheet. */
+export const WHOLESALE_COLORS = ['mocha', 'white', 'charcoal', 'grey'];
+
 export type WholesaleSeed = {
   slug: string;
   title: string;
   category: 'men' | 'women';
-  /** The retail style this borrows its copy, frames, options and price from. */
-  source: ProductSlug;
 };
 
-/**
- * Ten styles. The `source` rotation is deliberate rather than arbitrary: the
- * three men's styles are the only long-form copy the store has written, and
- * cycling them spreads the three descriptions evenly instead of giving one of
- * them to four products and another to three.
- */
+/** Ten styles, split five and five. */
 export const WHOLESALE_CATALOGUE: WholesaleSeed[] = [
-  {
-    slug: 'wholesale-razor-tank',
-    title: 'Razor Tank',
-    category: 'men',
-    source: 'mens-organic-tee',
-  },
-  {
-    slug: 'wholesale-notch-tank',
-    title: 'Notch Tank',
-    category: 'women',
-    source: 'mens-heavyweight-tee',
-  },
-  {
-    slug: 'wholesale-sg-muscle',
-    title: 'SG Muscle',
-    category: 'men',
-    source: 'mens-long-sleeve-tee',
-  },
-  {
-    slug: 'wholesale-crop-tee',
-    title: 'Crop Tee',
-    category: 'women',
-    source: 'mens-organic-tee',
-  },
-  {
-    slug: 'wholesale-basic-tee',
-    title: 'Basic Tee',
-    category: 'men',
-    source: 'mens-heavyweight-tee',
-  },
-  {
-    slug: 'wholesale-boy-tee',
-    title: 'Boy Tee',
-    category: 'women',
-    source: 'mens-long-sleeve-tee',
-  },
-  {
-    slug: 'wholesale-boy-tee-extended',
-    title: 'Boy Tee Extended',
-    category: 'men',
-    source: 'mens-organic-tee',
-  },
-  {
-    slug: 'wholesale-long-dress',
-    title: 'Long Dress',
-    category: 'women',
-    source: 'mens-heavyweight-tee',
-  },
-  {
-    slug: 'wholesale-sporty-muscle',
-    title: 'Sporty Muscle',
-    category: 'men',
-    source: 'mens-long-sleeve-tee',
-  },
-  {
-    slug: 'wholesale-v-neck-tee',
-    title: 'V Neck Tee',
-    category: 'women',
-    source: 'mens-organic-tee',
-  },
+  { slug: 'wholesale-razor-tank', title: 'Razor Tank', category: 'men' },
+  { slug: 'wholesale-notch-tank', title: 'Notch Tank', category: 'women' },
+  { slug: 'wholesale-sg-muscle', title: 'SG Muscle', category: 'men' },
+  { slug: 'wholesale-crop-tee', title: 'Crop Tee', category: 'women' },
+  { slug: 'wholesale-basic-tee', title: 'Basic Tee', category: 'men' },
+  { slug: 'wholesale-boy-tee', title: 'Boy Tee', category: 'women' },
+  { slug: 'wholesale-boy-tee-extended', title: 'Boy Tee Extended', category: 'men' },
+  { slug: 'wholesale-long-dress', title: 'Long Dress', category: 'women' },
+  { slug: 'wholesale-sporty-muscle', title: 'Sporty Muscle', category: 'men' },
+  { slug: 'wholesale-v-neck-tee', title: 'V Neck Tee', category: 'women' },
 ];
