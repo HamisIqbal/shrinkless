@@ -1860,15 +1860,14 @@
    Footer
    -------------------------------------------------------------------------- */
 
-/* A photograph under the ink rather than a flat black. It is held at a low
-   enough opacity to read as texture, and the ink layer over it is what the
-   contrast ratios are calculated against — the type never sits on the picture
-   directly. */
+/* Flat black behind the colophon — no photograph, no veil. The type sits on
+   solid ink, which is what the contrast ratios are calculated against. */
 .colophon {
   position: relative;
   isolation: isolate;
   margin-top: auto;
   overflow: hidden;
+  background: #000000;
 }
 
 /* The colophon runs at roughly half the height it used to. Everything inside
@@ -1921,25 +1920,6 @@
   .colophon__rule { margin-block: clamp(var(--space-1), 2vh, var(--space-5)); }
   .colophon__grid { gap: clamp(var(--space-1), 2vh, var(--space-4)); }
   .colophon__signup { gap: clamp(var(--space-1), 1.5vh, var(--space-3)); }
-}
-
-.colophon__bg {
-  position: absolute;
-  inset: 0;
-  z-index: -2;
-  object-fit: cover;
-}
-
-.colophon__veil {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: linear-gradient(
-    to bottom,
-    rgba(10, 10, 10, 0.9) 0%,
-    rgba(10, 10, 10, 0.84) 45%,
-    rgba(10, 10, 10, 0.93) 100%
-  );
 }
 
 .colophon__signup { display: grid; gap: var(--space-3); }

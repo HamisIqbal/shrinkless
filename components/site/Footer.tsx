@@ -1,15 +1,11 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import { NewsletterForm } from '@/components/site/NewsletterForm';
-import { getSiteMedia } from '@/lib/services/site-media';
 
 const INSTAGRAM = 'https://www.instagram.com/shrinkless/';
 
 type Column = { title: string; links: { href: string; label: string; external?: boolean }[] };
 
-export async function Footer({ storeEmail }: { storeEmail: string }) {
-  const { editorial } = await getSiteMedia();
-
+export function Footer({ storeEmail }: { storeEmail: string }) {
   // Help links point at the FAQ anchors that exist rather than at pages that
   // do not. A footer full of dead routes is worse than a short footer.
   const columns: Column[] = [
@@ -44,18 +40,6 @@ export async function Footer({ storeEmail }: { storeEmail: string }) {
 
   return (
     <footer className="band band--ink colophon">
-      {/* Decorative: the footer says nothing the picture has to carry, so the
-          alt is empty and screen readers skip straight to the signup. */}
-      <Image
-        src={editorial.craft.url}
-        alt=""
-        fill
-        loading="lazy"
-        sizes="100vw"
-        className="colophon__bg"
-      />
-      <div className="colophon__veil" aria-hidden="true" />
-
       <div className="wrap">
         <div className="colophon__signup">
           <div>
