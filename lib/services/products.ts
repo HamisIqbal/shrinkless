@@ -227,7 +227,11 @@ export async function listProductsForAdmin(
 ): Promise<Paged<AdminProductRowDTO>> {
   await connectToDatabase();
 
-  const query: Record<string, unknown> = {};
+  // Wholesale styles are products in the database and nowhere else: they are
+  // listed, edited and archived under /admin/wholesale, where the pricing
+  // ladder they are actually sold on is visible. Leaving them on the retail
+  // list would show an admin ten rows whose "From" price belongs to a tier.
+  const query: Record<string, unknown> = { tags: { $ne: WHOLESALE_TAG } };
 
   // Archived is opt-in: an admin looking at "products" means the live ones.
   query.archivedAt = params.filters.archived === 'true' ? { $ne: null } : null;

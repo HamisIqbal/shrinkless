@@ -54,6 +54,24 @@ describe('listProductsForAdmin', () => {
     expect(row.imagePublicId).toBe('shrinkless/field-tee');
   });
 
+  it('leaves wholesale styles to the wholesale list', async () => {
+    await seedProduct();
+    await seedProduct({ title: 'Razor Tank', slug: 'wholesale-razor-tank', tags: ['wholesale'] });
+
+    const page = await listProductsForAdmin(params());
+
+    expect(page.rows.map((row) => row.slug)).toEqual(['field-tee']);
+    expect(page.total).toBe(1);
+  });
+
+  it('does not surface a wholesale style through search either', async () => {
+    await seedProduct({ title: 'Razor Tank', slug: 'wholesale-razor-tank', tags: ['wholesale'] });
+
+    const page = await listProductsForAdmin(params({ q: 'wholesale' }));
+
+    expect(page.rows).toEqual([]);
+  });
+
   it('returns an empty page when nothing exists', async () => {
     const page = await listProductsForAdmin(params());
 
