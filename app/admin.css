@@ -1438,6 +1438,14 @@ body:has(.admin) {
 
 .admin .editor {
   display: grid;
+  /* An explicit track, not the implicit `auto` one: an auto track is sized by
+     its content's min-content width, and the pricing ladder below carries a
+     `min-width: 44rem`. That min travelled up through the section and made the
+     whole editor 44rem wide inside a phone-width column — which the shell
+     clips, so every field's right-hand end was cut off with no way to scroll
+     to it. Pinned at `minmax(0, 1fr)` the column follows the page and the
+     ladder scrolls inside its own holder, which is what it is for. */
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--ad-s-4);
 }
 
