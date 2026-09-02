@@ -1867,6 +1867,29 @@
   overflow: hidden;
 }
 
+/* The colophon runs at roughly half the height it used to. Everything inside
+   it steps down with the frame — type, controls and rhythm — so the shorter
+   footer reads as drawn small rather than as the old one cropped. */
+.colophon .head { font-size: clamp(1.25rem, 2.6vw, 1.875rem); }
+.colophon .lede { font-size: 0.875rem; line-height: 1.5; }
+
+.colophon .eyebrow,
+.colophon .meta,
+.colophon .ulink { font-size: 0.6875rem; }
+
+.colophon .btn {
+  min-height: 2.125rem;
+  padding: 0.4rem 1.25rem;
+  font-size: 0.6875rem;
+}
+
+.colophon .signup { gap: var(--space-1); }
+
+.colophon .signup__input {
+  min-height: 2.125rem;
+  padding: 0.35rem 0;
+}
+
 /* --------------------------------------------------------------------------
    The footer is pinned to the bottom of the viewport and the page slides over
    it, so it can only ever show its last viewport-worth of itself: whatever
@@ -1883,17 +1906,17 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    min-height: min(34rem, 100svh);
+    min-height: min(17rem, 100svh);
     max-height: 100svh;
-    padding-block: clamp(var(--space-4), 6vh, var(--space-7));
+    padding-block: clamp(var(--space-2), 3vh, var(--space-5));
   }
 
   /* The signup heading is the tallest single element down here. */
-  .colophon .head { font-size: min(var(--text-head), 7.5vh); }
+  .colophon .head { font-size: min(clamp(1.25rem, 2.6vw, 1.875rem), 4vh); }
 
-  .colophon__rule { margin-block: clamp(var(--space-3), 4vh, var(--space-7)); }
-  .colophon__grid { gap: clamp(var(--space-3), 4vh, var(--space-6)); }
-  .colophon__signup { gap: clamp(var(--space-2), 3vh, var(--space-5)); }
+  .colophon__rule { margin-block: clamp(var(--space-1), 2vh, var(--space-5)); }
+  .colophon__grid { gap: clamp(var(--space-1), 2vh, var(--space-4)); }
+  .colophon__signup { gap: clamp(var(--space-1), 1.5vh, var(--space-3)); }
 }
 
 .colophon__bg {
@@ -1915,9 +1938,9 @@
   );
 }
 
-.colophon__signup { display: grid; gap: var(--space-5); }
+.colophon__signup { display: grid; gap: var(--space-3); }
 
-.colophon__lede { padding-top: var(--space-3); color: var(--color-muted); }
+.colophon__lede { padding-top: var(--space-1); color: var(--color-muted); }
 
 @media (min-width: 56.25rem) {
   .colophon__signup { grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); align-items: end; }
@@ -1945,29 +1968,29 @@
    line back so the two gaps looked equal. The message is a toast now and the
    line is gone, so the compensation goes with it. */
 .colophon__rule {
-  margin-block: var(--space-7);
+  margin-block: var(--space-5);
   border-color: var(--color-muted-text);
 }
 
-.colophon__grid { display: grid; gap: var(--space-6); }
+.colophon__grid { display: grid; gap: var(--space-4); }
 
 @media (min-width: 56.25rem) {
   .colophon__grid { grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); }
 }
 
 .colophon__mark {
-  font-size: 1.0625rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: 0.22em;
   text-transform: uppercase;
 }
 
-.colophon__bio { padding-top: var(--space-3); color: var(--color-muted); max-width: 34ch; }
+.colophon__bio { padding-top: var(--space-1); color: var(--color-muted); max-width: 34ch; }
 
 .colophon__cols {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-5);
+  gap: var(--space-3);
 }
 
 @media (min-width: 48rem) {
@@ -1976,12 +1999,12 @@
 
 .colophon__links {
   display: grid;
-  gap: var(--space-2);
+  gap: var(--space-1);
   justify-items: start;
-  padding-top: var(--space-3);
+  padding-top: var(--space-2);
 }
 
-.colophon__legal { padding-top: var(--space-7); }
+.colophon__legal { padding-top: var(--space-4); }
 
 /* --------------------------------------------------------------------------
    Shop
