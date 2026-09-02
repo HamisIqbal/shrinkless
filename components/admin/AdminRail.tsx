@@ -18,12 +18,14 @@ import {
   SettingsIcon,
   ShippingIcon,
   StorefrontIcon,
+  WholesaleIcon,
 } from '@/components/admin/icons';
 
 const NAV = [
   { href: '/admin', label: 'Dashboard', Icon: DashboardIcon },
   { href: '/admin/orders', label: 'Orders', Icon: OrdersIcon },
   { href: '/admin/products', label: 'Products', Icon: ProductsIcon },
+  { href: '/admin/wholesale', label: 'Wholesale', Icon: WholesaleIcon },
   { href: '/admin/inventory', label: 'Inventory', Icon: InventoryIcon },
   { href: '/admin/customers', label: 'Customers', Icon: CustomersIcon },
   { href: '/admin/categories', label: 'Collections', Icon: CategoriesIcon },

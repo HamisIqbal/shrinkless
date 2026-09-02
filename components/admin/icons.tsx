@@ -57,6 +57,18 @@ export function ProductsIcon({ className }: IconProps) {
   );
 }
 
+/** Wholesale: a folded line sheet — the document a trade buyer reads. */
+export function WholesaleIcon({ className }: IconProps) {
+  return (
+    <svg {...base(className)}>
+      <rect x="4.25" y="2.75" width="11.5" height="14.5" rx="1.5" />
+      <path d="M7 6.5h6" />
+      <path d="M7 10h6" />
+      <path d="M7 13.5h3.5" />
+    </svg>
+  );
+}
+
 /** Inventory: stacked shelves. */
 export function InventoryIcon({ className }: IconProps) {
   return (

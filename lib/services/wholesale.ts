@@ -6,7 +6,11 @@ import { WholesaleEnquiry } from '@/lib/db/models/wholesale-enquiry';
 import { WHOLESALE_TAG } from '@/lib/wholesale/catalogue';
 import { enquiryTotal, quoteForTier, tierLadder } from '@/lib/wholesale/pricing';
 import type { WholesaleEnquiryInput } from '@/lib/validation/wholesale';
-import type { WholesaleEnquiryDTO, WholesaleProductDTO } from '@/types/dto';
+import type {
+  AdminWholesaleRowDTO,
+  WholesaleEnquiryDTO,
+  WholesaleProductDTO,
+} from '@/types/dto';
 
 type WithId<T> = T & { _id: Types.ObjectId };
 
@@ -192,4 +196,85 @@ export async function createWholesaleEnquiry(
     totalCents,
     status: 'new',
   };
+}
+
+/* --------------------------------------------------------------------------
+   The admin side of the line sheet
+   -------------------------------------------------------------------------- */
+
+/**
+ * Every wholesale style, including the ones the buyer cannot see.
+ *
+ * Deliberately NOT `ON_THE_LINE_SHEET`: that query is what the storefront
+ * publishes, and an admin list that used it could not show a style being
+ * drafted or one that has been pulled — the two states the editor exists to
+ * move a style between. The tag is the only condition, because the tag is what
+ * makes a product a wholesale style.
+ *
+ * Ordered by creation like the public sheet, so the two read the same way.
+ */
+export async function listWholesaleForAdmin(): Promise<AdminWholesaleRowDTO[]> {
+  await connectToDatabase();
+
+  const products = (await Product.find({ tags: WHOLESALE_TAG })
+    .sort({ createdAt: 1 })
+    .lean()) as WithId<ProductDoc>[];
+
+  if (!products.length) return [];
+
+  const variants = (await Variant.find({
+    productId: { $in: products.map((product) => product._id) },
+  }).lean()) as WithId<VariantDoc>[];
+
+  const grouped = new Map<string, WithId<VariantDoc>[]>();
+  for (const variant of variants) {
+    const key = String(variant.productId);
+    grouped.set(key, [...(grouped.get(key) ?? []), variant]);
+  }
+
+  return products.map((product) => {
+    const own = grouped.get(String(product._id)) ?? [];
+    const retailCents = retailBasis(own);
+
+    // The same ladder the page prints, so the admin and the buyer are never
+    // reading two different arithmetics off the same style.
+    const opening = tierLadder(retailCents)[0];
+    const frame = product.images[0];
+
+    return {
+      id: String(product._id),
+      title: product.title,
+      slug: product.slug,
+      category: product.category,
+      status: product.status as 'draft' | 'published',
+      archived: Boolean(product.archivedAt),
+      imagePublicId: frame?.publicId ?? '',
+      image: frame
+        ? {
+            publicId: frame.publicId,
+            width: frame.width,
+            height: frame.height,
+            alt: frame.alt ?? '',
+            focus: frame.focus ?? '',
+            zoom: frame.zoom ?? 1,
+            mobileFocus: frame.mobileFocus ?? '',
+            ...(frame.mobileZoom ? { mobileZoom: frame.mobileZoom } : {}),
+          }
+        : null,
+      variantCount: own.length,
+      retailCents,
+      openingTier: opening.tier,
+      openingUnitCents: opening.unitPriceCents,
+      updatedAt: new Date(
+        (product as { updatedAt?: Date }).updatedAt?.getTime() ?? Date.now(),
+      ).toISOString(),
+    };
+  });
+}
+
+/** True when this product is a wholesale style rather than a retail one. The
+ *  editor guards on it so a retail id typed into the wholesale URL 404s
+ *  instead of quietly opening the wrong editor. */
+export function isWholesaleProduct(tags: readonly string[] | undefined): boolean {
+  return Boolean(tags?.includes(WHOLESALE_TAG));
 }

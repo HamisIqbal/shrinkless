@@ -376,6 +376,31 @@ export type WholesaleProductDTO = {
   tiers: WholesaleTierDTO[];
 };
 
+/**
+ * One row of the wholesale line sheet, as the admin list draws it.
+ *
+ * Carries the derived opening tier alongside the retail basis, because the
+ * basis on its own is not the number the buyer is quoted and a list that only
+ * showed it would be showing the wrong price.
+ */
+export type AdminWholesaleRowDTO = {
+  id: string;
+  title: string;
+  slug: string;
+  category: string;
+  status: 'draft' | 'published';
+  archived: boolean;
+  imagePublicId: string;
+  /** The frame's stored placement, so the list thumbnail sits as the sheet does. */
+  image: ImageDTO | null;
+  variantCount: number;
+  retailCents: number;
+  /** Per-unit at the smallest tier — the headline figure on the line sheet. */
+  openingTier: number;
+  openingUnitCents: number;
+  updatedAt: string;
+};
+
 export type WholesaleEnquiryLineDTO = {
   slug: string;
   title: string;

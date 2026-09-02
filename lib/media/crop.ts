@@ -162,3 +162,17 @@ export const PRODUCT_RATIOS: ViewRatios = {
   desktop: { w: 4, h: 5 },
   mobile: { w: 2, h: 3 },
 };
+
+/**
+ * The wholesale line sheet frame.
+ *
+ * `.sheetrow__frame` is 2:3 at both widths — the sheet keeps one shape so the
+ * ten rows stay a column you can run your eye down. The two stages are still
+ * both worth having: the frame is a 9rem thumbnail at a desk and a 5rem one in
+ * a hand, and a subject that reads at the first is often lost at the second,
+ * which is exactly the decision `--crop-pos-m` exists to record.
+ */
+export const WHOLESALE_RATIOS: ViewRatios = {
+  desktop: { w: 2, h: 3 },
+  mobile: { w: 2, h: 3 },
+};

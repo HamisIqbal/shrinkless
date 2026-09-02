@@ -4,15 +4,22 @@ import { useState } from 'react';
 import { createUploadSignatureAction } from '@/app/actions/admin/products';
 import { uploadEndpoint } from '@/lib/cloudinary/config';
 import { ImageCropField } from '@/components/admin/ImageCropField';
-import { PRODUCT_RATIOS, ZOOM_MIN } from '@/lib/media/crop';
+import { PRODUCT_RATIOS, ZOOM_MIN, type ViewRatios } from '@/lib/media/crop';
 import type { ImageDTO } from '@/types/dto';
 
 type Props = {
   images: ImageDTO[];
   onChange: (images: ImageDTO[]) => void;
+  /**
+   * The two shapes these photographs are actually seen in. Defaults to the
+   * product gallery, which is what every caller wanted until the wholesale
+   * line sheet — whose frame is one 2:3 thumbnail rather than a 4:5 gallery,
+   * and whose crops would be rehearsed against the wrong shape without this.
+   */
+  ratios?: ViewRatios;
 };
 
-export function ImageUploader({ images, onChange }: Props) {
+export function ImageUploader({ images, onChange, ratios = PRODUCT_RATIOS }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -113,7 +120,7 @@ export function ImageUploader({ images, onChange }: Props) {
                   url={image.publicId}
                   alt={image.alt}
                   crop={image}
-                  ratios={PRODUCT_RATIOS}
+                  ratios={ratios}
                   onChange={(crop) =>
                     onChange(
                       images.map((current, i) =>
