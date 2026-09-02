@@ -4141,3 +4141,303 @@
 }
 
 .tradestyle__ladder .sheetrow__tiers { margin-top: 0; }
+
+/* --------------------------------------------------------------------------
+   Sticky purchase bar
+
+   The product page's own actions, kept within reach once they have scrolled
+   off the top. It is the same two buttons bound to the same handlers — see
+   components/shop/StickyBuyBar.tsx — so nothing here is a second checkout.
+
+   It portals to body, above the paper slab and the fixed footer dock but below
+   the cart sheet (80), the quick view and the toaster (90), so opening any of
+   those still buries it. The two product layouts pay for the room it occupies
+   in padding, so the bar never sits on top of the last thing being read.
+   -------------------------------------------------------------------------- */
+
+.buybar {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 70;
+  background: var(--color-ink);
+  color: var(--color-white);
+  border-top: var(--spacing-rule) solid rgb(255 255 255 / 0.16);
+  padding-bottom: env(safe-area-inset-bottom);
+  transform: translateY(101%);
+  visibility: hidden;
+  transition:
+    transform var(--dur-2) var(--ease-out),
+    visibility 0s linear var(--dur-2);
+}
+
+.buybar--on {
+  transform: translateY(0);
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+.buybar__inner {
+  width: 100%;
+  max-width: 100rem;
+  margin-inline: auto;
+  padding: var(--space-2) clamp(1.25rem, 4vw, 4.5rem);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.buybar__id { min-width: 0; }
+
+.buybar__title {
+  font-size: var(--text-meta);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.buybar__price {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-white);
+}
+
+.buybar__actions {
+  display: flex;
+  gap: var(--space-2);
+  flex: 0 0 auto;
+}
+
+/* Smaller than the page's own buttons on purpose: this is the reminder, not
+   the offer. btn--accent keeps Buy now the one lit thing in the bar. */
+.buybar__actions .btn {
+  min-height: 2.5rem;
+  padding: 0.5rem 1rem;
+  border-color: var(--color-white);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.buybar__actions .btn:not(.btn--accent) {
+  background: transparent;
+  color: var(--color-white);
+
+  --btn-fill: var(--color-white);
+  --btn-fill-ink: var(--color-ink);
+}
+
+/* On a phone the name and the money take their own line above the buttons
+   rather than squeezing them off the screen. */
+@media (max-width: 32rem) {
+  .buybar__inner {
+    flex-wrap: wrap;
+    padding-block: var(--space-1) var(--space-2);
+  }
+
+  .buybar__id {
+    flex: 1 1 100%;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
+
+  .buybar__actions { flex: 1 1 100%; }
+  .buybar__actions .btn { flex: 1 1 0; padding-inline: 0.5rem; }
+}
+
+/* The room the bar needs, given only to the two pages that mount one. */
+.pdp,
+.tradestyle-page { padding-bottom: 5.5rem; }
+
+@media (max-width: 32rem) {
+  .pdp,
+  .tradestyle-page { padding-bottom: 7rem; }
+}
+
+/* --------------------------------------------------------------------------
+   Zoomable product photography
+
+   The frames are the pages' own — .zoomshot only turns the wrapper into a
+   button and adds the magnifier. The cursor is a real SVG cursor so the hint
+   is under the pointer rather than in a corner, with zoom-in behind it for
+   anything that refuses the file.
+   -------------------------------------------------------------------------- */
+
+.zoomshot {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  /* No `background` here on purpose: `.frame` already paints the paper ground
+     the photograph loads over, and this rule is the later of the two. */
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  cursor:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><circle cx='14' cy='14' r='9' fill='rgba(255,255,255,0.35)' stroke='%230a0a0a' stroke-width='2'/><path d='M20.5 20.5 29 29' stroke='%230a0a0a' stroke-width='2.5' stroke-linecap='round'/><path d='M14 10v8M10 14h8' stroke='%230a0a0a' stroke-width='2' stroke-linecap='round'/></svg>")
+      14 14,
+    zoom-in;
+}
+
+.zoomshot__hint {
+  position: absolute;
+  right: var(--space-2);
+  bottom: var(--space-2);
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.9);
+  color: var(--color-ink);
+  opacity: 0;
+  transform: scale(0.9);
+  transition:
+    opacity var(--dur-2) var(--ease-out),
+    transform var(--dur-2) var(--ease-out);
+}
+
+.zoomshot:hover .zoomshot__hint,
+.zoomshot:focus-visible .zoomshot__hint {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Touch has no hover, so there the badge is simply always on — it is the only
+   thing telling a finger the photograph opens. */
+@media (hover: none) {
+  .zoomshot__hint { opacity: 1; transform: scale(1); }
+}
+
+/* --------------------------------------------------------------------------
+   Image viewer
+
+   One photograph, uncropped, as large as the viewport allows, with the rest of
+   the gallery a key, a button or a swipe away.
+   -------------------------------------------------------------------------- */
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  padding: clamp(0.75rem, 2vw, 2rem);
+  animation: lightbox-in var(--dur-2) var(--ease-out);
+}
+
+@keyframes lightbox-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.lightbox__scrim {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: rgb(10 10 10 / 0.94);
+  cursor: default;
+}
+
+.lightbox__stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  overflow: hidden;
+  cursor: zoom-in;
+  touch-action: pan-y;
+}
+
+.lightbox__stage--zoomed { cursor: zoom-out; }
+
+.lightbox__image {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  user-select: none;
+  transition: transform var(--dur-2) var(--ease-out);
+}
+
+.lightbox__stage--zoomed .lightbox__image {
+  transform: scale(2.5);
+  /* Following the pointer at 320ms lags; the magnified pan wants to be live. */
+  transition: transform 60ms linear;
+}
+
+.lightbox__close,
+.lightbox__step {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: var(--spacing-rule) solid rgb(255 255 255 / 0.28);
+  border-radius: 999px;
+  background: rgb(10 10 10 / 0.6);
+  color: var(--color-white);
+  cursor: pointer;
+  transition:
+    background var(--dur-2) var(--ease-out),
+    border-color var(--dur-2) var(--ease-out),
+    color var(--dur-2) var(--ease-out);
+}
+
+.lightbox__close:hover,
+.lightbox__step:hover,
+.lightbox__close:focus-visible,
+.lightbox__step:focus-visible {
+  background: var(--color-white);
+  border-color: var(--color-white);
+  color: var(--color-ink);
+}
+
+.lightbox__close {
+  top: clamp(0.75rem, 2vw, 2rem);
+  right: clamp(0.75rem, 2vw, 2rem);
+}
+
+.lightbox__step {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.lightbox__step--prev { left: clamp(0.5rem, 2vw, 2rem); }
+.lightbox__step--next { right: clamp(0.5rem, 2vw, 2rem); }
+
+.lightbox__meta {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  color: rgb(255 255 255 / 0.7);
+  font-size: var(--text-meta);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.lightbox__tip { color: rgb(255 255 255 / 0.45); }
+
+@media (max-width: 32rem) {
+  .lightbox__step { width: 2.5rem; height: 2.5rem; }
+  .lightbox__meta { gap: var(--space-2); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .buybar,
+  .lightbox,
+  .lightbox__image,
+  .zoomshot__hint { transition-duration: 1ms; animation-duration: 1ms; }
+}

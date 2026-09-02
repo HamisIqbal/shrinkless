@@ -1,12 +1,10 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getWholesaleProductBySlug } from '@/lib/services/wholesale';
 import { WHOLESALE_TIERS } from '@/lib/wholesale/pricing';
 import { formatCents } from '@/lib/money';
-import { imageUrl } from '@/lib/images';
-import { cropStyle } from '@/lib/media/crop';
 import { ProductStory } from '@/components/shop/ProductStory';
+import { ProductGallery } from '@/components/shop/ProductGallery';
 import { WholesaleStyleBoard } from '@/components/shop/WholesaleStyleBoard';
 
 const UNITS = new Intl.NumberFormat('en-US');
@@ -86,24 +84,13 @@ export default async function WholesaleStylePage(
             ) : null}
           </header>
 
-          {style.images.length ? (
-            <div className="tradestyle__gallery">
-              {style.images.map((frame, index) => (
-                <div key={frame.publicId} className="tradestyle__shot frame">
-                  <Image
-                    src={imageUrl(frame.publicId)}
-                    alt={frame.alt}
-                    fill
-                    sizes="(min-width: 68rem) 30rem, (min-width: 48rem) 45vw, 92vw"
-                    /* The first frame is the one on screen when the page opens. */
-                    priority={index === 0}
-                    loading={index === 0 ? 'eager' : 'lazy'}
-                    style={cropStyle(frame)}
-                  />
-                </div>
-              ))}
-            </div>
-          ) : null}
+          <ProductGallery
+            images={style.images}
+            title={style.title}
+            wrapClassName="tradestyle__gallery"
+            frameClassName="tradestyle__shot frame"
+            sizes="(min-width: 68rem) 30rem, (min-width: 48rem) 45vw, 92vw"
+          />
 
           <ProductStory description={style.description} />
         </WholesaleStyleBoard>

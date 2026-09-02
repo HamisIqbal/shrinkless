@@ -1,9 +1,11 @@
 'use client';
 
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useRef, useState, type ReactNode } from 'react';
 import { formatCents } from '@/lib/money';
 import { enquiryTotal, type WholesaleTier } from '@/lib/wholesale/pricing';
 import { WholesaleEnquiryForm } from '@/components/shop/WholesaleEnquiryForm';
+import { StickyBuyBar } from '@/components/shop/StickyBuyBar';
+import { formatCents as money } from '@/lib/money';
 import type { WholesaleProductDetailDTO } from '@/types/dto';
 
 type Props = {
@@ -43,6 +45,7 @@ export type ChosenLine = {
  */
 export function WholesaleStyleBoard({ style, children }: Props) {
   const [picked, setPicked] = useState<WholesaleTier | null>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   const lines = useMemo<ChosenLine[]>(() => {
     if (!picked) return [];
@@ -62,6 +65,9 @@ export function WholesaleStyleBoard({ style, children }: Props) {
   }, [style, picked]);
 
   const totals = useMemo(() => enquiryTotal(lines), [lines]);
+
+  /** The opening figure, for the bar to show before a tier is chosen. */
+  const opening = style.tiers[0];
 
   return (
     <div className="tradeboard">
@@ -116,7 +122,7 @@ export function WholesaleStyleBoard({ style, children }: Props) {
       </div>
 
       <aside className="tradepanel">
-        <div className="tradepanel__inner">
+        <div className="tradepanel__inner" ref={panelRef}>
           <h2 className="tradepanel__title">Your enquiry</h2>
 
           {lines.length ? (
@@ -155,6 +161,34 @@ export function WholesaleStyleBoard({ style, children }: Props) {
           <WholesaleEnquiryForm lines={lines} onSent={() => setPicked(null)} />
         </div>
       </aside>
+
+      {/* Wholesale has no cart and no checkout: the enquiry panel *is* the
+          purchase action, so the bar carries the buyer back to it rather than
+          growing a second, parallel way to ask for terms. */}
+      <StickyBuyBar
+        anchor={panelRef}
+        title={style.title}
+        price={
+          lines.length
+            ? `${UNITS.format(totals.units)} units · ${money(totals.totalCents)}`
+            : opening
+              ? `From ${money(opening.unitPriceCents)} per unit`
+              : 'Trade terms'
+        }
+      >
+        <button
+          type="button"
+          className="btn btn--accent"
+          onClick={() => {
+            panelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            panelRef.current
+              ?.querySelector<HTMLInputElement>('#wholesale-company')
+              ?.focus({ preventScroll: true });
+          }}
+        >
+          Request a quote
+        </button>
+      </StickyBuyBar>
     </div>
   );
 }

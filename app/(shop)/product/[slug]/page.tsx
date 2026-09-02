@@ -1,14 +1,12 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import {
   getPublishedProductBySlug,
   listProductsInCategory,
 } from '@/lib/services/products';
-import { imageUrl } from '@/lib/images';
 import { VariantPicker } from '@/components/shop/VariantPicker';
+import { ProductGallery } from '@/components/shop/ProductGallery';
 import { ProductGrid } from '@/components/shop/ProductGrid';
-import { cropStyle } from '@/lib/media/crop';
 
 // Native <details> so the accordions work without JavaScript and are keyboard
 // accessible by default. Factual claims are [TBC] until confirmed — spec §11.2.
@@ -85,25 +83,15 @@ export default async function ProductPage(props: PageProps<'/product/[slug]'>) {
       </div>
 
       <div className="wrap pdp__grid">
-        <div className="pdp__gallery">
-          {gallery.length ? (
-            gallery.map((image, index) => (
-              <div key={image.publicId} className="frame frame--45 pdp__shot">
-                <Image
-                  src={imageUrl(image.publicId, 'w_1400,q_auto,f_auto')}
-                  alt={image.alt || product.title}
-                  fill
-                  priority={index === 0}
-                  loading={index === 0 ? undefined : 'lazy'}
-                  sizes="(min-width: 56.25rem) 58vw, 100vw"
-                  style={cropStyle(image)}
-                />
-              </div>
-            ))
-          ) : (
-            <div className="frame frame--45 pdp__shot" aria-hidden="true" />
-          )}
-        </div>
+        <ProductGallery
+          images={gallery}
+          title={product.title}
+          wrapClassName="pdp__gallery"
+          frameClassName="frame frame--45 pdp__shot"
+          sizes="(min-width: 56.25rem) 58vw, 100vw"
+          transform="w_1400,q_auto,f_auto"
+          empty={<div className="frame frame--45 pdp__shot" aria-hidden="true" />}
+        />
 
         <div className="pdp__info">
           <div className="pdp__sticky">
@@ -115,6 +103,7 @@ export default async function ProductPage(props: PageProps<'/product/[slug]'>) {
                 the decision had already been made. */}
             <VariantPicker
               slug={product.slug}
+              title={product.title}
               sizes={product.sizes}
               colors={product.colors}
               variants={product.variants}

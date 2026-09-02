@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { addToCartAction } from '@/app/actions/cart';
 import { ProductStory } from '@/components/shop/ProductStory';
 import { RestockForm } from '@/components/shop/RestockForm';
+import { StickyBuyBar } from '@/components/shop/StickyBuyBar';
 import { useToast } from '@/components/ui/Toast';
 import { formatCents } from '@/lib/money';
 import { sizeOrder } from '@/lib/shop/colorways';
@@ -14,6 +15,8 @@ import type { QuantityRuleDTO, VariantDTO } from '@/types/dto';
 type Props = {
   /** For the back-in-stock record, which is per product and per colourway. */
   slug: string;
+  /** Named in the sticky bar once the page's own actions have scrolled off. */
+  title: string;
   sizes: string[];
   colors: string[];
   variants: VariantDTO[];
@@ -30,6 +33,7 @@ const SINGLES: QuantityRuleDTO = { min: 1, step: 1, max: null };
 
 export function VariantPicker({
   slug,
+  title,
   sizes,
   colors,
   variants,
@@ -39,6 +43,7 @@ export function VariantPicker({
 }: Props) {
   const router = useRouter();
   const toast = useToast();
+  const actionsRef = useRef<HTMLDivElement>(null);
 
   const [color, setColor] = useState(
     initialColor && colors.includes(initialColor) ? initialColor : (colors[0] ?? ''),
@@ -101,11 +106,11 @@ export function VariantPicker({
     });
   }
 
+  const priceLabel = priced ? formatCents(priced.priceCents) : 'Unavailable';
+
   return (
     <div className="picker">
-      <p className="picker__price tnum">
-        {priced ? formatCents(priced.priceCents) : 'Unavailable'}
-      </p>
+      <p className="picker__price tnum">{priceLabel}</p>
 
       <ProductStory description={description} />
 
@@ -223,7 +228,7 @@ export function VariantPicker({
         </div>
       </div>
 
-      <div className="picker__actions">
+      <div className="picker__actions" ref={actionsRef}>
         <button
           type="button"
           className="btn btn--lg btn--block"
@@ -244,6 +249,26 @@ export function VariantPicker({
           Buy now
         </button>
       </div>
+
+      {/* The same two handlers, not a second purchase path. */}
+      <StickyBuyBar anchor={actionsRef} title={title} price={priceLabel}>
+        <button
+          type="button"
+          className="btn"
+          onClick={() => add()}
+          disabled={pending}
+        >
+          {pending ? 'Adding' : 'Add to cart'}
+        </button>
+        <button
+          type="button"
+          className="btn btn--accent"
+          onClick={() => add(() => router.push('/cart'))}
+          disabled={pending}
+        >
+          Buy now
+        </button>
+      </StickyBuyBar>
         </>
       )}
     </div>
