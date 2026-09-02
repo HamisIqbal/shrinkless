@@ -32,8 +32,6 @@ export async function Footer({ storeEmail }: { storeEmail: string }) {
     {
       title: 'Help',
       links: [
-        { href: '/faq#shipping', label: 'Shipping' },
-        { href: '/faq#returns', label: 'Returns' },
         { href: '/faq', label: 'FAQ' },
         { href: `mailto:${storeEmail}`, label: 'Contact', external: true },
       ],
