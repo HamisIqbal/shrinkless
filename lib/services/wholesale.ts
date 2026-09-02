@@ -12,6 +12,7 @@ import type {
   WholesaleEnquiryDTO,
   WholesaleProductDTO,
   WholesaleProductDetailDTO,
+  VariantDTO,
 } from '@/types/dto';
 
 type WithId<T> = T & { _id: Types.ObjectId };
@@ -146,7 +147,20 @@ export async function getWholesaleProductBySlug(
     ...(frame.mobileZoom ? { mobileZoom: frame.mobileZoom } : {}),
   }));
 
-  return { ...toWholesaleDTO(product, variants), images };
+  const variantDTOs: VariantDTO[] = variants.map((variant) => ({
+    id: String(variant._id),
+    size: variant.size,
+    color: variant.color,
+    sku: variant.sku,
+    priceCents: variant.priceCents,
+    stock: variant.stock,
+    inStock: variant.stock > 0,
+    enabled: variant.enabled,
+    lowStockThreshold: variant.lowStockThreshold ?? null,
+    imagePublicId: variant.imagePublicId ?? '',
+  }));
+
+  return { ...toWholesaleDTO(product, variants), images, variants: variantDTOs };
 }
 
 /**

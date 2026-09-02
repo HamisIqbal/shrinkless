@@ -1,14 +1,13 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { addToCartAction } from '@/app/actions/cart';
 import { ProductStory } from '@/components/shop/ProductStory';
 import { StickyBuyBar } from '@/components/shop/StickyBuyBar';
-import {
-  WholesaleEnquiryForm,
-  type ChosenLine,
-} from '@/components/shop/WholesaleEnquiryForm';
+import { useToast } from '@/components/ui/Toast';
 import { formatCents } from '@/lib/money';
-import { enquiryTotal, type WholesaleTier } from '@/lib/wholesale/pricing';
+import type { WholesaleTier } from '@/lib/wholesale/pricing';
 import type { WholesaleProductDetailDTO } from '@/types/dto';
 
 type Props = { style: WholesaleProductDetailDTO };
@@ -19,42 +18,36 @@ const UNITS = new Intl.NumberFormat('en-US');
  * The trade equivalent of `VariantPicker`, in the same order and the same
  * frame: price, story, spec, the choices, then the action that ends the page.
  *
- * The only difference is what a wholesale buyer actually chooses. There are no
- * per-unit variants to pick and no cart to add to, so the one control is the
- * quantity — a dropdown of this style's own tiers, read off `style.tiers` and
- * never hardcoded, because every style's ladder is struck from its own retail
- * basis. Choosing one re-prices the panel and fills the enquiry beneath it.
+ * The choices a wholesale buyer makes are a colour, a size and a run size — a
+ * dropdown of this style's own tiers, read off `style.tiers` and never
+ * hardcoded, because every style's ladder is struck from its own retail basis.
+ * Choosing one re-prices the panel and sets how many units the buttons add.
  *
- * Nothing is priced in the browser: the figures are the server's, and the form
- * still posts only `slug:tier` for the action to re-price from the database.
+ * Nothing is priced in the browser: the figures are the server's, and the cart
+ * re-prices from the variant record it is handed.
  */
 export function WholesaleBuyPanel({ style }: Props) {
+  const router = useRouter();
+  const toast = useToast();
   const [picked, setPicked] = useState<WholesaleTier | null>(null);
+  const [color, setColor] = useState(style.colors[0] ?? '');
+  const [size, setSize] = useState('');
+  const [pending, startTransition] = useTransition();
   const actionsRef = useRef<HTMLDivElement>(null);
-  const enquiryRef = useRef<HTMLDivElement>(null);
 
   const chosen = useMemo(
     () => style.tiers.find((step) => step.tier === picked) ?? null,
     [style.tiers, picked],
   );
 
-  const lines = useMemo<ChosenLine[]>(
+  const selected = useMemo(
     () =>
-      chosen
-        ? [
-            {
-              slug: style.slug,
-              title: style.title,
-              tier: chosen.tier as WholesaleTier,
-              unitPriceCents: chosen.unitPriceCents,
-              totalCents: chosen.totalCents,
-            },
-          ]
-        : [],
-    [chosen, style.slug, style.title],
+      style.variants.find(
+        (variant) =>
+          variant.size === size && variant.color === color && variant.enabled,
+      ),
+    [style.variants, size, color],
   );
-
-  const totals = useMemo(() => enquiryTotal(lines), [lines]);
 
   /** The opening rung, shown until a quantity is chosen. */
   const opening = style.tiers[0];
@@ -71,12 +64,27 @@ export function WholesaleBuyPanel({ style }: Props) {
       ? `at ${UNITS.format(opening.tier)} units · ${formatCents(style.retailCents)} retail`
       : null;
 
-  /** Both purchase actions do the same thing: put the form in front of you. */
-  function goToEnquiry() {
-    enquiryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    enquiryRef.current
-      ?.querySelector<HTMLInputElement>('#wholesale-company')
-      ?.focus({ preventScroll: true });
+  /** Both buttons do the same thing; only Buy now carries on to the cart. */
+  function add(then?: () => void) {
+    if (!chosen) {
+      toast('Choose a quantity first', 'error');
+      return;
+    }
+
+    if (!selected) {
+      toast('Choose a size first', 'error');
+      return;
+    }
+
+    startTransition(async () => {
+      const result = await addToCartAction(selected.id, chosen.tier);
+      toast(result.ok ? 'Added to cart' : result.error, result.ok ? 'ok' : 'error');
+
+      if (result.ok) {
+        router.refresh();
+        then?.();
+      }
+    });
   }
 
   return (
@@ -95,30 +103,52 @@ export function WholesaleBuyPanel({ style }: Props) {
       </ul>
 
       {style.colors.length ? (
-        <div className="picker__group">
-          <p className="meta picker__legend">Colors</p>
+        <fieldset className="picker__group">
+          <legend className="meta picker__legend">Colors</legend>
           <div className="swatchrow">
             {style.colors.map((option) => (
-              <span key={option} className="swatch swatch--static">
+              <label
+                key={option}
+                className={`swatch${color === option ? ' swatch--on' : ''}`}
+              >
+                <input
+                  type="radio"
+                  name="color"
+                  value={option}
+                  className="visually-hidden"
+                  checked={color === option}
+                  onChange={() => setColor(option)}
+                />
                 <span className={`swatch__dot dot--${option}`} aria-hidden="true" />
                 <span className="swatch__name">{option}</span>
-              </span>
+              </label>
             ))}
           </div>
-        </div>
+        </fieldset>
       ) : null}
 
       {style.sizes.length ? (
-        <div className="picker__group">
-          <p className="meta picker__legend">Sizes</p>
+        <fieldset className="picker__group">
+          <legend className="meta picker__legend">Sizes</legend>
           <div className="chiprow">
             {style.sizes.map((option) => (
-              <span key={option} className="chip chip--static">
+              <label
+                key={option}
+                className={`chip${size === option ? ' chip--on' : ''}`}
+              >
+                <input
+                  type="radio"
+                  name="size"
+                  value={option}
+                  className="visually-hidden"
+                  checked={size === option}
+                  onChange={() => setSize(option)}
+                />
                 {option.toUpperCase()}
-              </span>
+              </label>
             ))}
           </div>
-        </div>
+        </fieldset>
       ) : null}
 
       <div className="picker__group">
@@ -147,7 +177,7 @@ export function WholesaleBuyPanel({ style }: Props) {
         {chosen ? (
           <p className="picker__total tnum" aria-live="polite">
             <span>Indicative total</span>
-            <span>{formatCents(totals.totalCents)}</span>
+            <span>{formatCents(chosen.totalCents)}</span>
           </p>
         ) : null}
       </div>
@@ -156,67 +186,42 @@ export function WholesaleBuyPanel({ style }: Props) {
         <button
           type="button"
           className="btn btn--light btn--lg btn--block"
-          onClick={goToEnquiry}
+          onClick={() => add()}
+          disabled={pending}
         >
-          Request a quote
+          {pending ? 'Adding' : 'Add to cart'}
+        </button>
+
+        <button
+          type="button"
+          className="btn btn--accent btn--lg btn--block"
+          onClick={() => add(() => router.push('/cart'))}
+          disabled={pending}
+        >
+          Buy now
         </button>
       </div>
 
-      <div className="pdp__enquiry" ref={enquiryRef}>
-        <div className="tradepanel__inner">
-          <h2 className="tradepanel__title">Your enquiry</h2>
-
-          {lines.length ? (
-            <>
-              <ul className="tradepanel__lines">
-                {lines.map((line) => (
-                  <li key={line.slug} className="tradepanel__line">
-                    <span className="tradepanel__style">{line.title}</span>
-                    <span className="tradepanel__qty tnum">
-                      {`${UNITS.format(line.tier)} × ${formatCents(line.unitPriceCents)}`}
-                    </span>
-                    <span className="tradepanel__money tnum">
-                      {formatCents(line.totalCents)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-
-              <p className="tradepanel__total">
-                <span className="tradepanel__totallabel">
-                  Indicative total
-                  <span className="tradepanel__units tnum">
-                    {`${UNITS.format(totals.units)} units`}
-                  </span>
-                </span>
-                <span className="tnum">{formatCents(totals.totalCents)}</span>
-              </p>
-            </>
-          ) : (
-            <p className="tradepanel__empty">
-              Choose a quantity above and it collects here. Nothing is ordered and
-              nothing is charged — this sends a request for real terms on this style.
-            </p>
-          )}
-
-          <WholesaleEnquiryForm lines={lines} onSent={() => setPicked(null)} />
-        </div>
-      </div>
-
-      {/* Wholesale has no cart and no checkout: the enquiry is the purchase
-          action, so the bar carries the buyer back to it rather than growing a
-          second, parallel way to ask for terms. */}
+      {/* The same two handlers, not a second purchase path. */}
       <StickyBuyBar
         anchor={actionsRef}
         title={style.title}
         price={
           chosen
-            ? `${UNITS.format(totals.units)} units · ${formatCents(totals.totalCents)}`
+            ? `${UNITS.format(chosen.tier)} units · ${formatCents(chosen.totalCents)}`
             : priceLabel
         }
       >
-        <button type="button" className="btn btn--accent" onClick={goToEnquiry}>
-          Request a quote
+        <button type="button" className="btn" onClick={() => add()} disabled={pending}>
+          {pending ? 'Adding' : 'Add to cart'}
+        </button>
+        <button
+          type="button"
+          className="btn btn--accent"
+          onClick={() => add(() => router.push('/cart'))}
+          disabled={pending}
+        >
+          Buy now
         </button>
       </StickyBuyBar>
     </div>

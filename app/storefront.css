@@ -4528,21 +4528,23 @@
   text-transform: uppercase;
 }
 
-/* Colours and sizes are stated, not chosen: a trade run carries the whole
-   range, and the ratio is settled in the quote. */
-.chip--static,
-.swatch--static { cursor: default; }
-
-.pdp--trade .chip--static {
+/* Colour and size are chosen here as they are on the shop's own page; only
+   the ground is different, so the chip has to read on ink rather than paper. */
+.pdp--trade .chip {
   border-color: rgba(245, 244, 240, 0.25);
   color: var(--color-paper);
 }
 
-.pdp--trade .swatch__dot { border-color: rgba(245, 244, 240, 0.35); }
-
-/* The enquiry is the trade purchase action, so it sits where Add to cart's
-   consequences would: directly under the buttons, in the sheet's paper panel. */
-.pdp__enquiry {
-  margin-top: var(--space-3);
-  scroll-margin-top: 5.5rem;
+.pdp--trade .chip--on {
+  background: var(--color-paper);
+  border-color: var(--color-paper);
+  color: var(--color-ink);
 }
+
+.pdp--trade .chip:has(:focus-visible) { outline-color: var(--color-paper); }
+
+.pdp--trade .swatch--on { border-color: var(--color-paper); }
+
+.pdp--trade .swatch--on .swatch__name { color: var(--color-paper); }
+
+.pdp--trade .swatch__dot { border-color: rgba(245, 244, 240, 0.35); }

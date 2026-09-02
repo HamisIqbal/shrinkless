@@ -387,6 +387,8 @@ export type WholesaleProductDTO = {
  */
 export type WholesaleProductDetailDTO = WholesaleProductDTO & {
   images: ImageDTO[];
+  /** The sellable variants behind the style, so the page can add to the cart. */
+  variants: VariantDTO[];
 };
 
 /**
