@@ -19,7 +19,18 @@ function toList(value: string): string[] {
   return value.split(',').map((part) => part.trim().toLowerCase()).filter(Boolean);
 }
 
-export function ProductEditor({ product }: { product: ProductDTO | null }) {
+type Suggestions = { categories: string[]; tags: string[]; sizes: string[]; colors: string[] };
+
+export function ProductEditor({
+  product,
+  suggestions,
+}: {
+  product: ProductDTO | null;
+  /** Values already used elsewhere in the catalogue, offered back as native
+   *  autofill so a repeated category, tag, size or colour doesn't have to be
+   *  retyped. Purely suggestions — picking one is the only way they apply. */
+  suggestions?: Suggestions;
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState('');
@@ -87,6 +98,19 @@ export function ProductEditor({ product }: { product: ProductDTO | null }) {
       const target = rows.find((row) => row.key === key);
       if (!target) return current;
       return { ...current, [key]: { ...target, ...patch } };
+    });
+  }
+
+  function handleApplyToAll<K extends 'priceCents' | 'stock' | 'enabled'>(
+    field: K,
+    value: MatrixRow[K],
+  ) {
+    setEdited((current) => {
+      const next = { ...current };
+      for (const row of rows) {
+        next[row.key] = { ...row, [field]: value };
+      }
+      return next;
     });
   }
 
@@ -201,7 +225,12 @@ export function ProductEditor({ product }: { product: ProductDTO | null }) {
         <div className="fieldrow">
           <label className="adfield">
             Collection
-            <input value={category} onChange={(e) => setCategory(e.target.value)} required />
+            <input
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              required
+              list="category-suggestions"
+            />
             <small>The collection slug, as it appears in the URL.</small>
           </label>
 
@@ -243,7 +272,11 @@ export function ProductEditor({ product }: { product: ProductDTO | null }) {
 
         <label className="adfield">
           Tags
-          <input value={tagsText} onChange={(e) => setTagsText(e.target.value)} />
+          <input
+            value={tagsText}
+            onChange={(e) => setTagsText(e.target.value)}
+            list="tag-suggestions"
+          />
           <small>Comma separated. Searchable in the product list.</small>
         </label>
 
@@ -314,13 +347,21 @@ export function ProductEditor({ product }: { product: ProductDTO | null }) {
         <div className="fieldrow">
           <label className="adfield">
             Sizes
-            <input value={sizesText} onChange={(e) => setSizesText(e.target.value)} />
+            <input
+              value={sizesText}
+              onChange={(e) => setSizesText(e.target.value)}
+              list="size-suggestions"
+            />
             <small>Comma separated.</small>
           </label>
 
           <label className="adfield">
             Colours
-            <input value={colorsText} onChange={(e) => setColorsText(e.target.value)} />
+            <input
+              value={colorsText}
+              onChange={(e) => setColorsText(e.target.value)}
+              list="color-suggestions"
+            />
             <small>Comma separated.</small>
           </label>
         </div>
@@ -331,7 +372,7 @@ export function ProductEditor({ product }: { product: ProductDTO | null }) {
           <small>The family code. Each variant carries its own SKU below.</small>
         </label>
 
-        <VariantMatrix rows={rows} onRowChange={handleRowChange} />
+        <VariantMatrix rows={rows} onRowChange={handleRowChange} onApplyToAll={handleApplyToAll} />
       </section>
 
       <section className="editor__section">
@@ -374,6 +415,21 @@ export function ProductEditor({ product }: { product: ProductDTO | null }) {
           {pending ? 'Saving' : 'Save product'}
         </button>
       </div>
+
+      {/* Autofill only — populates the browser's own suggestion list, never
+          overwrites a field on its own. */}
+      <datalist id="category-suggestions">
+        {(suggestions?.categories ?? []).map((value) => <option key={value} value={value} />)}
+      </datalist>
+      <datalist id="tag-suggestions">
+        {(suggestions?.tags ?? []).map((value) => <option key={value} value={value} />)}
+      </datalist>
+      <datalist id="size-suggestions">
+        {(suggestions?.sizes ?? []).map((value) => <option key={value} value={value} />)}
+      </datalist>
+      <datalist id="color-suggestions">
+        {(suggestions?.colors ?? []).map((value) => <option key={value} value={value} />)}
+      </datalist>
     </form>
   );
 }

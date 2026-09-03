@@ -517,6 +517,115 @@ export async function listUsedCategorySlugs(): Promise<string[]> {
   return (slugs as string[]).filter(Boolean).sort();
 }
 
+/** Values already typed into these fields elsewhere in the catalogue, so the
+ *  editor can offer them back instead of the admin retyping them. Purely
+ *  suggestions — a `<datalist>` never overwrites what's typed. */
+export async function getProductFieldSuggestions(): Promise<{
+  categories: string[];
+  tags: string[];
+  sizes: string[];
+  colors: string[];
+}> {
+  await connectToDatabase();
+
+  const [categories, tags, sizes, colors] = await Promise.all([
+    Product.distinct('category', { archivedAt: null }),
+    Product.distinct('tags', { archivedAt: null }),
+    Product.distinct('optionSets.sizes', { archivedAt: null }),
+    Product.distinct('optionSets.colors', { archivedAt: null }),
+  ]);
+
+  const clean = (values: unknown[]) => (values as string[]).filter(Boolean).sort();
+
+  return {
+    categories: clean(categories),
+    tags: clean(tags),
+    sizes: clean(sizes),
+    colors: clean(colors),
+  };
+}
+
+/** The next free `base-copy`, `base-copy-2`, … slug. */
+async function uniqueSlug(base: string): Promise<string> {
+  let candidate = `${base}-copy`;
+  let n = 2;
+  while (await Product.exists({ slug: candidate })) {
+    candidate = `${base}-copy-${n}`;
+    n += 1;
+  }
+  return candidate;
+}
+
+/** The next free `BASE-COPY`, `BASE-COPY-2`, … SKU. SKUs are unique across the
+ *  whole catalogue, so a duplicated variant can never keep the original's. */
+async function uniqueSku(base: string): Promise<string> {
+  let candidate = `${base}-COPY`;
+  let n = 2;
+  while (await Variant.exists({ sku: candidate })) {
+    candidate = `${base}-COPY-${n}`;
+    n += 1;
+  }
+  return candidate;
+}
+
+/**
+ * Copies a product's fields, images and variants into a new, independent
+ * document. The original is untouched.
+ *
+ * Images are copied by reference — the same Cloudinary public ids — so
+ * nothing is re-uploaded. Slug and every variant SKU are regenerated because
+ * both are unique across the catalogue. The copy starts as a draft, unfeatured
+ * and with zero stock: an identical listing silently going live, or claiming
+ * stock that only the original variant actually has, is worse than an admin
+ * publishing and restocking it on purpose.
+ */
+export async function duplicateProduct(id: string): Promise<string> {
+  if (!Types.ObjectId.isValid(id)) throw new ProductNotFoundError(id);
+
+  await connectToDatabase();
+
+  const source = (await Product.findById(id).lean()) as WithId<ProductDoc> | null;
+  if (!source) throw new ProductNotFoundError(id);
+
+  const variants = (await Variant.find({ productId: source._id }).lean()) as WithId<VariantDoc>[];
+
+  const slug = await uniqueSlug(source.slug);
+
+  const copy = await Product.create({
+    title: `${source.title} (copy)`,
+    slug,
+    description: source.description,
+    category: source.category,
+    status: 'draft',
+    featured: false,
+    badge: source.badge,
+    rating: source.rating,
+    tags: source.tags,
+    baseSku: source.baseSku,
+    seo: source.seo,
+    quantityRule: source.quantityRule,
+    images: source.images,
+    optionSets: source.optionSets,
+  });
+
+  for (const variant of variants) {
+    const sku = await uniqueSku(variant.sku);
+    await Variant.create({
+      productId: copy._id,
+      size: variant.size,
+      color: variant.color,
+      sku,
+      priceCents: variant.priceCents,
+      stock: 0,
+      lowStockThreshold: variant.lowStockThreshold,
+      imagePublicId: variant.imagePublicId,
+      enabled: variant.enabled,
+    });
+  }
+
+  return String(copy._id);
+}
+
 /** How many live products sit in a category. The category service asks before
  *  allowing an archive. */
 export async function countProductsInCategory(slug: string): Promise<number> {

@@ -314,25 +314,29 @@ export async function listMediaSlots(): Promise<MediaLibrary> {
   return {
     hero: {
       slotId: HERO_SLOT,
-      label: 'Campaign carousel',
+      label: 'Home',
       where: `Home — the frames behind the headline. ${HERO_MIN}–${HERO_MAX} of them.`,
       frames: media.hero,
       ratios: HERO_RATIOS,
       overridden: overrides.has(HERO_SLOT),
     },
 
+    // Simple, location-based titles — "Men", "Women" — rather than the
+    // catalogue's internal naming. The full location still reads underneath.
     categories: slugs.map(({ slug, label }) => ({
       slotId: categorySlotId(slug),
-      label: `${label} tile`,
+      label,
       where: 'Home — the shopping doors, and the desktop menu',
       frames: [categoryImage(media, slug)],
       ratios: CATEGORY_RATIOS,
       overridden: overrides.has(categorySlotId(slug)),
     })),
 
+    // Every one of these frames is a section of the home page (several also
+    // reach onto other pages — that detail stays in `where`, not the title).
     editorial: EDITORIAL_SLOTS.map((slot) => ({
       slotId: editorialSlotId(slot),
-      label: EDITORIAL[slot].label,
+      label: 'Home (Section)',
       where: EDITORIAL[slot].where,
       frames: [media.editorial[slot]],
       ratios: EDITORIAL[slot].ratios,

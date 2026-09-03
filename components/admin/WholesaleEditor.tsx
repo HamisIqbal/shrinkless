@@ -159,6 +159,17 @@ export function WholesaleEditor({ product }: { product: ProductDTO | null }) {
     });
   }
 
+  function handleApplyToAll<K extends 'priceCents' | 'stock' | 'enabled'>(
+    field: K,
+    value: MatrixRow[K],
+  ) {
+    setEdited((current) => {
+      const next = { ...current };
+      for (const row of rows) next[row.key] = { ...row, [field]: value };
+      return next;
+    });
+  }
+
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError('');
@@ -391,7 +402,7 @@ export function WholesaleEditor({ product }: { product: ProductDTO | null }) {
           <small>The family code. Each variant carries its own SKU below.</small>
         </label>
 
-        <VariantMatrix rows={rows} onRowChange={handleRowChange} />
+        <VariantMatrix rows={rows} onRowChange={handleRowChange} onApplyToAll={handleApplyToAll} />
       </section>
 
       <section className="editor__section">

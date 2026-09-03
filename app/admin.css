@@ -1533,6 +1533,13 @@ body:has(.admin) {
 .admin .matrix input[type="text"],
 .admin .matrix input[type="number"] { min-width: 5rem; }
 
+.admin .matrix__applyall {
+  display: block;
+  margin-top: 0.3rem;
+  padding-inline: 0;
+  white-space: nowrap;
+}
+
 /* Product photography used to be a contact sheet of thumbnails: small, dense,
    and enough to confirm an upload landed. It is now a stack, because each
    frame carries a crop stage that has to be big enough to place a garment in.

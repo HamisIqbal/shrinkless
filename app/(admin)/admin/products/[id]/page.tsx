@@ -4,13 +4,16 @@ import { PageHead } from '@/components/admin/PageHead';
 import { ProductEditor } from '@/components/admin/ProductEditor';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import { requireAdminPage } from '@/lib/auth/guards';
-import { getProductForAdmin } from '@/lib/services/products';
+import { getProductFieldSuggestions, getProductForAdmin } from '@/lib/services/products';
 
 export default async function EditProductPage({ params }: PageProps<'/admin/products/[id]'>) {
   await requireAdminPage('products:write');
 
   const { id } = await params;
-  const product = await getProductForAdmin(id);
+  const [product, suggestions] = await Promise.all([
+    getProductForAdmin(id),
+    getProductFieldSuggestions(),
+  ]);
   if (!product) notFound();
 
   const stock = product.variants.reduce((sum, variant) => sum + variant.stock, 0);
@@ -33,7 +36,7 @@ export default async function EditProductPage({ params }: PageProps<'/admin/prod
         }
       />
 
-      <ProductEditor product={product} />
+      <ProductEditor product={product} suggestions={suggestions} />
     </>
   );
 }

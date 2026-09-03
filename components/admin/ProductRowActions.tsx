@@ -3,7 +3,11 @@
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { archiveProductAction, setProductStatusAction } from '@/app/actions/admin/products';
+import {
+  archiveProductAction,
+  duplicateProductAction,
+  setProductStatusAction,
+} from '@/app/actions/admin/products';
 
 type Props = {
   id: string;
@@ -41,6 +45,16 @@ export function ProductRowActions({ id, status, archived, title }: Props) {
     });
   }
 
+  function duplicate() {
+    setError('');
+    startTransition(async () => {
+      const result = await duplicateProductAction({ id });
+
+      if (!result.ok) setError(result.error);
+      else router.push(`/admin/products/${result.data.id}`);
+    });
+  }
+
   function toggleArchive() {
     if (!archived && !window.confirm(`Archive “${title}”? It leaves the storefront.`)) return;
 
@@ -58,6 +72,15 @@ export function ProductRowActions({ id, status, archived, title }: Props) {
       <Link href={`/admin/products/${id}`} className="abtn abtn--ghost abtn--sm">
         Edit
       </Link>
+
+      <button
+        type="button"
+        className="abtn abtn--ghost abtn--sm"
+        onClick={duplicate}
+        disabled={pending}
+      >
+        Duplicate
+      </button>
 
       {!archived ? (
         <button

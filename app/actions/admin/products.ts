@@ -9,6 +9,7 @@ import {
   SkuTakenError,
   SlugTakenError,
   archiveProduct,
+  duplicateProduct,
   saveProduct,
   setProductStatus,
 } from '@/lib/services/products';
@@ -62,6 +63,22 @@ export const archiveProductAction = adminAction(
     await archiveProduct(input.id, input.archived);
     revalidateProduct();
     return undefined;
+  },
+);
+
+export type DuplicateProductResult = AdminResult<{ id: string }>;
+
+export const duplicateProductAction = adminAction(
+  {
+    permission: 'products:write',
+    schema: z.object({ id: z.string().min(1) }),
+    translate: translateProductError,
+    genericError: 'Could not duplicate the product.',
+  },
+  async (input) => {
+    const id = await duplicateProduct(input.id);
+    revalidateProduct();
+    return { id };
   },
 );
 
