@@ -30,7 +30,7 @@ export function NewsletterForm() {
         type="email"
         required
         autoComplete="email"
-        placeholder="Sign up for new releases, restocks and Shrinkless updates."
+        placeholder="Email address"
         className="signup__input"
       />
 
