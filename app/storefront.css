@@ -914,6 +914,8 @@
   width: min(26rem, 100%);
   background: var(--color-paper);
   color: var(--color-ink);
+  border-top-left-radius: var(--radius-slab);
+  border-bottom-left-radius: var(--radius-slab);
   transform: translateX(100%);
   transition: transform var(--dur-3) var(--ease-out);
 }
@@ -1634,6 +1636,7 @@
   height: 0.875rem;
   padding: 0;
   border: var(--spacing-rule) solid var(--color-muted);
+  border-radius: 50%;
   background: var(--dot, var(--color-paper-deep));
   cursor: pointer;
   transition: box-shadow var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out);
@@ -1686,6 +1689,7 @@
   max-height: min(92svh, 56rem);
   overflow-y: auto;
   overscroll-behavior: contain;
+  border-radius: var(--radius-slab);
   background: var(--color-paper);
   color: var(--color-ink);
 }
@@ -1705,6 +1709,7 @@
   width: 2.75rem;
   height: 2.75rem;
   border: var(--spacing-rule) solid var(--color-ink);
+  border-radius: 999px;
   background: var(--color-paper);
   color: var(--color-ink);
   cursor: pointer;
@@ -2285,7 +2290,7 @@
   min-height: 2.75rem;
   padding: 0.5rem 2rem 0.5rem 0.6rem;
   border: var(--spacing-rule) solid var(--color-muted);
-  border-radius: 0;
+  border-radius: 999px;
   background: transparent;
   color: inherit;
   font-size: var(--text-meta);
@@ -2312,6 +2317,7 @@
   min-height: 2.75rem;
   padding: 0 0.75rem;
   border: var(--spacing-rule) solid var(--color-muted);
+  border-radius: 999px;
   font-size: var(--text-meta);
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -2442,6 +2448,7 @@
   min-height: 2.75rem;
   padding: 0.25rem 0.5rem 0.25rem 0.25rem;
   border: var(--spacing-rule) solid transparent;
+  border-radius: 999px;
   font-size: var(--text-meta);
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -2456,6 +2463,7 @@
   width: 1.5rem;
   height: 1.5rem;
   border: var(--spacing-rule) solid var(--color-muted);
+  border-radius: 50%;
   background: var(--dot, var(--color-paper-deep));
 }
 
@@ -2631,6 +2639,7 @@
   width: 2.75rem;
   height: 2.75rem;
   border: var(--spacing-rule) solid var(--color-muted);
+  border-radius: 999px;
   background: transparent;
   color: inherit;
   cursor: pointer;
@@ -2975,6 +2984,7 @@
   min-width: 2rem;
   height: 2rem;
   border: var(--spacing-rule) solid var(--cart-line);
+  border-radius: 999px;
   background: transparent;
   color: inherit;
   font: inherit;
@@ -4523,6 +4533,7 @@
   height: auto;
   object-fit: contain;
   user-select: none;
+  border-radius: var(--radius-card);
   transition: transform var(--dur-2) var(--ease-out);
 }
 
@@ -4633,7 +4644,7 @@
   min-height: 3rem;
   padding: 0.5rem 0.75rem;
   border: var(--spacing-rule) solid var(--color-muted);
-  border-radius: 0;
+  border-radius: 999px;
   background: transparent;
   color: inherit;
   font: inherit;

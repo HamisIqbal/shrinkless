@@ -344,6 +344,7 @@
     text-transform: uppercase;
     text-decoration: none;
     cursor: pointer;
+    border-radius: 999px;
     transition: color var(--dur-2) var(--ease-out);
 
     --btn-fill: var(--color-white);
@@ -362,13 +363,15 @@
   }
 
   .btn:hover::before,
-  .btn:focus-visible::before {
+  .btn:focus-visible::before,
+  .btn:active::before {
     transform: scaleY(1);
     transform-origin: bottom;
   }
 
   .btn:hover,
-  .btn:focus-visible { color: var(--btn-fill-ink); }
+  .btn:focus-visible,
+  .btn:active { color: var(--btn-fill-ink); }
 
   /* On paper, over a photograph. */
   .btn--light {
@@ -433,36 +436,44 @@
   .btn[aria-disabled="true"]::before { content: none; }
 
   .btn[disabled]:hover,
-  .btn[aria-disabled="true"]:hover { color: var(--color-white); }
+  .btn[disabled]:active,
+  .btn[aria-disabled="true"]:hover,
+  .btn[aria-disabled="true"]:active { color: var(--color-white); }
 
   .btn--block { width: 100%; }
 
-  /* A rule that draws itself in from the left. Navigation and inline links. */
+  /* The same recipe as .btn, at link weight: a pill in the opposite colour
+     rises from the bottom edge and inverts the label. It replaces the hairline
+     rule that used to draw itself in underneath — one house hover for every
+     control on the site rather than two.
+
+     The pill is a pseudo-element with a negative inset rather than padding on
+     the link itself, so nothing it sits in — a nav row, a footer column, a
+     sentence — reflows when the style lands. */
   .ulink {
     position: relative;
+    isolation: isolate;
     display: inline-block;
     text-decoration: none;
     font-size: var(--text-meta);
     letter-spacing: 0.14em;
     text-transform: uppercase;
+    transition: color var(--dur-2) var(--ease-out);
+
+    --ulink-fill: var(--color-ink);
+    --ulink-fill-ink: var(--color-paper);
   }
 
-  .ulink::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: -0.35em;
-    height: var(--spacing-rule);
-    background: currentColor;
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 240ms var(--ease-out);
+  /* Light type means a dark ground, so the pill and the label swap over. */
+  .band--ink .ulink,
+  .colophon .ulink,
+  .hero .ulink,
+  .masthead--over .ulink,
+  .pdp--trade .ulink,
+  .cartsheet .ulink {
+    --ulink-fill: var(--color-paper);
+    --ulink-fill-ink: var(--color-ink);
   }
-
-  .ulink:hover::after,
-  .ulink:focus-visible::after,
-  .ulink[aria-current="page"]::after { transform: scaleX(1); }
 
   /* --------------------------------------------------------------------------
      Media
@@ -510,13 +521,17 @@
     min-height: 2.75rem;
     padding: 0.7rem 0.9rem;
     border: var(--spacing-rule) solid var(--color-muted);
-    border-radius: 0;
+    border-radius: 999px;
     background: var(--color-white);
     color: var(--color-ink);
     font: inherit;
   }
 
   .input:focus-visible { outline: 2px solid var(--color-ink); outline-offset: 0; }
+
+  /* A pill only reads as a field while the field is one line tall. */
+  textarea.input,
+  select[multiple].input { border-radius: var(--radius-card); }
 
   .notice { font-size: var(--text-meta); letter-spacing: 0.08em; text-transform: uppercase; }
   .notice--error { color: var(--color-ink); border-left: 2px solid var(--color-ink); padding-left: 0.6rem; }
@@ -545,3 +560,46 @@
   .lenis.lenis-stopped { overflow: clip; }
   .lenis.lenis-smooth iframe { pointer-events: none; }
 }
+
+/* --------------------------------------------------------------------------
+   Unlayered: the .ulink pill's interaction states
+   The rest of this file is layered so component sheets win over it, but that
+   is exactly the wrong way round here — `.mainnav__trigger { color: inherit }`
+   and its siblings are unlayered, so a layered `.ulink:hover { color }` lost to
+   them and the label stayed ink on an ink pill, i.e. invisible. These four
+   rules are the state machine of the control, not a default to be overridden,
+   so they sit outside the layer and win on merit.
+   -------------------------------------------------------------------------- */
+
+.ulink::after {
+  content: "";
+  position: absolute;
+  inset: -0.32em -0.75em;
+  z-index: -1;
+  border-radius: 999px;
+  background: var(--ulink-fill);
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform var(--dur-2) var(--ease-out);
+}
+
+.ulink:hover::after,
+.ulink:focus-visible::after,
+.ulink:active::after,
+.ulink[aria-current="page"]::after {
+  transform: scaleY(1);
+}
+
+.ulink:hover,
+.ulink:focus-visible,
+.ulink:active,
+.ulink[aria-current="page"] { color: var(--ulink-fill-ink); }
+
+/* A disabled control must not animate on hover. */
+.ulink[disabled]::after,
+.ulink[aria-disabled="true"]::after { content: none; }
+
+.ulink[disabled]:hover,
+.ulink[disabled]:active,
+.ulink[aria-disabled="true"]:hover,
+.ulink[aria-disabled="true"]:active { color: inherit; }
