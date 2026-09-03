@@ -128,6 +128,7 @@ type BoxProps = {
 
 function Lightbox({ images, title, index, onClose, onStep }: BoxProps) {
   const stageRef = useRef<HTMLDivElement>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const swipe = useRef<{ x: number; y: number } | null>(null);
 
@@ -176,12 +177,31 @@ function Lightbox({ images, title, index, onClose, onStep }: BoxProps) {
     };
   }, [many, onClose, go]);
 
+  /**
+   * Where the pointer is, as a percentage of the photograph.
+   *
+   * Of the photograph, not of the stage: a contained image is letterboxed
+   * inside it, and a `transform-origin` measured against the stage magnifies a
+   * point some way off the one that was clicked. `offsetWidth`/`offsetHeight`
+   * are the image's layout box, which the zoom transform does not touch — so
+   * the same arithmetic holds while panning at 2.5x as it does on the first
+   * click.
+   */
   function point(event: { clientX: number; clientY: number }) {
     const box = stageRef.current?.getBoundingClientRect();
-    if (!box) return '50% 50%';
+    const shot = imageRef.current;
+    if (!box || !shot) return '50% 50%';
 
-    const x = Math.min(100, Math.max(0, ((event.clientX - box.left) / box.width) * 100));
-    const y = Math.min(100, Math.max(0, ((event.clientY - box.top) / box.height) * 100));
+    const width = shot.offsetWidth;
+    const height = shot.offsetHeight;
+    if (!width || !height) return '50% 50%';
+
+    // Centred by the stage, so its unscaled edges sit at these two offsets.
+    const left = box.left + (box.width - width) / 2;
+    const top = box.top + (box.height - height) / 2;
+
+    const x = Math.min(100, Math.max(0, ((event.clientX - left) / width) * 100));
+    const y = Math.min(100, Math.max(0, ((event.clientY - top) / height) * 100));
     return `${x.toFixed(1)}% ${y.toFixed(1)}%`;
   }
 
@@ -281,6 +301,7 @@ function Lightbox({ images, title, index, onClose, onStep }: BoxProps) {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           key={image.publicId}
+          ref={imageRef}
           className="lightbox__image"
           src={imageUrl(image.publicId, FULL)}
           alt={image.alt || title}

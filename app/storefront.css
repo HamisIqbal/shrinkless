@@ -4514,10 +4514,17 @@
   cursor: default;
 }
 
+/* Flex, not grid, on purpose. A grid's implicit row is auto — it sizes to the
+   photograph's own 1800px — and the image's `max-height: 100%` then resolves
+   against that row rather than against the stage, so a portrait shot overflowed
+   a landscape viewport and `overflow: hidden` served the top slice of it. A
+   flex item's percentage caps resolve against the container, whose height the
+   viewer's own grid has already made definite. */
 .lightbox__stage {
   position: relative;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   min-height: 0;
   overflow: hidden;
   cursor: zoom-in;
