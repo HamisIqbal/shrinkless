@@ -28,23 +28,27 @@ type Frame = {
  * reachable exactly once.
  */
 /**
- * Five of these tiles share a slot with an editorial band elsewhere on the
+ * One tile per media slot, and no photograph on the rail twice.
+ *
+ * These tiles share their slots with the editorial bands elsewhere on the
  * site, which is deliberate: changing the fabric frame changes it everywhere
- * it appears. The other three have slots of their own, because they used to
- * reach into the product photography and a product's gallery is not the place
- * to art-direct the home page from.
+ * it appears. Two of them used to have duplicate slots of their own holding
+ * the very same photograph — the rail then ran the same frame twice and the
+ * media panel listed it twice — so they now read the slot that already owned
+ * the picture. Only the Organic Tee frame, which appears nowhere else, still
+ * has a slot to itself.
  */
 const frames = ({ editorial }: SiteMedia): Frame[] => [
   {
     href: '/product/mens-heavyweight-tee',
     label: 'Heavyweight Tee',
-    image: editorial.lookbookHeavyweight,
+    image: editorial.torso,
   },
   { href: '/why-shrinkless', label: 'The cotton', image: editorial.fabric },
   {
     href: '/product/womens-boxy-tee',
     label: 'Boxy Tee',
-    image: editorial.lookbookBoxy,
+    image: editorial.folded,
   },
   { href: '/our-story', label: 'Cut and sewn', image: editorial.craft },
   {
@@ -53,11 +57,6 @@ const frames = ({ editorial }: SiteMedia): Frame[] => [
     image: editorial.lookbookOrganic,
   },
   { href: '/why-shrinkless', label: "Doesn't shrink", image: editorial.hanging },
-  {
-    href: '/product/mens-organic-tee',
-    label: 'Organic Tee',
-    image: editorial.torso,
-  },
   { href: '/shop', label: 'The collection', image: editorial.heather },
 ];
 

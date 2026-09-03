@@ -256,6 +256,27 @@ describe('listMediaSlots', () => {
     }
   });
 
+  /* The panel used to list ten cards called "Home (Section)", three of which
+     were the same photograph under two slots. Both halves of that are what
+     these two guard. */
+  it('gives every slot a title of its own', async () => {
+    const library = await listMediaSlots();
+    const labels = [library.hero, ...library.categories, ...library.editorial].map(
+      (slot) => slot.label,
+    );
+
+    expect(new Set(labels).size).toBe(labels.length);
+  });
+
+  it('never lists the same photograph under two slots', async () => {
+    const library = await listMediaSlots();
+    const urls = [...library.categories, ...library.editorial].map(
+      (slot) => slot.frames[0].url,
+    );
+
+    expect(new Set(urls).size).toBe(urls.length);
+  });
+
   it('falls back to the manifest categories when the catalogue has none', async () => {
     const library = await listMediaSlots();
 

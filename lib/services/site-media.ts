@@ -69,69 +69,64 @@ export const CATEGORY_RATIOS: ViewRatios = {
 /**
  * The hand-composed frames.
  *
- * The last four exist because the home page and the lookbook rail reach into
- * `PRODUCT_IMAGES` for editorial purposes. Left alone they would be the only
- * storefront imagery the panel could not change — and editing a product's
- * photography would silently restyle the home page. Their own slots fix both.
+ * One record per photograph. Where the same picture is used in two places —
+ * the story tile and the lookbook tile cut from the same frame — both places
+ * read the one slot, so changing it changes both and the panel never lists
+ * the same image twice. The two that reach into `PRODUCT_IMAGES` do so
+ * because they are editorial uses of a frame the catalogue happens to own;
+ * they have slots of their own so a product's gallery is not the place the
+ * home page gets art-directed from.
+ *
+ * Labels are the place the frame is seen, not what is in it — "Home (Story,
+ * left)" rather than "Studio torso" — because that is what a person editing
+ * the site is looking for. `where` carries the rest.
  */
 const EDITORIAL: Record<string, EditorialDefinition> = {
   fabric: {
-    label: 'Fabric macro',
-    where: 'Home, Why Shrinkless, and the lookbook rail',
+    label: 'Why Shrinkless (Fabric)',
+    where: 'Why Shrinkless, and the lookbook rail on Home',
     default: BRAND_IMAGES.fabric,
     ratios: WIDE,
   },
   craft: {
-    label: 'Cut and sew',
-    where: 'Home, Our Story, Why Shrinkless, the lookbook rail, and the footer backdrop',
+    label: 'Our Story (Workshop)',
+    where: 'Our Story, Why Shrinkless, the lookbook rail on Home, and the footer backdrop',
     default: BRAND_IMAGES.craft,
     ratios: WIDE,
   },
   hanging: {
-    label: 'On the hanger',
-    where: 'Home, Our Story, Why Shrinkless, and the lookbook rail',
+    label: 'Why Shrinkless (Hanger)',
+    where: 'Why Shrinkless, and the lookbook rail on Home',
     default: BRAND_IMAGES.hanging,
     ratios: WIDE,
   },
   folded: {
-    label: 'Flat lay',
-    where: 'Home and Why Shrinkless',
+    label: 'Why Shrinkless (Flat lay)',
+    where: 'Why Shrinkless, and the Boxy Tee tile on the lookbook rail',
     default: BRAND_IMAGES.folded,
     ratios: TILE,
   },
   heather: {
-    label: 'Heather grey',
-    where: 'Home, Why Shrinkless, and the lookbook rail',
+    label: 'Home (Story, right)',
+    where: 'Home — the second story tile, and the last tile on the lookbook rail',
     default: BRAND_IMAGES.heather,
     ratios: WIDE,
   },
   torso: {
-    label: 'Studio torso',
-    where: 'Home, Our Story, and the lookbook rail',
+    label: 'Home (Story, left)',
+    where: 'Home — the first story tile, and the Heavyweight Tee tile on the lookbook rail',
     default: BRAND_IMAGES.torso,
     ratios: WIDE,
   },
   promise: {
-    label: 'The promise band',
+    label: 'Home (Promise band)',
     where: 'Home — the “Wash it. Dry it.” full-bleed band',
-    default: PRODUCT_IMAGES['mens-heavyweight-tee'][0],
+    default: PRODUCT_IMAGES['mens-long-sleeve-tee'][1],
     ratios: BAND,
   },
-  lookbookHeavyweight: {
-    label: 'Lookbook — Heavyweight Tee',
-    where: 'Home, the first tile on the lookbook rail',
-    default: PRODUCT_IMAGES['mens-heavyweight-tee'][1],
-    ratios: RAIL,
-  },
-  lookbookBoxy: {
-    label: 'Lookbook — Boxy Tee',
-    where: 'Home, the third tile on the lookbook rail',
-    default: PRODUCT_IMAGES['womens-boxy-tee'][1],
-    ratios: RAIL,
-  },
   lookbookOrganic: {
-    label: 'Lookbook — Organic Tee',
-    where: 'Home, the fifth tile on the lookbook rail',
+    label: 'Home (Lookbook)',
+    where: 'Home — the Organic Tee tile on the lookbook rail',
     default: PRODUCT_IMAGES['womens-organic-tee'][1],
     ratios: RAIL,
   },
@@ -332,11 +327,12 @@ export async function listMediaSlots(): Promise<MediaLibrary> {
       overridden: overrides.has(categorySlotId(slug)),
     })),
 
-    // Every one of these frames is a section of the home page (several also
-    // reach onto other pages — that detail stays in `where`, not the title).
+    // Location-based titles, one per photograph — "Home (Promise band)",
+    // "Why Shrinkless (Fabric)". Two slots never carry the same title, and no
+    // two slots hold the same picture.
     editorial: EDITORIAL_SLOTS.map((slot) => ({
       slotId: editorialSlotId(slot),
-      label: 'Home (Section)',
+      label: EDITORIAL[slot].label,
       where: EDITORIAL[slot].where,
       frames: [media.editorial[slot]],
       ratios: EDITORIAL[slot].ratios,

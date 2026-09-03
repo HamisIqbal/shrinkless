@@ -3,7 +3,6 @@
 import { useState, useTransition } from 'react';
 import {
   createSiteUploadSignatureAction,
-  resetMediaSlotAction,
   saveHeroFramesAction,
   saveMediaSlotAction,
 } from '@/app/actions/admin/media';
@@ -32,6 +31,29 @@ function toFrames(slot: MediaSlotView): Frame[] {
     mobileFocus: frame.mobileFocus ?? '',
     mobileZoom: frame.mobileZoom,
   }));
+}
+
+/**
+ * Whether two frames are the same edit.
+ *
+ * `Reset` is offered only when there is something to undo, so this decides
+ * whether the button is there at all. Compared field by field rather than by
+ * stringifying, because `mobileZoom` is legitimately `undefined` and a key
+ * order is not a contract.
+ */
+function sameFrame(a: Frame, b: Frame): boolean {
+  return (
+    a.url === b.url &&
+    a.alt === b.alt &&
+    a.focus === b.focus &&
+    a.zoom === b.zoom &&
+    a.mobileFocus === b.mobileFocus &&
+    a.mobileZoom === b.mobileZoom
+  );
+}
+
+function sameFrames(a: Frame[], b: Frame[]): boolean {
+  return a.length === b.length && a.every((frame, i) => sameFrame(frame, b[i]));
 }
 
 /**
@@ -157,11 +179,18 @@ function FrameFields({
    -------------------------------------------------------------------------- */
 
 function SlotCard({ slot }: { slot: MediaSlotView }) {
-  const [frame, setFrame] = useState<Frame>(() => toFrames(slot)[0]);
+  /* What the storefront is serving right now — the last save, or the shipped
+     frame if there has never been one. `Reset` returns to this and no further:
+     it undoes the edit in front of you, it does not throw away work that is
+     already live. */
+  const [saved, setSaved] = useState<Frame>(() => toFrames(slot)[0]);
+  const [frame, setFrame] = useState<Frame>(saved);
   const [overridden, setOverridden] = useState(slot.overridden);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [pending, startTransition] = useTransition();
+
+  const edited = !sameFrame(frame, saved);
 
   function save() {
     setError('');
@@ -175,26 +204,18 @@ function SlotCard({ slot }: { slot: MediaSlotView }) {
         return;
       }
 
+      setSaved(frame);
       setOverridden(true);
       setMessage('Saved. The storefront is updated.');
     });
   }
 
+  /** Undoes the edits on this card. Nothing is sent, and nothing already
+   *  saved is touched. */
   function reset() {
     setError('');
-    setMessage('');
-
-    startTransition(async () => {
-      const result = await resetMediaSlotAction({ slotId: slot.slotId });
-
-      if (!result.ok) {
-        setError(result.error);
-        return;
-      }
-
-      setOverridden(false);
-      setMessage('Restored. Reload to see the original.');
-    });
+    setFrame(saved);
+    setMessage('Changes undone. Back to the saved photograph.');
   }
 
   return (
@@ -222,14 +243,14 @@ function SlotCard({ slot }: { slot: MediaSlotView }) {
           {pending ? 'Saving…' : 'Save'}
         </button>
 
-        {overridden ? (
+        {edited ? (
           <button
             type="button"
             className="abtn abtn--quiet abtn--sm"
             onClick={reset}
             disabled={pending}
           >
-            Reset to default
+            Reset changes
           </button>
         ) : null}
 
@@ -245,11 +266,16 @@ function SlotCard({ slot }: { slot: MediaSlotView }) {
    -------------------------------------------------------------------------- */
 
 function HeroCard({ slot }: { slot: MediaSlotView }) {
-  const [frames, setFrames] = useState<Frame[]>(() => toFrames(slot));
+  /* Same rule as a single slot: the carousel resets to the set that is live,
+     not to the set the site launched with. */
+  const [saved, setSaved] = useState<Frame[]>(() => toFrames(slot));
+  const [frames, setFrames] = useState<Frame[]>(saved);
   const [overridden, setOverridden] = useState(slot.overridden);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [pending, startTransition] = useTransition();
+
+  const edited = !sameFrames(frames, saved);
 
   function patch(index: number, change: Partial<Frame>) {
     setFrames(frames.map((frame, i) => (i === index ? { ...frame, ...change } : frame)));
@@ -290,26 +316,18 @@ function HeroCard({ slot }: { slot: MediaSlotView }) {
         return;
       }
 
+      setSaved(frames);
       setOverridden(true);
       setMessage('Saved. The storefront is updated.');
     });
   }
 
+  /** Undoes the edits to the carousel — added, removed and reordered frames
+   *  included — back to the set that is live. */
   function reset() {
     setError('');
-    setMessage('');
-
-    startTransition(async () => {
-      const result = await resetMediaSlotAction({ slotId: slot.slotId });
-
-      if (!result.ok) {
-        setError(result.error);
-        return;
-      }
-
-      setOverridden(false);
-      setMessage('Restored. Reload to see the original frames.');
-    });
+    setFrames(saved);
+    setMessage('Changes undone. Back to the saved frames.');
   }
 
   return (
@@ -386,14 +404,14 @@ function HeroCard({ slot }: { slot: MediaSlotView }) {
           Add a frame
         </button>
 
-        {overridden ? (
+        {edited ? (
           <button
             type="button"
             className="abtn abtn--quiet abtn--sm"
             onClick={reset}
             disabled={pending}
           >
-            Reset to default
+            Reset changes
           </button>
         ) : null}
 

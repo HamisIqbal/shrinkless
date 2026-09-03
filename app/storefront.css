@@ -56,6 +56,11 @@
 
 .tiles__grid--tall .tiles__frame { aspect-ratio: 3 / 4; }
 
+/* A grid that is not inside a `.wrap` is full-bleed, so the same thing that
+   happens to the category doors happens here — see `.gateway__frame`. The
+   contained grids are already held to the measure and are left alone. */
+.tiles > .tiles__grid .tiles__frame { width: 100%; max-height: 100svh; }
+
 @media (min-width: 62rem) {
   .tiles__grid--tall .tiles__frame { aspect-ratio: 4 / 5; }
 }
@@ -344,10 +349,13 @@
   display: grid;
   gap: var(--space-4);
   justify-items: start;
-  max-width: 44rem;
 }
 
-.iglane__emptylede { color: var(--color-muted-text); }
+/* The measure belongs to the sentence, not to the block. This element is also
+   a `.wrap`, and a narrower `max-width` on a `.wrap` does not indent it — it
+   centres it, so the invitation drifted right of the heading above it and the
+   gap grew with the window. */
+.iglane__emptylede { max-width: 44rem; color: var(--color-muted-text); }
 
 .iglane__image {
   width: 100%;
@@ -1289,6 +1297,17 @@
 .gateway__frame {
   position: relative;
   aspect-ratio: 4 / 5;
+  /* The grid is full-bleed, so the frame's height is half the viewport's
+     WIDTH — on a wide window, or a zoomed-out one, a 4:5 tile is taller than
+     the window and its label falls off the bottom of the screen. Capping at
+     the window's own height keeps the door one screen tall however wide the
+     screen gets, and never bites below that: at every size the design was
+     drawn for, the ratio still decides. `width` is stated because a box with
+     an `aspect-ratio` and an `auto` width reads its width back off the capped
+     height — which would leave a strip of ground beside each door instead of
+     cropping the photograph. */
+  width: 100%;
+  max-height: 100svh;
   overflow: hidden;
   background: var(--color-paper-deep);
 }
