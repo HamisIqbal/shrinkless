@@ -6,16 +6,9 @@ import { ShopBrowser } from '@/components/shop/ShopBrowser';
 
 export const metadata = { title: 'Shop' };
 
-const INTRO: Record<string, { title: string; copy: string }> = {
-  men: {
-    title: "Men's",
-    copy: 'Cut straight through the body with a true crew neck. Garment dyed organic cotton, made in USA.',
-  },
-  women: {
-    title: "Women's",
-    copy: 'The same cotton and the same dye process, cut shorter through the body and narrower at the shoulder.',
-  },
-};
+/** Men and Women get a bare title and nothing else; every other category
+ *  (currently just the unfiltered "All Products" grid) keeps the full intro. */
+const MINIMAL_TITLES: Record<string, string> = { men: 'Men', women: 'Women' };
 
 const FALLBACK = {
   title: 'All Products',
@@ -43,7 +36,7 @@ export default async function ShopPage(props: PageProps<'/shop/[[...category]]'>
   // otherwise filtering to XXL removes every other size from the list and the
   // shopper cannot get back without editing the URL.
   const all = await listPublishedProducts(
-    { sizes: [], colors: [], sort: 'newest', q: '', minPrice: null, maxPrice: null },
+    { sizes: [], colors: [], sort: 'newest', q: '', minPrice: null, maxPrice: null, gender: null },
     categorySlug,
   );
 
@@ -54,15 +47,21 @@ export default async function ShopPage(props: PageProps<'/shop/[[...category]]'>
   const priceCeiling = prices.length ? Math.ceil(Math.max(...prices)) : 0;
 
   const basePath = categorySlug ? `/shop/${categorySlug}` : '/shop';
-  const intro = (categorySlug && INTRO[categorySlug]) || FALLBACK;
+  const minimalTitle = categorySlug ? MINIMAL_TITLES[categorySlug] : undefined;
 
   return (
     <div className="band band--tight shoppage">
       <div className="wrap">
         <header className="shoppage__head">
-          <p className="eyebrow">Collection</p>
-          <h1 className="display shoppage__title">{intro.title}</h1>
-          <p className="lede shoppage__intro">{intro.copy}</p>
+          {minimalTitle ? (
+            <h1 className="display shoppage__title">{minimalTitle}</h1>
+          ) : (
+            <>
+              <p className="eyebrow">Collection</p>
+              <h1 className="display shoppage__title">{FALLBACK.title}</h1>
+              <p className="lede shoppage__intro">{FALLBACK.copy}</p>
+            </>
+          )}
         </header>
 
         <ShopBrowser

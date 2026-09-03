@@ -162,7 +162,7 @@ function timeOf(doc: unknown, field: 'createdAt' | 'updatedAt' = 'createdAt'): n
  * nothing here is curated.
  */
 export async function listNewArrivals(limit = 4): Promise<ProductDTO[]> {
-  const all = await listPublishedProducts({ sizes: [], colors: [], sort: 'newest', q: '', minPrice: null, maxPrice: null });
+  const all = await listPublishedProducts({ sizes: [], colors: [], sort: 'newest', q: '', minPrice: null, maxPrice: null, gender: null });
   return all.slice(0, limit);
 }
 
@@ -175,7 +175,7 @@ export async function listNewArrivals(limit = 4): Promise<ProductDTO[]> {
  * rendering an empty band.
  */
 export async function listFeaturedProducts(limit = 3): Promise<ProductDTO[]> {
-  const all = await listPublishedProducts({ sizes: [], colors: [], sort: 'newest', q: '', minPrice: null, maxPrice: null });
+  const all = await listPublishedProducts({ sizes: [], colors: [], sort: 'newest', q: '', minPrice: null, maxPrice: null, gender: null });
   const chosen = all.filter((product) => product.featured);
 
   return (chosen.length ? chosen : all).slice(0, limit);
@@ -187,7 +187,7 @@ export async function listProductsInCategory(
   limit?: number,
 ): Promise<ProductDTO[]> {
   const all = await listPublishedProducts(
-    { sizes: [], colors: [], sort: 'newest', q: '', minPrice: null, maxPrice: null },
+    { sizes: [], colors: [], sort: 'newest', q: '', minPrice: null, maxPrice: null, gender: null },
     category,
   );
   return typeof limit === 'number' ? all.slice(0, limit) : all;

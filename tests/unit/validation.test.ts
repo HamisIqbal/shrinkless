@@ -11,6 +11,7 @@ describe('productFilterSchema', () => {
       q: '',
       minPrice: null,
       maxPrice: null,
+      gender: null,
     });
   });
 

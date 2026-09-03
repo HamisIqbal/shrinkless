@@ -8,6 +8,7 @@ const empty = {
   q: '',
   minPrice: null,
   maxPrice: null,
+  gender: null,
 };
 
 describe('toggleValue', () => {

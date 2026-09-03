@@ -13,6 +13,7 @@ const noFilter = {
   q: '',
   minPrice: null,
   maxPrice: null,
+  gender: null,
 };
 
 async function seedCatalogue() {

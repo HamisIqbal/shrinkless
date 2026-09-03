@@ -1,20 +1,28 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { FilterPanel } from '@/components/shop/FilterPanel';
 import { ProductGrid } from '@/components/shop/ProductGrid';
 import type { ProductFilter } from '@/lib/validation/catalogue';
 import type { ProductDTO } from '@/types/dto';
 
 type Props = {
-  products: ProductDTO[];
+  /** Rendered by the default grid. Omit when passing `grid` and `count` instead
+   *  (the wholesale line sheet, whose rows are not `ProductDTO`s). */
+  products?: ProductDTO[];
   filter: ProductFilter;
   sizes: string[];
   colors: string[];
+  genders?: { value: 'men' | 'women'; label: string }[];
   priceFloor: number;
   priceCeiling: number;
   basePath: string;
   focusSearch?: boolean;
+  /** Result count for the bar and the filter panel. Defaults to `products.length`. */
+  count?: number;
+  /** Overrides the default `ProductGrid`. */
+  grid?: ReactNode;
+  emptyMessage?: string;
 };
 
 /** Where the column layout takes over from the sheet. Matches storefront.css. */
@@ -45,11 +53,16 @@ export function ShopBrowser({
   filter,
   sizes,
   colors,
+  genders,
   priceFloor,
   priceCeiling,
   basePath,
   focusSearch = false,
+  count,
+  grid,
+  emptyMessage = 'Nothing matches that. Clear a filter and try again.',
 }: Props) {
+  const total = count ?? products?.length ?? 0;
   const [column, setColumn] = useState(true);
   const [sheet, setSheet] = useState(false);
 
@@ -105,7 +118,8 @@ export function ShopBrowser({
     filter.colors.length > 0 ||
     filter.q !== '' ||
     filter.minPrice !== null ||
-    filter.maxPrice !== null;
+    filter.maxPrice !== null ||
+    Boolean(filter.gender);
 
   return (
     <div
@@ -137,10 +151,11 @@ export function ShopBrowser({
             filter={filter}
             sizes={sizes}
             colors={colors}
+            genders={genders}
             priceFloor={priceFloor}
             priceCeiling={priceCeiling}
             basePath={basePath}
-            count={products.length}
+            count={total}
             focusSearch={focusSearch}
           />
         </div>
@@ -149,7 +164,7 @@ export function ShopBrowser({
             say "done" that is not the same word as "cancel". */}
         <div className="shoplayout__sheetfoot">
           <button type="button" className="btn btn--block" onClick={() => setSheet(false)}>
-            Show {products.length} {products.length === 1 ? 'style' : 'styles'}
+            Show {total} {total === 1 ? 'style' : 'styles'}
           </button>
         </div>
       </div>
@@ -174,16 +189,14 @@ export function ShopBrowser({
           </button>
 
           <p className="meta tnum">
-            {products.length} {products.length === 1 ? 'style' : 'styles'}
+            {total} {total === 1 ? 'style' : 'styles'}
           </p>
         </div>
 
-        {products.length === 0 ? (
-          <p className="lede shoppage__empty">
-            Nothing matches that. Clear a filter and try again.
-          </p>
+        {total === 0 ? (
+          <p className="lede shoppage__empty">{emptyMessage}</p>
         ) : (
-          <ProductGrid products={products} columns={3} />
+          grid ?? <ProductGrid products={products ?? []} columns={3} />
         )}
       </div>
     </div>

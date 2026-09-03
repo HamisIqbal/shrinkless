@@ -2075,6 +2075,9 @@
     flex-direction: column;
     max-height: 88dvh;
     background: var(--color-paper);
+    /* The sheet is paper regardless of the page it opened from — an ink page
+       (the trade line sheet) would otherwise leave this text white-on-paper. */
+    color: var(--color-ink);
     border-top-left-radius: var(--radius-slab);
     border-top-right-radius: var(--radius-slab);
     box-shadow: 0 -1rem 3rem rgba(10, 10, 10, 0.3);
@@ -3704,6 +3707,46 @@
 
 @media (min-width: 48rem) {
   .tradesheet__terms { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* The "a filter is on" dot sits on the toggle button, which is always on the
+   ink band directly (never inside the sheet's own paper surface). */
+.tradesheet .filters__dot { background: var(--color-paper); }
+
+/* The rest of the filter column sits on ink rather than paper only when it
+   is the desktop column — same technique as the trade product page's own
+   chips (.pdp--trade). The phone sheet is always its own paper surface
+   regardless of the page it opened from, so it is left alone. */
+@media (min-width: 62rem) {
+  .tradesheet .filters__input { color: var(--color-paper); }
+
+  .tradesheet .filters__input:focus-visible { border-bottom-color: var(--color-paper); }
+
+  .tradesheet .filters__color,
+  .tradesheet .filters__hint { color: rgba(245, 244, 240, 0.6); }
+
+  .tradesheet .filters__color--on { color: var(--color-paper); }
+
+  .tradesheet .filters__color:has(:focus-visible) { outline-color: var(--color-paper); }
+
+  .tradesheet .filters__range { accent-color: var(--color-paper); }
+
+  /* The native menu paints on the system ground, same caveat as the trade
+     product page's own select (.pdp--trade .picker__select). */
+  .tradesheet .filters__select option { background: var(--color-paper); color: var(--color-ink); }
+
+  .tradesheet .shoplayout__aside .chip {
+    border-color: rgba(245, 244, 240, 0.25);
+    color: var(--color-paper);
+  }
+
+  .tradesheet .shoplayout__aside .chip--on {
+    background: var(--color-paper);
+    border-color: var(--color-paper);
+    color: var(--color-ink);
+  }
+
+  .tradesheet .shoplayout__aside .chip:has(:focus-visible) { outline-color: var(--color-paper); }
 }
 
 /* --------------------------------------------------------------------------

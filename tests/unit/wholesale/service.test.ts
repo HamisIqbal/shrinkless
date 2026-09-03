@@ -14,7 +14,7 @@ import { withTestDatabase } from '@/tests/setup/db';
 withTestDatabase();
 
 const NO_FILTER = {
-  sizes: [], colors: [], sort: 'newest' as const, q: '', minPrice: null, maxPrice: null,
+  sizes: [], colors: [], sort: 'newest' as const, q: '', minPrice: null, maxPrice: null, gender: null,
 };
 
 async function seedStyle(

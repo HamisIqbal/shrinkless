@@ -17,6 +17,8 @@ type Props = {
   count: number;
   /** The header's search lands here and expects the field ready to type in. */
   focusSearch?: boolean;
+  /** Only set where a listing mixes categories in one grid (wholesale). */
+  genders?: { value: 'men' | 'women'; label: string }[];
 };
 
 const SORT_LABELS: Record<ProductSort, string> = {
@@ -46,6 +48,7 @@ export function FilterPanel({
   basePath,
   count,
   focusSearch = false,
+  genders,
 }: Props) {
   const router = useRouter();
   const searchRef = useRef<HTMLInputElement>(null);
@@ -67,7 +70,8 @@ export function FilterPanel({
     filter.colors.length > 0 ||
     filter.q !== '' ||
     filter.minPrice !== null ||
-    filter.maxPrice !== null;
+    filter.maxPrice !== null ||
+    Boolean(filter.gender);
 
   return (
       <form
@@ -80,6 +84,30 @@ export function FilterPanel({
         }}
       >
         <div className="filters__inner">
+          {genders ? (
+            <fieldset className="filters__group">
+              <legend className="meta filters__legend">Gender</legend>
+              <div className="chiprow">
+                {genders.map((gender) => (
+                  <label
+                    key={gender.value}
+                    className={`chip${filter.gender === gender.value ? ' chip--on' : ''}`}
+                  >
+                    <input
+                      type="checkbox"
+                      className="visually-hidden"
+                      checked={filter.gender === gender.value}
+                      onChange={() =>
+                        apply({ gender: filter.gender === gender.value ? null : gender.value })
+                      }
+                    />
+                    {gender.label}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          ) : null}
+
           <div className="filters__group">
             <label htmlFor="shop-search" className="meta filters__legend">Search</label>
             <div className="filters__search">
@@ -189,7 +217,7 @@ export function FilterPanel({
                 onClick={() => {
                   setTerm('');
                   setCeiling(priceCeiling);
-                  apply({ sizes: [], colors: [], q: '', minPrice: null, maxPrice: null });
+                  apply({ sizes: [], colors: [], q: '', minPrice: null, maxPrice: null, gender: null });
                 }}
               >
                 Clear all

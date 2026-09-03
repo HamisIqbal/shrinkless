@@ -45,14 +45,24 @@ export const productFilterSchema = z
     // zero — a max of 0 would hide the whole catalogue.
     min: priceBound,
     max: priceBound,
+    // Only meaningful where a listing mixes both categories in one grid (the
+    // wholesale line sheet). Retail pages already split by category via the
+    // URL path, so they parse this and never look at it.
+    gender: z
+      .string()
+      .optional()
+      .transform((value): 'men' | 'women' | null =>
+        value === 'men' || value === 'women' ? value : null,
+      ),
   })
-  .transform(({ size, color, sort, q, min, max }) => ({
+  .transform(({ size, color, sort, q, min, max, gender }) => ({
     sizes: size,
     colors: color,
     sort,
     q,
     minPrice: min,
     maxPrice: max,
+    gender,
   }));
 
 export type ProductFilter = z.infer<typeof productFilterSchema>;

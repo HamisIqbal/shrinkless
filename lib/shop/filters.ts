@@ -7,6 +7,7 @@ export type FilterChange = {
   q: string;
   minPrice: number | null;
   maxPrice: number | null;
+  gender: 'men' | 'women' | null;
 };
 
 export function toggleValue(list: string[], value: string): string[] {
@@ -30,6 +31,7 @@ export function buildFilterQuery(
   if (next.maxPrice !== null && next.maxPrice !== undefined) {
     params.set('max', String(next.maxPrice));
   }
+  if (next.gender) params.set('gender', next.gender);
 
   return params.toString();
 }
