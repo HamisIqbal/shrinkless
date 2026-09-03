@@ -111,7 +111,7 @@
 
 .tiles__copy {
   max-width: 32ch;
-  font-size: 1.25rem;
+  font-size: 0.9375rem;
   line-height: 1.5;
   color: rgba(255, 255, 255, 0.86);
 }
@@ -141,7 +141,7 @@
 .imageband__scrim { position: absolute; inset: 0; background: var(--color-scrim); }
 .imageband__inner { position: relative; width: 100%; }
 .imageband__eyebrow { color: var(--color-white); opacity: 0.9; }
-.imageband__glyph { padding-right: 0.5rem; font-size: 1.125rem; }
+.imageband__glyph { padding-right: 0.5rem; font-size: 0.75rem; }
 .imageband__head { padding-top: var(--space-2); }
 .imageband__lede { padding-top: var(--space-3); color: var(--color-white); }
 
@@ -520,7 +520,7 @@
 .masthead--compact .masthead__inner { min-height: 4rem; }
 
 .wordmark {
-  font-size: 1.25rem;
+  font-size: 1.0625rem;
   font-weight: 600;
   letter-spacing: 0.22em;
   text-transform: uppercase;
@@ -650,7 +650,7 @@
   border: var(--spacing-rule) solid currentColor;
   border-radius: 999px;
   color: inherit;
-  font-size: 1.125rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -675,7 +675,7 @@
   border-radius: 999px;
   background: var(--color-ink);
   color: var(--color-paper);
-  font-size: 1.125rem;
+  font-size: 0.625rem;
   font-weight: 600;
   line-height: 1.05rem;
   letter-spacing: 0;
@@ -811,7 +811,7 @@
 
 .mega__link {
   display: inline-block;
-  font-size: 1.25rem;
+  font-size: 1.0625rem;
   letter-spacing: -0.01em;
   text-decoration: none;
   color: var(--color-muted-text);
@@ -1123,7 +1123,7 @@
 .hero__head {
   margin-top: var(--space-3);
   max-width: 16ch;
-  font-size: var(--text-display);
+  font-size: min(var(--text-display), 11.5vh);
 }
 
 .hero__lede {
@@ -1459,7 +1459,7 @@
   padding: 0.25rem 0.55rem 0.25rem 0.45rem;
   background: rgba(245, 244, 240, 0.82);
   color: var(--color-ink);
-  font-size: 1.125rem;
+  font-size: 0.6875rem;
   font-weight: 500;
   letter-spacing: 0.06em;
   /* A label, not a control. Left clickable it would swallow drags that began
@@ -1527,7 +1527,7 @@
 
 .pcard__flag {
   padding: 0.4rem 0.9rem;
-  font-size: 1.125rem;
+  font-size: 0.6875rem;
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -1825,7 +1825,7 @@
 .imageband__scrim { position: absolute; inset: 0; background: var(--color-scrim); }
 .imageband__inner { position: relative; width: 100%; }
 .imageband__eyebrow { color: var(--color-white); opacity: 0.9; }
-.imageband__glyph { padding-right: 0.5rem; font-size: 1.125rem; }
+.imageband__glyph { padding-right: 0.5rem; font-size: 0.75rem; }
 .imageband__head { padding-top: var(--space-2); }
 .imageband__lede { padding-top: var(--space-3); color: var(--color-white); }
 
@@ -1873,17 +1873,17 @@
 /* The colophon runs at roughly half the height it used to. Everything inside
    it steps down with the frame — type, controls and rhythm — so the shorter
    footer reads as drawn small rather than as the old one cropped. */
-.colophon .head { font-size: var(--text-head); }
-.colophon .lede { font-size: 1.125rem; line-height: 1.5; }
+.colophon .head { font-size: clamp(1.25rem, 2.6vw, 1.875rem); }
+.colophon .lede { font-size: 0.875rem; line-height: 1.5; }
 
 .colophon .eyebrow,
 .colophon .meta,
-.colophon .ulink { font-size: 1.125rem; }
+.colophon .ulink { font-size: 0.6875rem; }
 
 .colophon .btn {
   min-height: 2.125rem;
   padding: 0.4rem 1.25rem;
-  font-size: 1.125rem;
+  font-size: 0.6875rem;
 }
 
 .colophon .signup { gap: var(--space-1); }
@@ -1915,7 +1915,7 @@
   }
 
   /* The signup heading is the tallest single element down here. */
-  .colophon .head { font-size: var(--text-head); }
+  .colophon .head { font-size: min(clamp(1.25rem, 2.6vw, 1.875rem), 4vh); }
 
   .colophon__rule { margin-block: clamp(var(--space-1), 2vh, var(--space-5)); }
   .colophon__grid { gap: clamp(var(--space-1), 2vh, var(--space-4)); }
@@ -1963,7 +1963,7 @@
 }
 
 .colophon__mark {
-  font-size: 1.125rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: 0.22em;
   text-transform: uppercase;
@@ -2361,7 +2361,7 @@
   gap: var(--space-3);
   padding-top: var(--space-3);
   max-width: 52ch;
-  font-size: 1.125rem;
+  font-size: 0.875rem;
   line-height: 1.65;
   color: var(--color-muted-text);
 }
@@ -2476,7 +2476,7 @@
 }
 
 .restock__mark {
-  font-size: var(--text-head);
+  font-size: clamp(3rem, 12vw, 5rem);
   font-weight: 600;
   line-height: 0.9;
   letter-spacing: -0.04em;
@@ -2487,7 +2487,7 @@
 .restock__lede,
 .restock__done {
   max-width: 44ch;
-  font-size: 1.25rem;
+  font-size: 0.9375rem;
   line-height: 1.6;
   color: var(--color-muted-text);
 }
@@ -2866,7 +2866,7 @@
   border-radius: 999px;
   background: var(--cart-spot);
   color: var(--cart-ground);
-  font-size: 1.125rem;
+  font-size: 0.6875rem;
   letter-spacing: 0.06em;
 }
 
@@ -3145,7 +3145,7 @@
 /* Six digits, spaced like the mail shows them, at a size you can check
    against a phone without leaning in. */
 .codeinput {
-  font-size: 1.375rem;
+  font-size: 1.5rem;
   letter-spacing: 0.35em;
   text-align: center;
   padding-block: 0.6rem;
@@ -3243,7 +3243,7 @@
   padding: var(--space-3);
   border: var(--spacing-rule) solid var(--color-muted);
   background: var(--color-paper-deep);
-  font-family: var(--font-sans);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: var(--text-meta);
   line-height: 1.5;
   white-space: pre-wrap;
@@ -3602,7 +3602,7 @@
 
 .tradesheet__term dd {
   margin-top: 0.35rem;
-  font-size: 1.25rem;
+  font-size: 0.9375rem;
   line-height: 1.4;
 }
 
@@ -3652,7 +3652,7 @@
 
 .tradecard__title {
   margin-top: var(--space-3);
-  font-size: 1.25rem;
+  font-size: 1.0625rem;
   font-weight: 500;
   letter-spacing: -0.01em;
 }
@@ -3661,7 +3661,7 @@
 
 .tradecard__price {
   margin-top: 0.35rem;
-  font-size: 1.25rem;
+  font-size: 0.9375rem;
   color: var(--color-paper);
 }
 
@@ -3796,7 +3796,7 @@
 
 .sheetrow__copy {
   margin-top: var(--space-2);
-  font-size: 1.25rem;
+  font-size: 0.9375rem;
   line-height: 1.6;
   max-width: 60ch;
   color: rgba(245, 244, 240, 0.72);
@@ -3843,7 +3843,7 @@
    The quantity is what a buyer scans for, the unit price is what they compare,
    and the line total is the consequence — in that order of prominence. */
 .tierbtn__qty {
-  font-size: 1.25rem;
+  font-size: 0.9375rem;
   font-weight: 500;
   letter-spacing: -0.01em;
 }
@@ -3854,7 +3854,7 @@
 }
 
 .tierbtn__line {
-  font-size: 1.125rem;
+  font-size: 0.6875rem;
   letter-spacing: 0.04em;
   color: var(--color-muted);
 }
@@ -3922,7 +3922,7 @@
 
 .tradepanel__empty {
   margin-top: var(--space-3);
-  font-size: 1.25rem;
+  font-size: 0.9375rem;
   line-height: 1.6;
   color: var(--color-muted-text);
 }
@@ -3942,7 +3942,7 @@
 }
 
 .tradepanel__style {
-  font-size: 1.25rem;
+  font-size: 0.9375rem;
   font-weight: 500;
 }
 
@@ -3956,7 +3956,7 @@
   grid-column: 2;
   grid-row: 1 / span 2;
   align-self: center;
-  font-size: 1.25rem;
+  font-size: 0.9375rem;
 }
 
 .tradepanel__total {
@@ -3965,7 +3965,7 @@
   justify-content: space-between;
   gap: var(--space-3);
   padding-top: var(--space-3);
-  font-size: 1.25rem;
+  font-size: 1.0625rem;
   font-weight: 500;
 }
 
@@ -4034,7 +4034,7 @@
   background: none;
   color: var(--color-ink);
   font: inherit;
-  font-size: 1.25rem;
+  font-size: 0.9375rem;
   transition: border-color var(--dur-1) var(--ease-out);
 }
 
@@ -4215,7 +4215,7 @@
 }
 
 .buybar__price {
-  font-size: 1.25rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--color-white);
 }
@@ -4503,7 +4503,7 @@
   background: transparent;
   color: inherit;
   font: inherit;
-  font-size: 1.125rem;
+  font-size: 0.875rem;
 }
 
 .picker__select:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }

@@ -30,21 +30,12 @@ const APPEARANCE = {
     colorPrimary: '#171919',
     colorText: '#171919',
     colorDanger: '#171919',
-    fontFamily: 'Figtree, "Helvetica Neue", Helvetica, Arial, sans-serif',
-    fontSizeBase: '18px',
+    fontFamily: 'inherit',
+    fontSizeBase: '15px',
     borderRadius: '10px',
     spacingUnit: '4px',
   },
 } as const;
-
-// The Elements iframe cannot inherit the page's face, so Figtree is handed to
-// it from the same Google Fonts stylesheet the document loads.
-const FONTS = [
-  {
-    cssSrc:
-      'https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&display=swap',
-  },
-];
 
 type Step = 'details' | 'payment';
 
@@ -64,7 +55,7 @@ export function CheckoutFlow({
     return (
       <Elements
         stripe={stripePromise}
-        options={{ clientSecret, appearance: APPEARANCE, fonts: FONTS }}
+        options={{ clientSecret, appearance: APPEARANCE }}
       >
         <PaymentStep
           clientSecret={clientSecret}
@@ -85,7 +76,6 @@ export function CheckoutFlow({
         amount: totalCents,
         currency: 'usd',
         appearance: APPEARANCE,
-        fonts: FONTS,
       }}
     >
       <DetailsStep

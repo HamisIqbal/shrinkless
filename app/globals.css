@@ -72,18 +72,18 @@
   --color-ochre:       var(--color-muted-text);
 
   /* --- Type --------------------------------------------------------------
-     One face for the whole site: Figtree, loaded from Google Fonts in the
-     root layout. Both tokens point at it — the serif alias is kept only so
-     the two places that consume it keep resolving. */
-  --font-sans:  Figtree, "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-serif: Figtree, "Helvetica Neue", Helvetica, Arial, sans-serif;
+     Neue Haas Grotesk is licensed and Helvetica Neue is not distributable as
+     a webfont, so Inter Tight ships — with Helvetica Neue ahead of it for the
+     machines that already have it. Cormorant is an accent, used twice. */
+  --font-sans:  var(--font-inter-tight), "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-serif: var(--font-cormorant), Georgia, serif;
 
-  /* One heading step at 28px, and body text between 18px and 22px. */
-  --text-display: 1.75rem;
-  --text-head:    1.75rem;
-  --text-sub:     1.375rem;
-  --text-body:    1.25rem;
-  --text-meta:    1.125rem;
+  /* Fluid: editorial display type at 120px must not stay 120px on a phone. */
+  --text-display: clamp(2.75rem, 9vw, 7.5rem);
+  --text-head:    clamp(2rem, 5vw, 3.5rem);
+  --text-sub:     clamp(1.25rem, 2.2vw, 1.75rem);
+  --text-body:    1rem;
+  --text-meta:    0.8125rem;
 
   /* Legacy steps, still consumed by the admin. */
   --text-step-1: 0.75rem;
@@ -155,8 +155,7 @@
   h1, h2, h3, h4, h5, h6 {
     margin: 0;
     font-family: var(--font-sans);
-    font-size: var(--text-head);
-    font-weight: 700;
+    font-weight: 500;
     line-height: 0.95;
     letter-spacing: -0.03em;
   }
@@ -261,7 +260,7 @@
 
   .display {
     font-size: var(--text-display);
-    font-weight: 700;
+    font-weight: 500;
     line-height: 0.92;
     letter-spacing: -0.035em;
     text-transform: uppercase;
@@ -269,7 +268,7 @@
 
   .head {
     font-size: var(--text-head);
-    font-weight: 700;
+    font-weight: 500;
     line-height: 0.98;
     letter-spacing: -0.03em;
     text-transform: uppercase;
@@ -277,7 +276,7 @@
 
   .sub {
     font-size: var(--text-sub);
-    font-weight: 700;
+    font-weight: 500;
     line-height: 1.15;
     letter-spacing: -0.02em;
   }
@@ -294,7 +293,7 @@
   .band--ink .eyebrow { color: var(--color-muted); }
 
   .lede {
-    font-size: 1.25rem;
+    font-size: 1.0625rem;
     line-height: 1.6;
     max-width: 46ch;
   }
@@ -417,7 +416,7 @@
   .btn--lg {
     min-height: 3.5rem;
     padding: 1rem 2.5rem;
-    font-size: 1.125rem;
+    font-size: 0.875rem;
     letter-spacing: 0.16em;
   }
 
