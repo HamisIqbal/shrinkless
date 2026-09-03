@@ -197,6 +197,12 @@
   overflow: hidden;
 }
 
+/* On the home page the rail runs straight into the two-up statement band and
+   then the promise photograph, with no paper gap between them — so the stack
+   closes the padding each of those bands otherwise carries on its own. */
+.home-visual-stack .lookbook { padding-bottom: 0; }
+.home-visual-stack .tiles { padding-block: 0; }
+
 .lookbook__head {
   display: flex;
   flex-wrap: wrap;
@@ -451,10 +457,8 @@
 
 .announce {
   overflow: hidden;
-  /* Inverted: paper ground, ink type — the ticker reads as a rule above the
-     masthead rather than a black band. */
-  background: var(--color-white);
-  color: var(--color-ink);
+  background: var(--color-ink);
+  color: var(--color-white);
   font-size: var(--text-meta);
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -1950,9 +1954,17 @@
   grid-template-columns: minmax(0, 1fr) auto;
   gap: var(--space-2);
   align-items: center;
+  width: 100%;
+  /* Roughly 30% of the old full-measure bar, and pinned to the start edge
+     rather than stretched — a short, deliberate field, not a banner. */
+  max-width: 30%;
   padding: 0.3rem 0.3rem 0.3rem var(--space-3);
   border-radius: 999px;
   background: var(--color-accent);
+}
+
+@media (max-width: 36rem) {
+  .signup { max-width: 100%; }
 }
 
 .signup__input {

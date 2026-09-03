@@ -73,6 +73,9 @@ export default async function HomePage() {
     <>
       <HeroSlider
         slides={slides}
+        eyebrow="Made in USA"
+        headline={['Organic tees', "that don't shrink."]}
+        lede="Garment dyed organic cotton, cut and sewn in the United States."
         primary={{ href: '/shop', label: 'Shop tees' }}
         secondary={{ href: '/why-shrinkless', label: 'Why Shrinkless' }}
       />
@@ -101,18 +104,22 @@ export default async function HomePage() {
       </section>
 
       {/* Photography between two grids of product cards, so the page does not
-          read as three shops in a row. */}
-      <LookbookRail />
+          read as three shops in a row. The three bands below run back to
+          back with no paper gap between them — one continuous run of
+          imagery from the rail through to the promise photograph. */}
+      <div className="home-visual-stack">
+        <LookbookRail />
 
-      <OverlayTiles tiles={statement(media)} columns={2} tall />
+        <OverlayTiles tiles={statement(media)} columns={2} tall />
 
-      <ImageBand
-        image={media.editorial.promise}
-        eyebrow="The promise"
-        headline="Wash it. Dry it. Wear it."
-        compact
-        body="The shrinking happens in our facility, not in your machine."
-      />
+        <ImageBand
+          image={media.editorial.promise}
+          eyebrow="The promise"
+          headline="Wash it. Dry it. Wear it."
+          compact
+          body="The shrinking happens in our facility, not in your machine."
+        />
+      </div>
 
       {featured.length ? (
         <section className="band band--white rail" aria-labelledby="featured-heading">

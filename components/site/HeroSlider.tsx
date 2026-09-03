@@ -13,6 +13,9 @@ export type HeroSlide = {
 
 type Props = {
   slides: HeroSlide[];
+  eyebrow: string;
+  headline: string[];
+  lede: string;
   primary: { href: string; label: string };
   secondary: { href: string; label: string };
   /** Milliseconds each frame holds before the next one takes over. */
@@ -33,14 +36,14 @@ const SLIDE_MS = 700;
  * switched off — same picture, same position, no visible move. Take the clone
  * away and the loop becomes a long backwards scroll every fourth beat.
  *
- * The frames carry the campaign on their own: no type sits over them, so the
- * photograph is the whole statement.
- *
  * `#hero-sentinel` at the foot is what the header watches. Moving or renaming
  * it silently breaks the header's overlay state.
  */
 export function HeroSlider({
   slides,
+  eyebrow,
+  headline,
+  lede,
   primary,
   secondary,
   interval = 5200,
@@ -164,11 +167,18 @@ export function HeroSlider({
       <div className="hero__scrim" aria-hidden="true" />
 
       <div className="wrap hero__inner">
-        {/* No type is drawn over the frames any more, so the page's one
-            heading is here for the document outline and for screen readers. */}
-        <h1 id="hero-heading" className="visually-hidden">
-          Shrinkless — organic tees that don&rsquo;t shrink
+        <p className="eyebrow hero__eyebrow">{eyebrow}</p>
+
+        <h1 id="hero-heading" className="display hero__head">
+          {headline.map((line, index) => (
+            <span key={line} className="hero__line">
+              {line}
+              {index < headline.length - 1 ? <br /> : null}
+            </span>
+          ))}
         </h1>
+
+        <p className="lede hero__lede">{lede}</p>
 
         <div className="hero__actions">
           <Link href={primary.href} className="btn btn--light btn--lg">{primary.label}</Link>
