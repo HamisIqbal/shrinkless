@@ -3133,12 +3133,55 @@
 
 /* --------------------------------------------------------------------------
    FAQ
+   A single continuous list rather than the PDP's grouped `<details>` spec
+   sheet, so it gets its own class names (`.faqlist*`) instead of reusing
+   `.accordion*` — that class is still load-bearing on the product page.
    -------------------------------------------------------------------------- */
 
-.faq__head { padding-bottom: var(--space-6); }
-.faq__group { padding-bottom: var(--space-6); }
-.faq__groupname { display: block; padding-bottom: var(--space-3); }
-.faq__contact { padding-top: var(--space-3); color: var(--color-muted-text); }
+.faqlist { max-width: 42rem; margin-inline: auto; border-top: var(--spacing-rule) solid var(--color-muted); }
+
+.faqlist__item { border-bottom: var(--spacing-rule) solid var(--color-muted); }
+
+.faqlist__row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-block: var(--space-4);
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 1.0625rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: color var(--dur-1) var(--ease-out);
+}
+
+.faqlist__row:hover,
+.faqlist__row:focus-visible { color: var(--color-muted-text); }
+
+.faqlist__mark { position: relative; width: 0.75rem; height: 0.75rem; flex: none; }
+
+.faqlist__mark::before,
+.faqlist__mark::after {
+  content: "";
+  position: absolute;
+  background: currentColor;
+  transition: transform 280ms var(--ease-out);
+}
+
+.faqlist__mark::before { top: 50%; left: 0; width: 100%; height: 1px; transform: rotate(0deg); }
+.faqlist__mark::after { left: 50%; top: 0; width: 1px; height: 100%; transform: rotate(0deg); }
+
+.faqlist__mark[data-open="true"]::before,
+.faqlist__mark[data-open="true"]::after { transform: rotate(45deg); }
+
+.faqlist__panel { overflow: hidden; }
+
+.faqlist__answer { max-width: 60ch; padding-bottom: var(--space-4); color: var(--color-muted-text); }
 
 
 /* --------------------------------------------------------------------------
@@ -3155,6 +3198,21 @@
 .pagehead { padding-bottom: var(--space-5); }
 .pagehead__title { padding-block: var(--space-2) var(--space-4); max-width: 20ch; }
 .pagehead__lede { color: var(--color-muted-text); }
+
+/* Our Story and Why Shrinkless read as a centred editorial column rather
+   than the left-aligned spec-sheet pageheads elsewhere. */
+.pagehead--center { text-align: center; }
+.pagehead--center .pagehead__title,
+.pagehead--center .pagehead__lede { margin-inline: auto; }
+
+/* A hairline above repeated pagehead blocks stacked with no photography
+   between them, so consecutive statements still read as distinct beats. */
+.pagehead--rule { padding-top: var(--space-6); border-top: var(--spacing-rule) solid var(--color-muted); }
+
+.storyblock__glyph { margin-right: 0.35em; }
+.storyblock__cta { margin-top: var(--space-5); }
+
+.shopcta { padding-block: var(--space-2) var(--space-6); text-align: center; }
 
 .authform { display: grid; gap: var(--space-4); max-width: 26rem; padding-top: var(--space-5); }
 

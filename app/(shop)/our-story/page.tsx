@@ -1,61 +1,72 @@
-import { getSiteMedia } from '@/lib/services/site-media';
-import { ImageBand } from '@/components/editorial/ImageBand';
-import { SplitFeature } from '@/components/editorial/SplitFeature';
-import { FullBleedType } from '@/components/editorial/FullBleedType';
+import Link from 'next/link';
 
 export const metadata = {
   title: 'Our Story',
   description: 'Why Shrinkless makes one tee, and makes it in the United States.',
 };
 
-export default async function OurStoryPage() {
-  const { editorial } = await getSiteMedia();
+type Block = { eyebrow: string; heading: string; body: string; glyph?: string };
 
+const BLOCKS: Block[] = [
+  {
+    eyebrow: 'The beginning',
+    heading: 'We got tired of tees that stopped fitting.',
+    body: 'Every wardrobe has one: the tee that fit perfectly until the third wash, and then belonged to somebody smaller.',
+  },
+  {
+    eyebrow: 'The process',
+    heading: 'Shrunk before you own it.',
+    body: 'We pre-shrink the fabric and garment dye the finished tee at temperature, so the change that normally happens in your machine has already happened in ours.',
+  },
+  {
+    eyebrow: 'The material',
+    heading: 'Organic cotton, garment dyed.',
+    body: 'Garment dyeing gives each run its own depth and character — the colour settles into the cotton rather than sitting on top of it, and it wears in instead of wearing out.',
+  },
+  {
+    eyebrow: 'Craft',
+    glyph: '🇺🇸',
+    heading: 'Made in USA.',
+    body: 'Cut and sewn in the United States. Mill and factory details: [TBC].',
+  },
+];
+
+/* No <InstagramStrip /> here — app/(shop)/layout.tsx already renders it
+   after every page's content, right where the brief wants it. */
+export default function OurStoryPage() {
   return (
-    <>
-      <ImageBand
-        image={editorial.craft}
-        eyebrow="Our story"
-        headline="One tee, made properly."
-      />
-
-      <header className="band band--tight wrap pagehead">
-        <p className="eyebrow">The beginning</p>
-        <h2 className="display pagehead__title">We got tired of tees that stopped fitting.</h2>
-        <p className="lede pagehead__lede">
-          Every wardrobe has one: the tee that fit perfectly until the third wash,
-          and then belonged to somebody smaller.
-        </p>
+    <div className="band band--white">
+      <header className="wrap pagehead pagehead--center">
+        <p className="eyebrow">Our story</p>
+        <h1 className="display pagehead__title">One tee, made properly.</h1>
       </header>
 
-      <SplitFeature
-        image={editorial.hanging}
-        eyebrow="The process"
-        headline="Shrunk before you own it."
-        body="We pre-shrink the fabric and garment dye the finished tee at temperature, so the change that normally happens in your machine has already happened in ours."
-      />
+      {BLOCKS.map((block) => (
+        <section key={block.heading} className="wrap pagehead pagehead--center pagehead--rule">
+          <p className="eyebrow">
+            {block.glyph ? (
+              <span className="storyblock__glyph" aria-hidden="true">{block.glyph} </span>
+            ) : null}
+            {block.eyebrow}
+          </p>
+          <h2 className="head pagehead__title">{block.heading}</h2>
+          <p className="lede pagehead__lede">{block.body}</p>
+        </section>
+      ))}
 
-      <SplitFeature
-        image={editorial.fabric}
-        eyebrow="The material"
-        headline="Organic cotton, garment dyed."
-        body="Garment dyeing gives each run its own depth and character — the colour settles into the cotton rather than sitting on top of it, and it wears in instead of wearing out."
-        flip
-      />
+      <section className="wrap pagehead pagehead--center pagehead--rule">
+        <h2 className="display pagehead__title">
+          Less,
+          <br />
+          but better.
+        </h2>
+        <p className="lede pagehead__lede">
+          Six styles, cut from the same cotton and finished the same way. Made well enough that
+          we do not need a seventh.
+        </p>
 
-      <ImageBand
-        image={editorial.torso}
-        eyebrow="Craft"
-        glyph="🇺🇸"
-        headline="Made in USA."
-        body="Cut and sewn in the United States. Mill and factory details: [TBC]."
-      />
-
-      <FullBleedType
-        lines={['Less,', 'but better.']}
-        support="Six styles, cut from the same cotton and finished the same way. Made well enough that we do not need a seventh."
-        cta={{ href: '/shop', label: 'Shop tees' }}
-      />
-    </>
+        <Link href="/shop" className="btn storyblock__cta">Shop Now</Link>
+      </section>
+    </div>
   );
 }

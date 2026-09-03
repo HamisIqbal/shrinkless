@@ -1,7 +1,6 @@
+import Link from 'next/link';
 import { getSiteMedia, type SiteMedia } from '@/lib/services/site-media';
 import { OverlayTiles, type Tile } from '@/components/editorial/OverlayTiles';
-import { SplitFeature } from '@/components/editorial/SplitFeature';
-import { FullBleedType } from '@/components/editorial/FullBleedType';
 
 export const metadata = {
   title: 'Why Shrinkless',
@@ -37,33 +36,25 @@ const points = ({ editorial }: SiteMedia): Tile[] => [
   },
 ];
 
+/* No <InstagramStrip /> here — app/(shop)/layout.tsx already renders it
+   after every page's content, right where the brief wants it. */
 export default async function WhyShrinklessPage() {
   const media = await getSiteMedia();
 
   return (
     <>
-      <header className="band band--tight wrap pagehead">
-        <p className="eyebrow">The difference</p>
-        <h1 className="display pagehead__title">Why Shrinkless?</h1>
+      <header className="band band--tight wrap pagehead pagehead--center">
+        <h1 className="display pagehead__title">Why Shrinkless</h1>
         <p className="lede pagehead__lede">
           Four things separate this tee from the one that stopped fitting.
         </p>
       </header>
 
-      <OverlayTiles tiles={points(media)} columns={4} />
+      <OverlayTiles tiles={points(media)} columns={4} contained />
 
-      <SplitFeature
-        image={media.editorial.heather}
-        eyebrow="In practice"
-        headline="The wash test."
-        body="A tee that fits in the shop and not after laundry day was never the right size. Ours is finished at temperature before it reaches you, so what you try on is what you keep."
-      />
-
-      <FullBleedType
-        lines={['Your tee', 'should fit', 'the same way', 'tomorrow.']}
-        support="We make tees designed for real life, real washing and real wear."
-        cta={{ href: '/shop', label: 'Shop Shrinkless' }}
-      />
+      <div className="band band--tight wrap shopcta">
+        <Link href="/shop" className="btn">Shop Now</Link>
+      </div>
     </>
   );
 }

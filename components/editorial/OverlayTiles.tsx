@@ -20,6 +20,8 @@ type Props = {
   columns?: 2 | 3 | 4;
   /** Taller frames, for the two-up statement treatment. */
   tall?: boolean;
+  /** Constrains the grid to the page's wrap measure instead of full-bleed. */
+  contained?: boolean;
 };
 
 /**
@@ -35,27 +37,11 @@ type Props = {
  * reason the hero's is — white type has to survive a pale photograph, and a
  * flat tint strong enough to guarantee that would grey out the whole picture.
  */
-export function OverlayTiles({ eyebrow, heading, tiles, columns = 2, tall = false }: Props) {
+export function OverlayTiles({ eyebrow, heading, tiles, columns = 2, tall = false, contained = false }: Props) {
   const headingId = heading ? `tiles-${heading.replace(/\W+/g, '-').toLowerCase()}` : undefined;
 
-  return (
-    <section
-      className="tiles"
-      aria-labelledby={headingId}
-      aria-label={headingId ? undefined : eyebrow}
-    >
-      {heading ? (
-        <div className="wrap">
-          <Reveal>
-            <div className="tiles__head">
-              {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
-              <h2 id={headingId} className="head tiles__title">{heading}</h2>
-            </div>
-          </Reveal>
-        </div>
-      ) : null}
-
-      <ul className={`tiles__grid tiles__grid--${columns}${tall ? ' tiles__grid--tall' : ''}`}>
+  const grid = (
+    <ul className={`tiles__grid tiles__grid--${columns}${tall ? ' tiles__grid--tall' : ''}`}>
         {tiles.map((tile, index) => {
           const inner = (
             <>
@@ -92,7 +78,27 @@ export function OverlayTiles({ eyebrow, heading, tiles, columns = 2, tall = fals
             </li>
           );
         })}
-      </ul>
+    </ul>
+  );
+
+  return (
+    <section
+      className="tiles"
+      aria-labelledby={headingId}
+      aria-label={headingId ? undefined : eyebrow}
+    >
+      {heading ? (
+        <div className="wrap">
+          <Reveal>
+            <div className="tiles__head">
+              {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
+              <h2 id={headingId} className="head tiles__title">{heading}</h2>
+            </div>
+          </Reveal>
+        </div>
+      ) : null}
+
+      {contained ? <div className="wrap">{grid}</div> : grid}
     </section>
   );
 }
