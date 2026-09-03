@@ -1060,8 +1060,10 @@
   margin-top: -5.25rem; /* sits under the transparent masthead */
   /* Height-relative rather than fixed. The content is bottom-aligned, so on a
      short laptop window an 8rem top pad pushed the eyebrow and the top of the
-     headline off the top of the section. */
-  padding-block: clamp(var(--space-6), 14vh, var(--space-8)) var(--space-4);
+     headline off the top of the section. The bottom pad lifts the block off
+     the very edge of the frame now that the caption/dots row underneath it
+     is gone. */
+  padding-block: clamp(var(--space-6), 14vh, var(--space-8)) clamp(var(--space-6), 9vh, var(--space-7));
   color: var(--color-white);
 }
 
