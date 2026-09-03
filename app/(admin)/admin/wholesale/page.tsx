@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { DataTable, type Column } from '@/components/admin/DataTable';
 import { PageHead } from '@/components/admin/PageHead';
 import { StatusBadge } from '@/components/admin/StatusBadge';
+import { WholesaleRowActions } from '@/components/admin/WholesaleRowActions';
 import { requireAdminPage } from '@/lib/auth/guards';
 import { cloudinaryUrl } from '@/lib/cloudinary/url';
 import { cropStyle } from '@/lib/media/crop';
@@ -86,11 +87,7 @@ const columns: Column<AdminWholesaleRowDTO>[] = [
     key: 'actions',
     header: '',
     actions: true,
-    cell: (row) => (
-      <Link href={`/admin/wholesale/${row.id}`} className="abtn abtn--quiet abtn--sm">
-        Edit
-      </Link>
-    ),
+    cell: (row) => <WholesaleRowActions id={row.id} />,
   },
 ];
 
