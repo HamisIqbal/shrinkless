@@ -145,6 +145,10 @@
 .imageband__head { padding-top: var(--space-2); }
 .imageband__lede { padding-top: var(--space-3); color: var(--color-white); }
 
+/* The promise band is a supporting note on the home page, not its statement,
+   so its headline steps well down off the display scale. */
+.imageband--compact .imageband__head { font-size: clamp(1.125rem, 2.4vw, 1.625rem); }
+
 /* --------------------------------------------------------------------------
    Quotes
    -------------------------------------------------------------------------- */
@@ -220,11 +224,15 @@
   padding-right: var(--spacing-rule);
 }
 
+/* Phone and tablet get square frames: the landscape crop left the rail
+   looking like a strip of postage stamps on a narrow window, where the tile
+   cannot be wide enough for 3:2 to have any height. Desktop keeps the
+   landscape frame and simply takes a little more of it. */
 .lookbook__tile {
   position: relative;
   flex: none;
   width: clamp(17rem, 52vw, 38rem);
-  aspect-ratio: 3 / 2;
+  aspect-ratio: 1 / 1;
   overflow: hidden;
   background: var(--color-paper-deep);
   text-decoration: none;
@@ -252,6 +260,10 @@
   font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+}
+
+@media (min-width: 62rem) {
+  .lookbook__tile { width: clamp(19rem, 52vw, 42rem); aspect-ratio: 3 / 2; }
 }
 
 @keyframes lookbook-roll {
@@ -439,8 +451,10 @@
 
 .announce {
   overflow: hidden;
-  background: var(--color-ink);
-  color: var(--color-white);
+  /* Inverted: paper ground, ink type — the ticker reads as a rule above the
+     masthead rather than a black band. */
+  background: var(--color-white);
+  color: var(--color-ink);
   font-size: var(--text-meta);
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -457,7 +471,7 @@
 .announce__item {
   display: inline-flex;
   align-items: center;
-  padding-block: 0.55rem;
+  padding-block: 0.3rem;
   white-space: nowrap;
 }
 
@@ -1146,6 +1160,11 @@
     gap: var(--space-3);
   }
 }
+
+/* The hero's pair of calls to action are the one place buttons are drawn with
+   a radius: they sit on a photograph, where a hard rectangle reads as a panel
+   rather than as a control. */
+.hero__actions .btn { border-radius: 999px; }
 
 /* Phone: caption over dots, on two rows. Side by side there is roughly 190px
    left for the caption once four dots have taken their 10rem, and the longer
@@ -1889,8 +1908,8 @@
 .colophon .signup { gap: var(--space-1); }
 
 .colophon .signup__input {
-  min-height: 2.125rem;
-  padding: 0.35rem 0;
+  min-height: 1.875rem;
+  padding: 0.3rem 0;
 }
 
 /* --------------------------------------------------------------------------
@@ -1917,44 +1936,43 @@
   /* The signup heading is the tallest single element down here. */
   .colophon .head { font-size: min(clamp(1.25rem, 2.6vw, 1.875rem), 4vh); }
 
-  .colophon__rule { margin-block: clamp(var(--space-1), 2vh, var(--space-5)); }
   .colophon__grid { gap: clamp(var(--space-1), 2vh, var(--space-4)); }
   .colophon__signup { gap: clamp(var(--space-1), 1.5vh, var(--space-3)); }
 }
 
-.colophon__signup { display: grid; gap: var(--space-3); }
+.colophon__signup { display: grid; gap: var(--space-3); padding-bottom: var(--space-5); }
 
-.colophon__lede { padding-top: var(--space-1); color: var(--color-muted); }
-
-@media (min-width: 56.25rem) {
-  .colophon__signup { grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); align-items: end; }
+/* One orange bar with the field and the button inside it, rather than a rule
+   and a separate control. The pill is the whole signup, so it reads as a slot
+   to type into on a black footer. */
+.signup {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-2);
+  align-items: center;
+  padding: 0.3rem 0.3rem 0.3rem var(--space-3);
+  border-radius: 999px;
+  background: var(--color-accent);
 }
 
-.signup { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-2); align-items: start; }
-
 .signup__input {
-  min-height: 2.75rem;
-  padding: 0.7rem 0;
+  min-width: 0;
+  min-height: 2.25rem;
+  padding: 0.4rem 0;
   border: 0;
-  border-bottom: var(--spacing-rule) solid var(--color-muted);
   border-radius: 0;
   background: transparent;
-  color: var(--color-white);
+  color: var(--color-ink);
   font: inherit;
 }
 
-.signup__input::placeholder { color: var(--color-muted); }
-.signup__input:focus-visible { outline: 0; border-bottom-color: var(--color-white); }
+/* Long enough copy that it needs the room; clipped rather than allowed to
+   push the bar open on a narrow window. */
+.signup__input::placeholder { color: var(--color-ink); opacity: 0.72; text-overflow: ellipsis; }
+.signup__input:focus-visible { outline: 0; }
 
+.signup__submit { border-radius: 999px; }
 
-/* Even again. The signup used to reserve a line under itself for a status
-   message it usually had nothing to put in, and this margin paid that phantom
-   line back so the two gaps looked equal. The message is a toast now and the
-   line is gone, so the compensation goes with it. */
-.colophon__rule {
-  margin-block: var(--space-5);
-  border-color: var(--color-muted-text);
-}
 
 .colophon__grid { display: grid; gap: var(--space-4); }
 
@@ -1983,9 +2001,10 @@
 
 .colophon__links {
   display: grid;
-  gap: var(--space-1);
+  gap: 0.15rem;
   justify-items: start;
-  padding-top: var(--space-2);
+  padding-top: var(--space-1);
+  line-height: 1.35;
 }
 
 .colophon__legal { padding-top: var(--space-4); }

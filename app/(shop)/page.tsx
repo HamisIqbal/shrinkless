@@ -11,47 +11,9 @@ import { CategoryGateway, type Gateway } from '@/components/shop/CategoryGateway
 import { ProductGrid } from '@/components/shop/ProductGrid';
 import { OverlayTiles, type Tile } from '@/components/editorial/OverlayTiles';
 import { ImageBand } from '@/components/editorial/ImageBand';
-import { FullBleedType } from '@/components/editorial/FullBleedType';
 import { QuoteRow, type Quote } from '@/components/editorial/QuoteRow';
 import { LookbookRail } from '@/components/site/LookbookRail';
 import { Reveal } from '@/components/ui/Reveal';
-
-/** Captions ride with the frames, so the campaign reads as a sequence. */
-const HERO_CAPTIONS = [
-  'Organic Tee — Black',
-  'Organic Tee — White',
-  'Boxy Tee — Olive',
-  'Heavyweight Tee — Black',
-];
-
-/* Each claim sits on the frame that evidences it. Built per request, because
-   the photographs are the admin's to change. */
-const why = ({ editorial }: SiteMedia): Tile[] => [
-  {
-    index: '01',
-    title: 'Organic Cotton',
-    body: 'Premium organic cotton, selected for everyday wear.',
-    image: editorial.fabric,
-  },
-  {
-    index: '02',
-    title: 'Garment Dyed',
-    body: 'The finished garment is dyed for its character and its feel.',
-    image: editorial.folded,
-  },
-  {
-    index: '03',
-    title: "Doesn't Shrink",
-    body: 'Built to hold its fit and its proportions, wash after wash.',
-    image: editorial.hanging,
-  },
-  {
-    index: '04',
-    title: 'Made in USA',
-    body: 'Cut and sewn in the United States.',
-    image: editorial.craft,
-  },
-];
 
 /* The old statement band said this in type over an empty ground. */
 const statement = ({ editorial }: SiteMedia): Tile[] => [
@@ -93,13 +55,9 @@ export default async function HomePage() {
     ...SHOPPABLE.map(({ slug }) => listProductsInCategory(slug)),
   ]);
 
-  // Captions are copy and stay in the code; the frames are media and come from
-  // the database. A carousel the admin has lengthened simply runs out of
-  // written captions and falls back to the brand name.
-  const slides: HeroSlide[] = media.hero.map((image, index) => ({
-    image,
-    caption: HERO_CAPTIONS[index] ?? 'Shrinkless',
-  }));
+  // The frames are media and come from the database; nothing else rides with
+  // them, so the hero is the photography and the two calls to action.
+  const slides: HeroSlide[] = media.hero.map((image) => ({ image }));
 
   // Deliberately still the curated pair rather than every category in the
   // database: these are art-directed frames with their own photography, not a
@@ -115,9 +73,6 @@ export default async function HomePage() {
     <>
       <HeroSlider
         slides={slides}
-        eyebrow="Made in USA"
-        headline={['Organic tees', "that don't shrink."]}
-        lede="Garment dyed organic cotton, cut and sewn in the United States."
         primary={{ href: '/shop', label: 'Shop tees' }}
         secondary={{ href: '/why-shrinkless', label: 'Why Shrinkless' }}
       />
@@ -155,6 +110,7 @@ export default async function HomePage() {
         image={media.editorial.promise}
         eyebrow="The promise"
         headline="Wash it. Dry it. Wear it."
+        compact
         body="The shrinking happens in our facility, not in your machine."
       />
 
@@ -176,20 +132,8 @@ export default async function HomePage() {
         </section>
       ) : null}
 
-      <OverlayTiles
-        eyebrow="Why Shrinkless"
-        heading="Four things, done properly."
-        tiles={why(media)}
-        columns={4}
-      />
-
       <QuoteRow eyebrow="Reviews" heading="What people say." quotes={QUOTES} />
 
-      <FullBleedType
-        lines={['Start', 'with one.']}
-        support="Six styles, two fits, and a tee that comes out of the wash the same size it went in."
-        cta={{ href: '/shop', label: 'Shop the collection' }}
-      />
     </>
   );
 }

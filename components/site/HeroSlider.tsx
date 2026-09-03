@@ -1,23 +1,18 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { useReducedMotion } from 'motion/react';
 import type { BrandImage } from '@/lib/brand/images';
 import { cropStyle } from '@/lib/media/crop';
 
 export type HeroSlide = {
   image: BrandImage;
-  /** Short line naming what is in the frame. Changes with the slide. */
-  caption: string;
 };
 
 type Props = {
   slides: HeroSlide[];
-  eyebrow: string;
-  headline: string[];
-  lede: string;
   primary: { href: string; label: string };
   secondary: { href: string; label: string };
   /** Milliseconds each frame holds before the next one takes over. */
@@ -38,17 +33,14 @@ const SLIDE_MS = 700;
  * switched off — same picture, same position, no visible move. Take the clone
  * away and the loop becomes a long backwards scroll every fourth beat.
  *
- * The caption is the only text that changes; the headline is the brand
- * statement and stays put, so there is exactly one stable `<h1>` on the page.
+ * The frames carry the campaign on their own: no type sits over them, so the
+ * photograph is the whole statement.
  *
  * `#hero-sentinel` at the foot is what the header watches. Moving or renaming
  * it silently breaks the header's overlay state.
  */
 export function HeroSlider({
   slides,
-  eyebrow,
-  headline,
-  lede,
   primary,
   secondary,
   interval = 5200,
@@ -65,14 +57,6 @@ export function HeroSlider({
 
   const paused = hidden || hovering;
   const active = position % count;
-
-  const go = useCallback(
-    (next: number) => {
-      setSilent(false);
-      setPosition(((next % count) + count) % count);
-    },
-    [count],
-  );
 
   // Reduced motion gets a single still frame and no timer at all — an
   // auto-advancing carousel is exactly the vestibular trigger the media query
@@ -180,63 +164,16 @@ export function HeroSlider({
       <div className="hero__scrim" aria-hidden="true" />
 
       <div className="wrap hero__inner">
-        <p className="eyebrow hero__eyebrow">{eyebrow}</p>
-
-        <h1 id="hero-heading" className="display hero__head">
-          {headline.map((line, index) => (
-            <span key={line} className="hero__line">
-              {line}
-              {index < headline.length - 1 ? <br /> : null}
-            </span>
-          ))}
+        {/* No type is drawn over the frames any more, so the page's one
+            heading is here for the document outline and for screen readers. */}
+        <h1 id="hero-heading" className="visually-hidden">
+          Shrinkless — organic tees that don&rsquo;t shrink
         </h1>
-
-        <p className="lede hero__lede">{lede}</p>
 
         <div className="hero__actions">
           <Link href={primary.href} className="btn btn--light btn--lg">{primary.label}</Link>
           <Link href={secondary.href} className="btn btn--ghost btn--lg">{secondary.label}</Link>
         </div>
-      </div>
-
-      <div className="wrap hero__foot">
-        <p className="hero__caption" aria-live="polite">
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.span
-              key={active}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.4, ease: [0.16, 0.84, 0.44, 1] }}
-              className="hero__captiontext"
-            >
-              {slides[active].caption}
-            </motion.span>
-          </AnimatePresence>
-        </p>
-
-        <ol className="hero__dots">
-          {slides.map((slide, index) => (
-            <li key={slide.image.url}>
-              <button
-                type="button"
-                className={`hero__dot${index === active ? ' hero__dot--on' : ''}`}
-                aria-label={`Show frame ${index + 1} of ${count}`}
-                aria-current={index === active ? 'true' : undefined}
-                onClick={() => go(index)}
-              >
-                {/* The rule fills across while the frame holds, so the
-                    indicator doubles as the timer. */}
-                <span
-                  key={index === active ? `run-${position}` : 'idle'}
-                  className="hero__dotfill"
-                  style={index === active ? { animationDuration: `${interval}ms` } : undefined}
-                  aria-hidden="true"
-                />
-              </button>
-            </li>
-          ))}
-        </ol>
       </div>
 
       <div id="hero-sentinel" className="hero__sentinel" aria-hidden="true" />

@@ -53,13 +53,6 @@ export function CategoryGateway({ gateways }: Props) {
 
                 <span className="gateway__body">
                   <span className="display gateway__label">{gateway.label}</span>
-                  <span className="gateway__meta meta">
-                    {gateway.count} {gateway.count === 1 ? 'style' : 'styles'}
-                  </span>
-                  <span className="gateway__cta">
-                    Shop {gateway.label}
-                    <span className="gateway__arrow" aria-hidden="true">&rarr;</span>
-                  </span>
                 </span>
               </Link>
             </li>

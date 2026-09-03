@@ -42,17 +42,9 @@ export function Footer({ storeEmail }: { storeEmail: string }) {
     <footer className="band band--ink colophon">
       <div className="wrap">
         <div className="colophon__signup">
-          <div>
-            <h2 className="head">Get the good stuff.</h2>
-            <p className="lede colophon__lede">
-              Sign up for new releases, restocks and Shrinkless updates.
-            </p>
-          </div>
-
+          <h2 className="head">Get the good stuff.</h2>
           <NewsletterForm />
         </div>
-
-        <hr className="rule colophon__rule" />
 
         <div className="colophon__grid">
           <div className="colophon__brand">
