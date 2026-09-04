@@ -18,10 +18,11 @@ const UNITS = new Intl.NumberFormat('en-US');
  * The trade equivalent of `VariantPicker`, in the same order and the same
  * frame: price, story, spec, the choices, then the action that ends the page.
  *
- * The choices a wholesale buyer makes are a colour, a size and a run size — a
- * dropdown of this style's own tiers, read off `style.tiers` and never
- * hardcoded, because every style's ladder is struck from its own retail basis.
- * Choosing one re-prices the panel and sets how many units the buttons add.
+ * The choices a wholesale buyer makes are a colour and a run size — a dropdown
+ * of this style's own tiers, read off `style.tiers` and never hardcoded,
+ * because every style's ladder is struck from its own retail basis. Choosing
+ * one re-prices the panel and sets how many units the buttons add. There is no
+ * size to pick; see `selected` below.
  *
  * Nothing is priced in the browser: the figures are the server's, and the cart
  * re-prices from the variant record it is handed.
@@ -31,7 +32,6 @@ export function WholesaleBuyPanel({ style }: Props) {
   const toast = useToast();
   const [picked, setPicked] = useState<WholesaleTier | null>(null);
   const [color, setColor] = useState(style.colors[0] ?? '');
-  const [size, setSize] = useState('');
   const [pending, startTransition] = useTransition();
   const actionsRef = useRef<HTMLDivElement>(null);
 
@@ -40,13 +40,16 @@ export function WholesaleBuyPanel({ style }: Props) {
     [style.tiers, picked],
   );
 
+  /* A run is not bought in a size. The old panel made a buyer pick one before
+     it would let them enquire, which was a retail habit carried across: a
+     trade order is a size run, and which sizes it breaks down into is settled
+     in the conversation the enquiry starts. So the colourway is the choice,
+     and the variant behind it is the first the style has in that colour. */
   const selected = useMemo(
     () =>
-      style.variants.find(
-        (variant) =>
-          variant.size === size && variant.color === color && variant.enabled,
-      ),
-    [style.variants, size, color],
+      style.variants.find((variant) => variant.color === color && variant.enabled) ??
+      style.variants.find((variant) => variant.enabled),
+    [style.variants, color],
   );
 
   /** The opening rung, shown until a quantity is chosen. */
@@ -58,11 +61,12 @@ export function WholesaleBuyPanel({ style }: Props) {
       ? `From ${formatCents(opening.unitPriceCents)} per unit`
       : 'Price on request';
 
+  /* Only once a run is chosen. The opening rung used to sit here quoting the
+     retail basis it was struck from, which invited a trade buyer to compare
+     their price to a shelf price they will never charge. */
   const basis = chosen
     ? `${UNITS.format(chosen.tier)} units · ${formatCents(chosen.totalCents)} total`
-    : opening
-      ? `at ${UNITS.format(opening.tier)} units · ${formatCents(style.retailCents)} retail`
-      : null;
+    : null;
 
   /** Both buttons do the same thing; only Buy now carries on to the cart. */
   function add(then?: () => void) {
@@ -72,7 +76,7 @@ export function WholesaleBuyPanel({ style }: Props) {
     }
 
     if (!selected) {
-      toast('Choose a size first', 'error');
+      toast('That colourway is unavailable', 'error');
       return;
     }
 
@@ -100,6 +104,11 @@ export function WholesaleBuyPanel({ style }: Props) {
         <li>Garment Dyed Organic Cotton</li>
         <li>Made in USA</li>
         <li>Made to order</li>
+        {/* Stated rather than chosen: the run's size ratio is settled in the
+            enquiry, but the buyer still has to know what the style is cut in. */}
+        {style.sizes.length ? (
+          <li>{`Sizes ${style.sizes.map((size) => size.toUpperCase()).join(', ')}`}</li>
+        ) : null}
       </ul>
 
       {style.colors.length ? (
@@ -121,30 +130,6 @@ export function WholesaleBuyPanel({ style }: Props) {
                 />
                 <span className={`swatch__dot dot--${option}`} aria-hidden="true" />
                 <span className="swatch__name">{option}</span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
-      ) : null}
-
-      {style.sizes.length ? (
-        <fieldset className="picker__group">
-          <legend className="meta picker__legend">Sizes</legend>
-          <div className="chiprow">
-            {style.sizes.map((option) => (
-              <label
-                key={option}
-                className={`chip${size === option ? ' chip--on' : ''}`}
-              >
-                <input
-                  type="radio"
-                  name="size"
-                  value={option}
-                  className="visually-hidden"
-                  checked={size === option}
-                  onChange={() => setSize(option)}
-                />
-                {option.toUpperCase()}
               </label>
             ))}
           </div>

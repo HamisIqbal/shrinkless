@@ -120,6 +120,11 @@
      with the same hand. */
   --ease-out: cubic-bezier(0.16, 0.84, 0.44, 1);
 
+  /* The one exception: the fill that rises through a control. It leaves
+     quickly and settles slowly, which is what makes it read as liquid finding
+     its level rather than a panel sliding into place. */
+  --ease-liquid: cubic-bezier(0.32, 0.75, 0.2, 1);
+
   --dur-1: 200ms;  /* state flicks: chips, swatches, small hovers */
   --dur-2: 320ms;  /* the default: buttons, links, headers */
   --dur-3: 520ms;  /* panels and modals */
@@ -318,10 +323,17 @@
      Squared, hairline, monochrome. Two weights and a text link — no more.
      -------------------------------------------------------------------------- */
 
-  /* The house hover: a solid fill rises from the bottom edge, takes the whole
-     button, and inverts the label. Leaving reverses the *direction* rather than
-     the animation — the origin flips to the top so the fill keeps travelling
-     upward and off, instead of sinking back down the way it came.
+  /* The house hover: a colour floods the control from the bottom edge to the
+     top and inverts the label, then drains back the way it came.
+
+     Drawn with a clip-path rather than a scale. `scaleY` squashed the fill
+     flat and stretched it back out, which the eye reads as a plane tilting
+     towards it — a 3D flip on a flat control. Clipping to an ellipse wider
+     than the control (`rx` past 100%) instead moves a real edge up the frame,
+     and because that edge is the shallow arc of the ellipse rather than a
+     ruled line, the surface bows slightly ahead at the centre the way a liquid
+     climbing a glass does. Nothing scales, nothing rotates: one flat edge
+     rising.
 
      `--btn-fill` is the colour that rises and `--btn-fill-ink` is what the label
      becomes underneath it, so every variant is two custom properties rather than
@@ -357,16 +369,18 @@
     inset: 0;
     z-index: -1;
     background: var(--btn-fill);
-    transform: scaleY(0);
-    transform-origin: top;
-    transition: transform var(--dur-2) var(--ease-out);
+    /* Anchored to the bottom edge with no height: the fill is present but
+       clipped away until the control is touched. */
+    clip-path: ellipse(140% 0% at 50% 100%);
+    transition: clip-path var(--dur-2) var(--ease-liquid);
   }
 
   .btn:hover::before,
   .btn:focus-visible::before,
   .btn:active::before {
-    transform: scaleY(1);
-    transform-origin: bottom;
+    /* Past the top corners on both axes, so the last of the rise fills the
+       corners rather than leaving the arc parked across the label. */
+    clip-path: ellipse(140% 165% at 50% 100%);
   }
 
   .btn:hover,
@@ -578,16 +592,17 @@
   z-index: -1;
   border-radius: 999px;
   background: var(--ulink-fill);
-  transform: scaleY(0);
-  transform-origin: bottom;
-  transition: transform var(--dur-2) var(--ease-out);
+  /* The same rising edge as .btn, on the same curve — see the note there for
+     why this is a clip and not a scale. */
+  clip-path: ellipse(140% 0% at 50% 100%);
+  transition: clip-path var(--dur-2) var(--ease-liquid);
 }
 
 .ulink:hover::after,
 .ulink:focus-visible::after,
 .ulink:active::after,
 .ulink[aria-current="page"]::after {
-  transform: scaleY(1);
+  clip-path: ellipse(140% 165% at 50% 100%);
 }
 
 .ulink:hover,
