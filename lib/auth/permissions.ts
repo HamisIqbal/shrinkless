@@ -30,6 +30,8 @@ export const PERMISSIONS = [
   'payments:read',
   'media:read',
   'media:write',
+  'content:read',
+  'content:write',
   'settings:read',
   'settings:write',
 ] as const;

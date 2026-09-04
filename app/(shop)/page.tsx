@@ -5,6 +5,7 @@ import {
   listProductsInCategory,
 } from '@/lib/services/products';
 import { categoryImage, getSiteMedia, type SiteMedia } from '@/lib/services/site-media';
+import { getSiteContent, type SiteContent } from '@/lib/services/site-content';
 import { SHOPPABLE } from '@/lib/shop/navigation';
 import { HeroSlider, type HeroSlide } from '@/components/site/HeroSlider';
 import { CategoryGateway, type Gateway } from '@/components/shop/CategoryGateway';
@@ -15,41 +16,35 @@ import { QuoteRow, type Quote } from '@/components/editorial/QuoteRow';
 import { LookbookRail } from '@/components/site/LookbookRail';
 import { Reveal } from '@/components/ui/Reveal';
 
-/* The old statement band said this in type over an empty ground. */
-const statement = ({ editorial }: SiteMedia): Tile[] => [
+/* The old statement band said this in type over an empty ground. The words and
+   the photographs are both the admin's to change, so both are data here. */
+const statement = ({ editorial }: SiteMedia, copy: SiteContent): Tile[] => [
   {
-    title: 'The tee that stays the same.',
-    body: 'Pre-shrunk, then garment dyed at temperature — so the change happens in our facility, not in your machine.',
+    title: copy['home.story.1.title'],
+    body: copy['home.story.1.body'],
     image: editorial.torso,
     href: '/why-shrinkless',
   },
   {
-    title: 'Worn in, not worn out.',
-    body: 'Garment dyeing settles the colour into the cotton rather than sitting on top of it.',
+    title: copy['home.story.2.title'],
+    body: copy['home.story.2.body'],
     image: editorial.heather,
     href: '/our-story',
   },
 ];
 
-// Placeholder copy until real reviews exist — spec §11.3. Replace verbatim.
-const QUOTES: Quote[] = [
-  {
-    text: 'Finally found a tee that still fits the way I want it to after washing.',
-    name: 'Placeholder review',
-  },
-  {
-    text: 'The colour has settled into something better than it started. It looks worn in, not worn out.',
-    name: 'Placeholder review',
-  },
-  {
-    text: 'I bought one to try it. I now own four.',
-    name: 'Placeholder review',
-  },
+// Placeholder copy until real reviews exist — spec §11.3. Editable on the
+// Content tab, so replacing it is not a deploy.
+const quotes = (copy: SiteContent): Quote[] => [
+  { text: copy['home.reviews.1.text'], name: copy['home.reviews.1.name'] },
+  { text: copy['home.reviews.2.text'], name: copy['home.reviews.2.name'] },
+  { text: copy['home.reviews.3.text'], name: copy['home.reviews.3.name'] },
 ];
 
 export default async function HomePage() {
-  const [media, newArrivals, featured, ...categories] = await Promise.all([
+  const [media, copy, newArrivals, featured, ...categories] = await Promise.all([
     getSiteMedia(),
+    getSiteContent(),
     listNewArrivals(6),
     listFeaturedProducts(3),
     ...SHOPPABLE.map(({ slug }) => listProductsInCategory(slug)),
@@ -73,11 +68,11 @@ export default async function HomePage() {
     <>
       <HeroSlider
         slides={slides}
-        eyebrow="Made in USA"
-        headline={['Organic tees', "that don't shrink."]}
-        lede="Garment dyed organic cotton, cut and sewn in the United States."
-        primary={{ href: '/shop', label: 'Shop tees' }}
-        secondary={{ href: '/why-shrinkless', label: 'Why Shrinkless' }}
+        eyebrow={copy['home.hero.eyebrow']}
+        headline={[copy['home.hero.headline1'], copy['home.hero.headline2']]}
+        lede={copy['home.hero.lede']}
+        primary={{ href: '/shop', label: copy['home.hero.primary'] }}
+        secondary={{ href: '/why-shrinkless', label: copy['home.hero.secondary'] }}
       />
 
       {/* Shopping direction, immediately after the hero — before any story. */}
@@ -88,10 +83,10 @@ export default async function HomePage() {
           <Reveal>
             <div className="rail__head">
               <div>
-                <p className="eyebrow">Just landed</p>
-                <h2 id="new-heading" className="head">New Arrivals</h2>
+                <p className="eyebrow">{copy['home.new.eyebrow']}</p>
+                <h2 id="new-heading" className="head">{copy['home.new.heading']}</h2>
               </div>
-              <Link href="/shop?sort=newest" className="ulink rail__more">Shop all</Link>
+              <Link href="/shop?sort=newest" className="ulink rail__more">{copy['home.new.link']}</Link>
             </div>
           </Reveal>
 
@@ -110,14 +105,14 @@ export default async function HomePage() {
       <div className="home-visual-stack">
         <LookbookRail />
 
-        <OverlayTiles tiles={statement(media)} columns={2} tall />
+        <OverlayTiles tiles={statement(media, copy)} columns={2} tall />
 
         <ImageBand
           image={media.editorial.promise}
-          eyebrow="The promise"
-          headline="Wash it. Dry it. Wear it."
+          eyebrow={copy['home.promise.eyebrow']}
+          headline={copy['home.promise.headline']}
           compact
-          body="The shrinking happens in our facility, not in your machine."
+          body={copy['home.promise.body']}
         />
       </div>
 
@@ -127,10 +122,10 @@ export default async function HomePage() {
             <Reveal>
               <div className="rail__head">
                 <div>
-                  <p className="eyebrow">Chosen by us</p>
-                  <h2 id="featured-heading" className="head">Featured</h2>
+                  <p className="eyebrow">{copy['home.featured.eyebrow']}</p>
+                  <h2 id="featured-heading" className="head">{copy['home.featured.heading']}</h2>
                 </div>
-                <Link href="/shop" className="ulink rail__more">Shop all</Link>
+                <Link href="/shop" className="ulink rail__more">{copy['home.featured.link']}</Link>
               </div>
             </Reveal>
 
@@ -139,7 +134,11 @@ export default async function HomePage() {
         </section>
       ) : null}
 
-      <QuoteRow eyebrow="Reviews" heading="What people say." quotes={QUOTES} />
+      <QuoteRow
+        eyebrow={copy['home.reviews.eyebrow']}
+        heading={copy['home.reviews.heading']}
+        quotes={quotes(copy)}
+      />
 
     </>
   );

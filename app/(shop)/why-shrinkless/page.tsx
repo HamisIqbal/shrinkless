@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { getSiteMedia, type SiteMedia } from '@/lib/services/site-media';
+import { getSiteContent, type SiteContent } from '@/lib/services/site-content';
 import { OverlayTiles, type Tile } from '@/components/editorial/OverlayTiles';
 
 export const metadata = {
@@ -7,31 +8,31 @@ export const metadata = {
   description: 'Organic cotton, garment dyed, built to hold its fit. Made in USA.',
 };
 
-/* Built per request rather than at module scope: the photographs are the
-   admin's to change, so they are data now, not constants. */
-const points = ({ editorial }: SiteMedia): Tile[] => [
+/* Built per request rather than at module scope: the photographs and the
+   words are both the admin's to change, so they are data now, not constants. */
+const points = ({ editorial }: SiteMedia, copy: SiteContent): Tile[] => [
   {
-    index: '01',
-    title: 'Organic Cotton',
-    body: 'Premium organic cotton, selected for everyday wear. Certification: [TBC].',
+    index: copy['why.1.index'],
+    title: copy['why.1.title'],
+    body: copy['why.1.body'],
     image: editorial.fabric,
   },
   {
-    index: '02',
-    title: 'Garment Dyed',
-    body: 'The finished garment is dyed for its distinctive character and feel.',
+    index: copy['why.2.index'],
+    title: copy['why.2.title'],
+    body: copy['why.2.body'],
     image: editorial.folded,
   },
   {
-    index: '03',
-    title: "Doesn't Shrink",
-    body: 'Built to maintain its fit and proportions wash after wash. Expected residual shrinkage: [TBC]%.',
+    index: copy['why.3.index'],
+    title: copy['why.3.title'],
+    body: copy['why.3.body'],
     image: editorial.hanging,
   },
   {
-    index: '04',
-    title: 'Made in USA',
-    body: 'Proudly made in the USA.',
+    index: copy['why.4.index'],
+    title: copy['why.4.title'],
+    body: copy['why.4.body'],
     image: editorial.craft,
   },
 ];
@@ -39,21 +40,19 @@ const points = ({ editorial }: SiteMedia): Tile[] => [
 /* No <InstagramStrip /> here — app/(shop)/layout.tsx already renders it
    after every page's content, right where the brief wants it. */
 export default async function WhyShrinklessPage() {
-  const media = await getSiteMedia();
+  const [media, copy] = await Promise.all([getSiteMedia(), getSiteContent()]);
 
   return (
     <>
       <header className="band band--tight wrap pagehead pagehead--center">
-        <h1 className="display pagehead__title">Why Shrinkless</h1>
-        <p className="lede pagehead__lede">
-          Four things separate this tee from the one that stopped fitting.
-        </p>
+        <h1 className="display pagehead__title">{copy['why.title']}</h1>
+        <p className="lede pagehead__lede">{copy['why.lede']}</p>
       </header>
 
-      <OverlayTiles tiles={points(media)} columns={4} contained />
+      <OverlayTiles tiles={points(media, copy)} columns={4} contained />
 
       <div className="band band--tight wrap shopcta">
-        <Link href="/shop" className="btn">Shop Now</Link>
+        <Link href="/shop" className="btn">{copy['why.cta']}</Link>
       </div>
     </>
   );

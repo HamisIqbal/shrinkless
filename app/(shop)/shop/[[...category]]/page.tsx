@@ -2,13 +2,19 @@ import { notFound } from 'next/navigation';
 import { listPublishedProducts } from '@/lib/services/products';
 import { productFilterSchema } from '@/lib/validation/catalogue';
 import { shoppableCategories } from '@/lib/shop/menu.server';
+import { getSiteContent } from '@/lib/services/site-content';
 import { ShopBrowser } from '@/components/shop/ShopBrowser';
 
 export const metadata = { title: 'Shop' };
 
 /** Men and Women get a bare title and nothing else; every other category
- *  (currently just the unfiltered "All Products" grid) keeps the full intro. */
-const MINIMAL_TITLES: Record<string, string> = { men: 'Men', women: 'Women' };
+ *  (currently just the unfiltered "All Products" grid) keeps the full intro.
+ *  Both titles are editable on the Content tab, so what is named here is the
+ *  key and the wording comes from the registry. */
+const MINIMAL_TITLE_KEYS: Record<string, string> = {
+  men: 'shop.men.title',
+  women: 'shop.women.title',
+};
 
 const FALLBACK = {
   title: 'All Products',
@@ -30,6 +36,7 @@ export default async function ShopPage(props: PageProps<'/shop/[[...category]]'>
   }
 
   const filter = productFilterSchema.parse(rawSearch);
+  const copy = await getSiteContent();
   const products = await listPublishedProducts(filter, categorySlug);
 
   // The filter options describe the category, not the current result set —
@@ -47,7 +54,8 @@ export default async function ShopPage(props: PageProps<'/shop/[[...category]]'>
   const priceCeiling = prices.length ? Math.ceil(Math.max(...prices)) : 0;
 
   const basePath = categorySlug ? `/shop/${categorySlug}` : '/shop';
-  const minimalTitle = categorySlug ? MINIMAL_TITLES[categorySlug] : undefined;
+  const minimalKey = categorySlug ? MINIMAL_TITLE_KEYS[categorySlug] : undefined;
+  const minimalTitle = minimalKey ? copy[minimalKey] : undefined;
 
   return (
     <div className="band band--tight shoppage">

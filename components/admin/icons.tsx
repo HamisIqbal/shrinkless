@@ -147,6 +147,17 @@ export function SettingsIcon({ className }: IconProps) {
 }
 
 /** Media: a picture — a frame with a horizon and a sun. */
+/** Words on a page: a sheet with lines of type on it. Distinct from
+ *  MediaIcon so "the writing" and "the photography" never read as one tab. */
+export function ContentIcon({ className }: IconProps) {
+  return (
+    <svg {...base(className)}>
+      <rect x="4" y="3" width="12" height="14" rx="1.5" />
+      <path d="M6.75 7h6.5M6.75 10h6.5M6.75 13h4" />
+    </svg>
+  );
+}
+
 export function MediaIcon({ className }: IconProps) {
   return (
     <svg {...base(className)}>

@@ -6,6 +6,7 @@ import { useTransition } from 'react';
 import { logoutAction } from '@/app/actions/auth';
 import {
   CategoriesIcon,
+  ContentIcon,
   CustomersIcon,
   DashboardIcon,
   DiscountsIcon,
@@ -30,6 +31,7 @@ const NAV = [
   { href: '/admin/customers', label: 'Customers', Icon: CustomersIcon },
   { href: '/admin/categories', label: 'Collections', Icon: CategoriesIcon },
   { href: '/admin/media', label: 'Media', Icon: MediaIcon },
+  { href: '/admin/content', label: 'Content', Icon: ContentIcon },
   { href: '/admin/discounts', label: 'Discounts', Icon: DiscountsIcon },
   { href: '/admin/shipping', label: 'Shipping', Icon: ShippingIcon },
   { href: '/admin/payments', label: 'Payments', Icon: PaymentsIcon },

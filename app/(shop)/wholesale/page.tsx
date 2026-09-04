@@ -1,4 +1,5 @@
 import { listWholesaleProducts } from '@/lib/services/wholesale';
+import { getSiteContent } from '@/lib/services/site-content';
 import { productFilterSchema } from '@/lib/validation/catalogue';
 import { ShopBrowser } from '@/components/shop/ShopBrowser';
 import { WholesaleGrid } from '@/components/shop/WholesaleGrid';
@@ -36,7 +37,7 @@ export default async function WholesalePage(props: PageProps<'/wholesale'>) {
   const rawSearch = await props.searchParams;
   const filter = productFilterSchema.parse(rawSearch);
 
-  const all = await listWholesaleProducts();
+  const [all, copy] = await Promise.all([listWholesaleProducts(), getSiteContent()]);
 
   // Filter options describe the whole line sheet, not the current result
   // set — otherwise filtering to Women removes Men from the gender chips and
@@ -84,7 +85,7 @@ export default async function WholesalePage(props: PageProps<'/wholesale'>) {
     <div className="band band--ink tradesheet">
       <div className="wrap">
         <header className="tradesheet__head">
-          <h1 className="display tradesheet__title">Wholesale</h1>
+          <h1 className="display tradesheet__title">{copy['wholesale.title']}</h1>
         </header>
 
         <ShopBrowser
