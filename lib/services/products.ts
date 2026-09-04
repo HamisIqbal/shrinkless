@@ -216,17 +216,16 @@ export const PRODUCT_SORTS = ['updatedAt', 'createdAt', 'title', 'status'] as co
 export const PRODUCT_FILTERS = ['status', 'category', 'featured', 'archived'] as const;
 
 /**
- * One page of products, filtered and sorted by the database.
+ * The filter half of the admin product list, on its own.
  *
- * The variant roll-up (count, total stock, cheapest price) is a second query
- * scoped to the ids on *this page* — not the whole catalogue — so the cost of
- * the list does not grow with the size of the store.
+ * Separate from the list because a bulk edit has to act on exactly the rows an
+ * admin is looking at, across every page of them — not on the twenty-five it
+ * happens to have fetched. One builder means the scope a bulk edit claims and
+ * the scope the list shows can never drift apart.
  */
-export async function listProductsForAdmin(
-  params: ListParams,
-): Promise<Paged<AdminProductRowDTO>> {
-  await connectToDatabase();
-
+export function adminProductQuery(
+  params: Pick<ListParams, 'q' | 'filters'>,
+): Record<string, unknown> {
   // Wholesale styles are products in the database and nowhere else: they are
   // listed, edited and archived under /admin/wholesale, where the pricing
   // ladder they are actually sold on is visible. Leaving them on the retail
@@ -246,6 +245,23 @@ export async function listProductsForAdmin(
   if (needle) {
     query.$or = [{ title: needle }, { slug: needle }, { baseSku: needle }, { tags: needle }];
   }
+
+  return query;
+}
+
+/**
+ * One page of products, filtered and sorted by the database.
+ *
+ * The variant roll-up (count, total stock, cheapest price) is a second query
+ * scoped to the ids on *this page* — not the whole catalogue — so the cost of
+ * the list does not grow with the size of the store.
+ */
+export async function listProductsForAdmin(
+  params: ListParams,
+): Promise<Paged<AdminProductRowDTO>> {
+  await connectToDatabase();
+
+  const query = adminProductQuery(params);
 
   const { skip, limit } = pageWindow(params);
 
@@ -281,6 +297,23 @@ export async function listProductsForAdmin(
   });
 
   return toPaged(rows, total, params);
+}
+
+/**
+ * Just the ids the admin list would show, every page of it.
+ *
+ * The list itself never needs this — it works a page at a time — but a bulk
+ * edit does, and it has to be the same set. Ids only: a bulk stock set has no
+ * use for the rest of the document and the catalogue can be swept cheaply
+ * while it stays a projection.
+ */
+export async function listAdminProductIds(
+  params: Pick<ListParams, 'q' | 'filters'>,
+): Promise<string[]> {
+  await connectToDatabase();
+
+  const products = await Product.find(adminProductQuery(params)).select('_id').lean();
+  return products.map((product) => String(product._id));
 }
 
 export async function getProductForAdmin(id: string): Promise<ProductDTO | null> {

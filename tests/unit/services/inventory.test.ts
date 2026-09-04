@@ -13,6 +13,7 @@ import {
   listInventory,
   listLowStock,
   releaseStockForOrder,
+  setStockForProducts,
   setVariantStock,
   stockStateFor,
 } from '@/lib/services/inventory';
@@ -70,6 +71,128 @@ async function seedOrder(
     status,
   });
 }
+
+describe('setStockForProducts', () => {
+  async function seedProductWithVariants(stocks: number[]) {
+    const product = await Product.create({
+      title: 'Field Tee',
+      slug: `field-tee-${Math.random().toString(36).slice(2, 8)}`,
+      category: 'tees',
+    });
+
+    for (const [index, stock] of stocks.entries()) {
+      await Variant.create({
+        productId: product._id,
+        size: ['s', 'm', 'l'][index] ?? 'xl',
+        color: 'sand',
+        sku: `SKU-${Math.random().toString(36).slice(2, 8)}`.toUpperCase(),
+        priceCents: 4200,
+        stock,
+      });
+    }
+
+    return product;
+  }
+
+  it('sets every variant of every product named to the same count', async () => {
+    const first = await seedProductWithVariants([1, 2]);
+    const second = await seedProductWithVariants([7]);
+    const untouched = await seedProductWithVariants([9]);
+
+    const result = await setStockForProducts({
+      productIds: [String(first._id), String(second._id)],
+      stock: 100,
+      actor: ACTOR,
+    });
+
+    expect(result).toEqual({ products: 2, variants: 3, changed: 3, failed: 0 });
+
+    const changed = await Variant.find({
+      productId: { $in: [first._id, second._id] },
+    }).lean();
+    expect(changed.map((variant) => variant.stock)).toEqual([100, 100, 100]);
+
+    const others = await Variant.find({ productId: untouched._id }).lean();
+    expect(others[0]?.stock).toBe(9);
+  });
+
+  it('writes one ledger row per variant it moved, naming the actor', async () => {
+    const product = await seedProductWithVariants([1, 5]);
+
+    await setStockForProducts({
+      productIds: [String(product._id)],
+      stock: 20,
+      note: 'Season reset',
+      actor: ACTOR,
+    });
+
+    const entries = await InventoryAdjustment.find({ productId: product._id }).lean();
+    expect(entries).toHaveLength(2);
+    expect(entries.map((entry) => entry.resultingStock)).toEqual([20, 20]);
+    expect(entries.map((entry) => entry.delta).sort((a, b) => a - b)).toEqual([15, 19]);
+    expect(entries[0]).toMatchObject({
+      reason: 'correction',
+      note: 'Season reset',
+      actorEmail: 'admin@example.com',
+    });
+  });
+
+  it('leaves variants already at the figure alone, and logs nothing for them', async () => {
+    const product = await seedProductWithVariants([12, 3]);
+
+    const result = await setStockForProducts({
+      productIds: [String(product._id)],
+      stock: 12,
+      actor: ACTOR,
+    });
+
+    expect(result).toMatchObject({ variants: 2, changed: 1 });
+    expect(await InventoryAdjustment.countDocuments({})).toBe(1);
+  });
+
+  it('takes zero as a figure, which empties the list', async () => {
+    const product = await seedProductWithVariants([4, 6]);
+
+    await setStockForProducts({ productIds: [String(product._id)], stock: 0, actor: ACTOR });
+
+    const variants = await Variant.find({ productId: product._id }).lean();
+    expect(variants.map((variant) => variant.stock)).toEqual([0, 0]);
+  });
+
+  it('refuses a figure that is negative or past the ceiling, before touching anything', async () => {
+    const product = await seedProductWithVariants([4]);
+    const ids = [String(product._id)];
+
+    await expect(setStockForProducts({ productIds: ids, stock: -1 })).rejects.toThrow();
+    await expect(
+      setStockForProducts({ productIds: ids, stock: MAX_STOCK + 1 }),
+    ).rejects.toThrow();
+
+    const variants = await Variant.find({ productId: product._id }).lean();
+    expect(variants[0]?.stock).toBe(4);
+  });
+
+  it('does nothing at all when the list is empty', async () => {
+    expect(await setStockForProducts({ productIds: [], stock: 50 })).toEqual({
+      products: 0,
+      variants: 0,
+      changed: 0,
+      failed: 0,
+    });
+  });
+
+  it('ignores an id that is not a product id rather than failing the run', async () => {
+    const product = await seedProductWithVariants([2]);
+
+    const result = await setStockForProducts({
+      productIds: ['not-an-id', String(product._id)],
+      stock: 8,
+      actor: ACTOR,
+    });
+
+    expect(result).toMatchObject({ products: 1, variants: 1, changed: 1, failed: 0 });
+  });
+});
 
 describe('adjustStock', () => {
   it('adds stock and records who did it and why', async () => {

@@ -813,6 +813,57 @@ body:has(.admin) {
 .admin .toolbar__reset:hover { color: var(--ad-ink); }
 
 /* --------------------------------------------------------------------------
+   Bulk stock — one count across a whole list
+   -------------------------------------------------------------------------- */
+
+/* Sits between the toolbar and the table, and is quiet until it is opened:
+   closed it reads as a caption on the list it describes, open it becomes a
+   form on the same paper the toolbar uses. */
+.admin .bulkstock {
+  display: grid;
+  gap: var(--ad-s-2);
+  margin: 0 0 var(--ad-s-4);
+}
+
+.admin .bulkstock__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ad-s-2);
+}
+
+.admin .bulkstock__scope {
+  margin: 0;
+  font-size: var(--ad-t-small);
+  color: var(--ad-ink-2);
+}
+
+.admin .bulkstock__form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--ad-s-2);
+  padding: var(--ad-s-3);
+  border-radius: var(--ad-r-card);
+  background: var(--ad-paper);
+}
+
+.admin .bulkstock__form .adfield { margin: 0; }
+
+.admin .bulkstock__field { flex: 0 1 12rem; min-width: 0; }
+
+/* Takes the whole row under the controls rather than squeezing in beside
+   them — it explains what the button is about to do, so it has to be read
+   before the button, not after it runs out of space. */
+.admin .bulkstock__note {
+  flex: 1 0 100%;
+  margin: 0;
+  font-size: var(--ad-t-small);
+  color: var(--ad-ink-2);
+  line-height: 1.5;
+}
+
+/* --------------------------------------------------------------------------
    Forms
    -------------------------------------------------------------------------- */
 

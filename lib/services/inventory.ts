@@ -195,6 +195,77 @@ export async function setVariantStock(input: {
 }
 
 /**
+ * The same absolute count, applied to every variant of many products at once.
+ *
+ * Deliberately built on `setVariantStock` rather than one `updateMany`. A
+ * bulk figure is still a stock take: each variant needs its own compare-and-
+ * set against the count that was actually there, and its own ledger row, or
+ * the day someone sets the whole catalogue to 100 there is no record of what
+ * any of it used to be. The store is catalogue-sized — tens of styles, not
+ * millions of rows — so the loop is affordable and the history is worth more
+ * than the round trips it costs.
+ *
+ * Variants already sitting at the figure are skipped by `setVariantStock`
+ * itself: re-running the same bulk set writes nothing and logs nothing.
+ *
+ * One variant failing does not abandon the rest. A bulk set that stopped
+ * halfway would leave the catalogue in a state nobody asked for and no
+ * message could describe; instead every variant is attempted and the count of
+ * failures comes back with the result.
+ */
+export async function setStockForProducts(input: {
+  productIds: readonly string[];
+  stock: number;
+  note?: string;
+  actor?: Actor;
+}): Promise<{ products: number; variants: number; changed: number; failed: number }> {
+  const { stock } = input;
+
+  if (!Number.isInteger(stock) || stock < 0) {
+    throw new Error('Stock has to be a whole number of units, and cannot be negative');
+  }
+  if (!Number.isSafeInteger(stock) || stock > MAX_STOCK) throw new Error(STOCK_RANGE_ERROR);
+
+  const ids = input.productIds
+    .filter((id) => Types.ObjectId.isValid(id))
+    .map((id) => new Types.ObjectId(id));
+
+  if (!ids.length) return { products: 0, variants: 0, changed: 0, failed: 0 };
+
+  await connectToDatabase();
+
+  const variants = await Variant.find({ productId: { $in: ids } })
+    .select('_id productId stock')
+    .lean();
+
+  let changed = 0;
+  let failed = 0;
+
+  for (const variant of variants) {
+    try {
+      const after = await setVariantStock({
+        variantId: String(variant._id),
+        stock,
+        reason: 'correction',
+        note: input.note || 'Bulk stock set',
+        actor: input.actor,
+      });
+
+      if (after !== variant.stock) changed += 1;
+    } catch {
+      failed += 1;
+    }
+  }
+
+  return {
+    products: new Set(variants.map((variant) => String(variant.productId))).size,
+    variants: variants.length,
+    changed,
+    failed,
+  };
+}
+
+/**
  * Takes stock for a whole order, all or nothing.
  *
  * Each line is a separate atomic decrement, so a partial failure is possible

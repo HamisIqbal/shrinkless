@@ -5,6 +5,7 @@ import {
   PRODUCT_FILTERS,
   PRODUCT_SORTS,
   getProductForAdmin,
+  listAdminProductIds,
   listProductsForAdmin,
 } from '@/lib/services/products';
 import { parseListParams } from '@/lib/admin/query';
@@ -111,6 +112,41 @@ describe('listProductsForAdmin', () => {
     expect(first.rows).toHaveLength(2);
     expect(first.pageCount).toBe(3);
     expect(last.rows).toHaveLength(1);
+  });
+});
+
+describe('listAdminProductIds', () => {
+  it('returns every id the list would show, not just the first page', async () => {
+    for (let index = 0; index < 30; index += 1) {
+      await seedProduct({ title: `Tee ${index}`, slug: `tee-${index}` });
+    }
+
+    const page = await listProductsForAdmin(params());
+    const ids = await listAdminProductIds(params());
+
+    expect(page.rows).toHaveLength(25);
+    expect(ids).toHaveLength(30);
+  });
+
+  it('narrows to the same rows the search and filters do', async () => {
+    await seedProduct({ title: 'Field Tee', slug: 'field-tee', status: 'published' });
+    await seedProduct({ title: 'Shop Coat', slug: 'shop-coat', status: 'draft' });
+
+    const published = await listAdminProductIds(params({ status: 'published' }));
+    const searched = await listAdminProductIds(params({ q: 'coat' }));
+
+    expect(published).toHaveLength(1);
+    expect(searched).toHaveLength(1);
+    expect(published[0]).not.toBe(searched[0]);
+  });
+
+  it('leaves wholesale styles and archived products out, like the list', async () => {
+    await seedProduct();
+    await seedProduct({ title: 'Razor Tank', slug: 'wholesale-razor-tank', tags: ['wholesale'] });
+    await seedProduct({ title: 'Old Tee', slug: 'old-tee', archivedAt: new Date() });
+
+    expect(await listAdminProductIds(params())).toHaveLength(1);
+    expect(await listAdminProductIds(params({ archived: 'true' }))).toHaveLength(1);
   });
 });
 

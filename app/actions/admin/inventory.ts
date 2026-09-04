@@ -11,8 +11,12 @@ import {
   InsufficientStockError,
   VariantNotFoundError,
   adjustStock,
+  setStockForProducts,
   setVariantStock,
 } from '@/lib/services/inventory';
+import { listAdminProductIds } from '@/lib/services/products';
+import { listWholesaleProductIds } from '@/lib/services/wholesale';
+import { MAX_STOCK, STOCK_RANGE_ERROR } from '@/lib/inventory/limits';
 
 function revalidateInventory(): void {
   revalidatePath('/admin/inventory');
@@ -81,6 +85,57 @@ export const setStockAction = adminAction(
 
     revalidateInventory();
     return { stock };
+  },
+);
+
+/**
+ * One count, applied across a whole list.
+ *
+ * The client sends the list it is looking at — the tab, plus the search and
+ * filters in the query string — and the server resolves that back into product
+ * ids itself. Sending the ids from the browser would be the obvious shape and
+ * would quietly be wrong twice: the page holds only the twenty-five rows it
+ * fetched, and a list of ids from a client is a list of anything.
+ */
+export const setStockForListedAction = adminAction(
+  {
+    permission: 'inventory:write',
+    schema: z.object({
+      scope: z.enum(['products', 'wholesale']),
+      stock: z
+        .number()
+        .int('Stock has to be a whole number of units')
+        .min(0, 'Stock cannot be negative')
+        .max(MAX_STOCK, STOCK_RANGE_ERROR),
+      note: z.string().trim().max(200).default(''),
+      /** Echoed from the list's own query string; ignored for wholesale,
+       *  whose list has no filters of its own. */
+      q: z.string().trim().max(100).default(''),
+      filters: z.record(z.string(), z.string().max(100)).default({}),
+    }),
+    translate,
+    genericError: 'Could not set the stock levels.',
+  },
+  async (input, actor) => {
+    const productIds =
+      input.scope === 'wholesale'
+        ? await listWholesaleProductIds()
+        : await listAdminProductIds({ q: input.q, filters: input.filters });
+
+    const result = await setStockForProducts({
+      productIds,
+      stock: input.stock,
+      note: input.note || `Set to ${input.stock} across the ${input.scope} list`,
+      actor: { id: actor.id, email: actor.email },
+    });
+
+    revalidateInventory();
+    if (input.scope === 'wholesale') {
+      revalidatePath('/admin/wholesale');
+      revalidatePath('/wholesale');
+    }
+
+    return result;
   },
 );
 

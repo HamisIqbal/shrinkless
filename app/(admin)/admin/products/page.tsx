@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { BulkStockPanel } from '@/components/admin/BulkStockPanel';
 import { DataTable, type Column } from '@/components/admin/DataTable';
 import { ListControls, Pagination } from '@/components/admin/ListControls';
 import { PageHead } from '@/components/admin/PageHead';
@@ -149,6 +150,13 @@ export default async function AdminProductsPage(props: PageProps<'/admin/product
           { value: 'title', label: 'Title' },
           { value: 'status', label: 'Status' },
         ]}
+      />
+
+      <BulkStockPanel
+        scope="products"
+        count={page.total}
+        q={params.q}
+        filters={params.filters}
       />
 
       <DataTable

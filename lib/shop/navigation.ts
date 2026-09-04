@@ -52,9 +52,9 @@ export const PRIMARY_NAV: NavLink[] = [
   { href: '/shop', label: 'Shop' },
   { href: '/shop/men', label: 'Men' },
   { href: '/shop/women', label: 'Women' },
-  { href: '/our-story', label: 'About' },
-  // Last, and flagged. Trade sits at the end of the bar because it is the
-  // end of the retail journey for the people it is aimed at, and because the
-  // pill needs a neighbour on one side only to read as deliberate.
+  // Flagged, and ahead of the story. Trade closes the run of shopping
+  // destinations rather than trailing the bar, because a buyer who came for
+  // the line sheet should meet it before the brand's own history does.
   { href: '/wholesale', label: 'Wholesale', highlight: true },
+  { href: '/our-story', label: 'About Us' },
 ];

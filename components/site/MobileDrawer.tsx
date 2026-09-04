@@ -174,16 +174,16 @@ export function MobileDrawer({
 
             <li className="drawer__item">
               <div className="drawer__row">
-                <Link href="/our-story" className="drawer__link" onClick={onClose}>
-                  About
+                <Link href="/wholesale" className="drawer__link" onClick={onClose}>
+                  Wholesale
                 </Link>
               </div>
             </li>
 
             <li className="drawer__item">
               <div className="drawer__row">
-                <Link href="/wholesale" className="drawer__link" onClick={onClose}>
-                  Wholesale
+                <Link href="/our-story" className="drawer__link" onClick={onClose}>
+                  About Us
                 </Link>
               </div>
             </li>

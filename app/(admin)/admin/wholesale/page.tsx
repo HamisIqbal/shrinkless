@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { BulkStockPanel } from '@/components/admin/BulkStockPanel';
 import { DataTable, type Column } from '@/components/admin/DataTable';
 import { PageHead } from '@/components/admin/PageHead';
 import { StatusBadge } from '@/components/admin/StatusBadge';
@@ -112,6 +113,8 @@ export default async function AdminWholesalePage() {
           </>
         }
       />
+
+      <BulkStockPanel scope="wholesale" count={rows.length} />
 
       <DataTable
         columns={columns}

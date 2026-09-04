@@ -257,6 +257,18 @@ export async function createWholesaleEnquiry(
    -------------------------------------------------------------------------- */
 
 /**
+ * The ids behind the admin line sheet, in the same scope the table shows —
+ * every wholesale style, archived ones included, since the table lists those
+ * too. The retail counterpart is `listAdminProductIds`.
+ */
+export async function listWholesaleProductIds(): Promise<string[]> {
+  await connectToDatabase();
+
+  const products = await Product.find({ tags: WHOLESALE_TAG }).select('_id').lean();
+  return products.map((product) => String(product._id));
+}
+
+/**
  * Every wholesale style, including the ones the buyer cannot see.
  *
  * Deliberately NOT `ON_THE_LINE_SHEET`: that query is what the storefront
