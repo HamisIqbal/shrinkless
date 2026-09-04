@@ -3242,18 +3242,14 @@
    between them, so consecutive statements still read as distinct beats. */
 .pagehead--rule { padding-top: var(--space-6); border-top: var(--spacing-rule) solid var(--color-muted); }
 
-/* Our Story is one film. The video keeps its own proportions at every width —
-   it is never scaled on a single axis, and the desktop frame is sized from the
-   video's own aspect ratio so the whole picture shows with nothing letterboxed
-   or cut. Desktop lays the copy over the frame; narrower screens set the copy
-   underneath, and only a phone trims the sides (about 17.5% each, centred). */
-.storyfilm { padding-bottom: var(--space-6); }
+/* Our Story is one film, run as a hero: no measure, no frame, no radius — it
+   spans the viewport edge to edge. Width is the only dimension ever set, so the
+   picture keeps its own proportions and is never squeezed on one axis. Desktop
+   centres the copy on the film; narrower screens set it underneath, and only a
+   phone trims the sides (about 17.5% each, from the centre). */
+.storyfilm { padding-block: 0; }
 
-.storyfilm__media {
-  position: relative;
-  overflow: hidden;
-  border-radius: var(--radius-card);
-}
+.storyfilm__stage { position: relative; }
 
 .storyfilm__video {
   display: block;
@@ -3261,60 +3257,66 @@
   height: auto;
 }
 
-.storyfilm__copy { padding-top: var(--space-5); }
-
-.storyfilm__eyebrow { margin-bottom: var(--space-3); }
-
-.storyfilm__body {
-  font-size: 1.0625rem;
-  line-height: 1.75;
-  max-width: 68ch;
-  color: var(--color-muted-text);
+.storyfilm__copy {
+  padding: var(--space-6) clamp(1.25rem, 4vw, 4.5rem);
+  text-align: center;
 }
 
-/* A phone crops rather than shrinks: the picture is widened past the column
+.storyfilm__column { max-width: 74ch; margin-inline: auto; }
+
+.storyfilm__title {
+  font-size: var(--text-head);
+  font-weight: 700;
+  line-height: 0.98;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: var(--color-white);
+}
+
+.storyfilm__body {
+  padding-top: var(--space-4);
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: var(--color-paper);
+}
+
+/* A phone crops rather than shrinks: the picture is widened past the viewport
    and pulled back by half the difference, so its centre is what survives. */
 @media (max-width: 47.999rem) {
+  .storyfilm__stage { overflow: hidden; }
+
   .storyfilm__video {
     width: 154%;
     margin-inline-start: -27%;
   }
 }
 
-/* Desktop: the frame follows the film's ratio and is capped by the viewport's
-   height, so it stays large without ever running past the fold. The copy sits
-   on it under a scrim that carries the text without touching the video. */
+/* Desktop: the copy sits centred on the film, under a scrim that carries the
+   text without touching the video itself. */
 @media (min-width: 62rem) {
-  .storyfilm__media {
-    width: min(100%, calc(84vh * var(--film-ar, 1.7778)));
-    margin-inline: auto;
-  }
-
   .storyfilm__copy {
     position: absolute;
     inset: 0;
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
+    justify-content: center;
     overflow-y: auto;
-    padding: clamp(1.75rem, 1rem + 2vw, 3.5rem);
-    color: var(--color-white);
+    padding: clamp(2rem, 1rem + 3vw, 5rem);
     background: linear-gradient(
       to bottom,
-      rgb(0 0 0 / 0.08) 0%,
-      rgb(0 0 0 / 0.42) 42%,
-      rgb(0 0 0 / 0.78) 100%
+      rgb(0 0 0 / 0.20) 0%,
+      rgb(0 0 0 / 0.55) 50%,
+      rgb(0 0 0 / 0.20) 100%
     );
-    text-shadow: 0 1px 3px rgb(0 0 0 / 0.5);
+    text-shadow: 0 1px 3px rgb(0 0 0 / 0.55);
   }
 
-  .storyfilm__eyebrow { color: var(--color-muted); }
+  .storyfilm__title { font-size: var(--text-display); }
 
   .storyfilm__body {
-    max-width: 78ch;
+    padding-top: var(--space-5);
     font-size: clamp(1rem, 0.9rem + 0.25vw, 1.1875rem);
     line-height: 1.7;
-    color: inherit;
   }
 }
 
