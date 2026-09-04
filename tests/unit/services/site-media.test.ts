@@ -289,19 +289,32 @@ describe('listMediaSlots', () => {
 });
 
 describe('listMediaPages', () => {
-  it('offers the pages the storefront actually has photography on', async () => {
+  it('offers the two pages the storefront has photography on, and no others', async () => {
     const pages = await listMediaPages();
-    const ids = pages.map((page) => page.id);
 
-    expect(ids[0]).toBe('home');
-    expect(ids).toContain(categorySlotId('men'));
-    expect(ids).toContain(categorySlotId('women'));
-    expect(ids).toContain('why-shrinkless');
+    expect(pages.map((page) => page.id)).toEqual(['home', 'why-shrinkless']);
 
     for (const page of pages) {
       expect(page.label).toBeTruthy();
       expect(page.path.startsWith('/')).toBe(true);
+      expect(page.sections.length).toBeGreaterThan(0);
     }
+  });
+
+  /* The category tiles are edited on Home, where they are composed, rather
+     than on a page of their own — so they still have to be reachable. The
+     "places every slot on a page" test below is what actually guards that;
+     this one says where they are. */
+  it('keeps the category doors on Home', async () => {
+    const pages = await listMediaPages();
+    const doors = pages
+      .find((page) => page.id === 'home')
+      ?.sections.find((section) => section.id === 'doors');
+
+    expect(doors?.slots.map((slot) => slot.slotId).sort()).toEqual([
+      categorySlotId('men'),
+      categorySlotId('women'),
+    ]);
   });
 
   /* The point of the tab: a frame is edited where it stands, so every slot the
@@ -334,11 +347,13 @@ describe('listMediaPages', () => {
     expect(appearances?.[0].overridden).toBe(true);
   });
 
-  it('says the Our Story film is not editable rather than pretending it is', async () => {
+  it('never offers a page with nothing on it to edit', async () => {
     const pages = await listMediaPages();
-    const story = pages.find((page) => page.id === 'our-story');
 
-    expect(story?.sections[0].kind).toBe('fixed');
-    expect(story?.sections[0].slots).toEqual([]);
+    for (const page of pages) {
+      for (const section of page.sections) {
+        expect(section.slots.length).toBeGreaterThan(0);
+      }
+    }
   });
 });

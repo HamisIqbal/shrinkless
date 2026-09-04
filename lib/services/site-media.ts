@@ -444,7 +444,7 @@ export async function resetMediaSlot(slotId: string): Promise<void> {
 
 /** The shape a section is drawn in, so the preview reads as the page rather
  *  than as a row of thumbnails. */
-export type MediaSectionKind = 'hero' | 'doors' | 'rail' | 'tiles' | 'band' | 'fixed';
+export type MediaSectionKind = 'hero' | 'doors' | 'rail' | 'tiles' | 'band';
 
 export type MediaSectionView = {
   id: string;
@@ -488,11 +488,14 @@ const STORY_ORDER: EditorialSlot[] = ['torso', 'heather'];
 /**
  * Every page and section, resolved against the slots that exist right now.
  *
- * Category pages are generated from the catalogue for the same reason the
- * category slots are: a category added last week gets its tile without a
- * deploy. Pages with no editable photography are not listed — the Our Story
- * film is fixed in the layout and the FAQ and wholesale pages carry none, so
- * offering them would be offering an empty room.
+ * Two pages, because two pages are where the storefront's photography is:
+ * Home carries the carousel, the category doors, the lookbook rail, the story
+ * tiles and the promise band, and Why Shrinkless carries the four points.
+ * Everything else either has no photography of its own — the Our Story film is
+ * set in the page rather than in a slot, the FAQ and wholesale pages carry
+ * none — or reads a frame that is already editable on Home: a category tile is
+ * one slot whether it is seen as a door or in the menu, so it is edited once,
+ * where it is composed.
  */
 export async function listMediaPages(): Promise<MediaPageView[]> {
   const library = await listMediaSlots();
@@ -543,37 +546,6 @@ export async function listMediaPages(): Promise<MediaPageView[]> {
 
   const pages: { id: string; label: string; path: string; sections: SectionDefinition[] }[] = [
     { id: 'home', label: 'Home', path: '/', sections: home },
-
-    // One page per category, carrying the tile that is that category's door.
-    ...library.categories.map((slot) => ({
-      id: slot.slotId,
-      label: slot.label,
-      path: `/shop/${slot.slotId.slice('category:'.length)}`,
-      sections: [
-        {
-          id: 'door',
-          label: 'Category tile',
-          note: slot.where,
-          kind: 'doors' as const,
-          slots: [slot.slotId],
-        },
-      ],
-    })),
-
-    {
-      id: 'our-story',
-      label: 'Our Story',
-      path: '/our-story',
-      sections: [
-        {
-          id: 'film',
-          label: 'The story film',
-          note: 'This page is one film, set in the page itself rather than in a media slot — there is no photography here to change.',
-          kind: 'fixed',
-          slots: [],
-        },
-      ],
-    },
 
     {
       id: 'why-shrinkless',

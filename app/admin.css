@@ -2183,19 +2183,11 @@ body:has(.admin) {
   color: var(--ad-ink-3);
 }
 
-.admin .canvasrow__note,
-.admin .canvasrow__fixed {
+.admin .canvasrow__note {
   margin: 0;
   font-size: var(--ad-t-small);
   line-height: 1.5;
   color: var(--ad-ink-2);
-}
-
-.admin .canvasrow__fixed {
-  padding: var(--ad-s-4);
-  border: 1px dashed var(--ad-line);
-  border-radius: var(--ad-r-field);
-  color: var(--ad-ink-3);
 }
 
 /* Each section is drawn in the shape the storefront draws it: the carousel and

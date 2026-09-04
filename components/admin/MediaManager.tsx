@@ -198,32 +198,26 @@ function Canvas({
               <p className="canvasrow__note">{section.note}</p>
             </header>
 
-            {section.kind === 'fixed' ? (
-              <p className="canvasrow__fixed">Nothing here is editable from this tab.</p>
-            ) : (
-              <div className="canvasrow__frames">
-                {section.slots.flatMap((slot) =>
-                  (drafts[slot.slotId] ?? []).map((frame, index) => (
-                    <CanvasFrame
-                      key={`${slot.slotId}:${index}`}
-                      frame={frame}
-                      ratio={slot.ratios[viewport]}
-                      viewport={viewport}
-                      label={
-                        (drafts[slot.slotId] ?? []).length > 1
-                          ? `${slot.label} ${index + 1}`
-                          : slot.label
-                      }
-                      selected={
-                        selection?.slotId === slot.slotId && selection.index === index
-                      }
-                      edited={!sameFrames(drafts[slot.slotId] ?? [], saved[slot.slotId] ?? [])}
-                      onSelect={() => onSelect({ slotId: slot.slotId, index })}
-                    />
-                  )),
-                )}
-              </div>
-            )}
+            <div className="canvasrow__frames">
+              {section.slots.flatMap((slot) =>
+                (drafts[slot.slotId] ?? []).map((frame, index) => (
+                  <CanvasFrame
+                    key={`${slot.slotId}:${index}`}
+                    frame={frame}
+                    ratio={slot.ratios[viewport]}
+                    viewport={viewport}
+                    label={
+                      (drafts[slot.slotId] ?? []).length > 1
+                        ? `${slot.label} ${index + 1}`
+                        : slot.label
+                    }
+                    selected={selection?.slotId === slot.slotId && selection.index === index}
+                    edited={!sameFrames(drafts[slot.slotId] ?? [], saved[slot.slotId] ?? [])}
+                    onSelect={() => onSelect({ slotId: slot.slotId, index })}
+                  />
+                )),
+              )}
+            </div>
           </section>
         ))}
       </div>
