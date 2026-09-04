@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getSiteMedia, type SiteMedia } from '@/lib/services/site-media';
-import { getSiteContent, type SiteContent } from '@/lib/services/site-content';
+import { getContentLayer, getSiteContent, type SiteContent } from '@/lib/services/site-content';
+import { ContentLayer } from '@/components/site/ContentLayer';
 import { OverlayTiles, type Tile } from '@/components/editorial/OverlayTiles';
 
 export const metadata = {
@@ -40,7 +41,11 @@ const points = ({ editorial }: SiteMedia, copy: SiteContent): Tile[] => [
 /* No <InstagramStrip /> here — app/(shop)/layout.tsx already renders it
    after every page's content, right where the brief wants it. */
 export default async function WhyShrinklessPage() {
-  const [media, copy] = await Promise.all([getSiteMedia(), getSiteContent()]);
+  const [media, copy, layer] = await Promise.all([
+    getSiteMedia(),
+    getSiteContent(),
+    getContentLayer('why-shrinkless'),
+  ]);
 
   return (
     <>
@@ -54,6 +59,8 @@ export default async function WhyShrinklessPage() {
       <div className="band band--tight wrap shopcta">
         <Link href="/shop" className="btn">{copy['why.cta']}</Link>
       </div>
+
+      <ContentLayer {...layer} />
     </>
   );
 }

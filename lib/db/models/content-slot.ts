@@ -17,8 +17,25 @@ const contentSlotSchema = new Schema(
   {
     key: { type: String, required: true, unique: true, trim: true },
     /** Not trimmed: a paragraph's leading or trailing space is the admin's to
-     *  decide, and the registry bounds the length instead. */
-    value: { type: String, required: true },
+     *  decide, and the registry bounds the length instead.
+     *
+     *  Optional, because a row can exist for styling alone — a heading set
+     *  larger but still worded the way the site shipped keeps no second copy
+     *  of that wording. A missing value reads as "the default". */
+    value: { type: String },
+    /**
+     * How the field is set, per width. Free-form on purpose: the shape is
+     * owned by `lib/validation/content.ts`, which is the only door in, and a
+     * schema here would be a second copy of it to keep in step.
+     */
+    style: { type: Schema.Types.Mixed },
+    /**
+     * Where the field lands in the storefront's markup, as the editor found
+     * it — a class-and-position chain derived from the live page when the
+     * style was saved. The stylesheet the site serves is built from these, so
+     * a rule can only ever point at an element that existed.
+     */
+    selector: { type: String },
   },
   { timestamps: true },
 );

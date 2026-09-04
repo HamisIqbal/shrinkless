@@ -1,5 +1,6 @@
 import { FaqAccordion, type FaqItem } from '@/components/site/FaqAccordion';
-import { getSiteContent, type SiteContent } from '@/lib/services/site-content';
+import { getContentLayer, getSiteContent, type SiteContent } from '@/lib/services/site-content';
+import { ContentLayer } from '@/components/site/ContentLayer';
 
 export const metadata = {
   title: 'FAQ',
@@ -22,7 +23,7 @@ const items = (copy: SiteContent): FaqItem[] =>
 /* No <InstagramStrip /> here — app/(shop)/layout.tsx already renders it
    after every page's content, right where the brief wants it. */
 export default async function FaqPage() {
-  const copy = await getSiteContent();
+  const [copy, layer] = await Promise.all([getSiteContent(), getContentLayer('faq')]);
 
   return (
     <div className="band band--tight wrap">
@@ -31,6 +32,8 @@ export default async function FaqPage() {
       </header>
 
       <FaqAccordion items={items(copy)} />
+
+      <ContentLayer {...layer} />
     </div>
   );
 }

@@ -35,3 +35,46 @@ export const contentFieldInputSchema = z.object({ key, value });
 export const contentKeySchema = z.object({ key });
 
 export type ContentFieldInput = z.infer<typeof contentFieldInputSchema>;
+
+/**
+ * How a field is set, at one width.
+ *
+ * Deliberately loose here and strict in the service: `cleanStyle` owns the
+ * ranges and the vocabulary, and repeating them in a schema would be a second
+ * copy to keep in step. What this stage is for is shape — an object of
+ * primitives, small enough to be worth writing down — so that nothing
+ * unbounded reaches the database even if the service later grows a property.
+ */
+const style = z
+  .record(z.string(), z.union([z.string().max(40), z.number(), z.boolean()]))
+  .optional();
+
+const styleSet = z
+  .object({ desktop: style, mobile: style })
+  .optional();
+
+/**
+ * One field as the visual editor hands it back.
+ *
+ * The selector is derived from the live page by the editor, never typed, and
+ * is checked again in the service before any of it becomes a CSS rule.
+ */
+const fieldEdit = z.object({
+  key,
+  value,
+  style: styleSet,
+  selector: z.string().trim().max(400).optional(),
+});
+
+/**
+ * A page's worth of edits, saved together.
+ *
+ * The editor holds everything as a draft until Save, so what arrives is every
+ * line the admin touched while they were on that page. Bounded at 200, which
+ * is more fields than any page has.
+ */
+export const contentPageInputSchema = z.object({
+  entries: z.array(fieldEdit).min(1, 'There is nothing to save').max(200),
+});
+
+export type ContentPageInput = z.infer<typeof contentPageInputSchema>;

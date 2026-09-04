@@ -5,7 +5,8 @@ import {
   listProductsInCategory,
 } from '@/lib/services/products';
 import { categoryImage, getSiteMedia, type SiteMedia } from '@/lib/services/site-media';
-import { getSiteContent, type SiteContent } from '@/lib/services/site-content';
+import { getContentLayer, getSiteContent, type SiteContent } from '@/lib/services/site-content';
+import { ContentLayer } from '@/components/site/ContentLayer';
 import { SHOPPABLE } from '@/lib/shop/navigation';
 import { HeroSlider, type HeroSlide } from '@/components/site/HeroSlider';
 import { CategoryGateway, type Gateway } from '@/components/shop/CategoryGateway';
@@ -42,9 +43,10 @@ const quotes = (copy: SiteContent): Quote[] => [
 ];
 
 export default async function HomePage() {
-  const [media, copy, newArrivals, featured, ...categories] = await Promise.all([
+  const [media, copy, layer, newArrivals, featured, ...categories] = await Promise.all([
     getSiteMedia(),
     getSiteContent(),
+    getContentLayer('home'),
     listNewArrivals(6),
     listFeaturedProducts(3),
     ...SHOPPABLE.map(({ slug }) => listProductsInCategory(slug)),
@@ -139,6 +141,8 @@ export default async function HomePage() {
         heading={copy['home.reviews.heading']}
         quotes={quotes(copy)}
       />
+
+      <ContentLayer {...layer} />
 
     </>
   );

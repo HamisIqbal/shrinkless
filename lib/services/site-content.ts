@@ -1,6 +1,16 @@
 import { connectToDatabase } from '@/lib/db/connection';
 import { ContentSlot } from '@/lib/db/models/content-slot';
 import { AdminOperationError } from '@/lib/admin/action';
+import {
+  MOBILE_MAX,
+  WIDE_MIN,
+  cleanStyleSet,
+  isSafeSelector,
+  styleDeclarations,
+  type ContentLayer,
+  type ContentLayerField,
+  type ContentStyleSet,
+} from '@/lib/content/style';
 
 /* --------------------------------------------------------------------------
    The registry
@@ -67,6 +77,16 @@ export type ContentPageDefinition = {
   label: string;
   /** Where this page is on the storefront, so the admin can go and look. */
   path: string;
+  /**
+   * Kept out of the editor's page list.
+   *
+   * The two shop landings are a catalogue with a word over it — there is a
+   * title and nothing else to compose, and offering them as pages to design
+   * would be offering a grid of products the tab cannot touch. The fields stay
+   * in the registry because the storefront still reads them; only the editor
+   * declines to list the page.
+   */
+  hidden?: boolean;
   sections: ContentSectionDefinition[];
 };
 
@@ -79,6 +99,11 @@ export const LONG_MAX = 2000;
 export function maxLengthFor(kind: ContentKind): number {
   return kind === 'body' || kind === 'answer' || kind === 'lede' ? LONG_MAX : SHORT_MAX;
 }
+
+/* The vocabulary of a style lives in `lib/content/style.ts`: the editor
+   imports it too, and it must not drag a database connection into the
+   browser. Re-exported here so content still has one door. */
+export * from '@/lib/content/style';
 
 /**
  * The pages, in the order the panel lists them.
@@ -291,6 +316,7 @@ const PAGES: ContentPageDefinition[] = [
     id: 'men',
     label: 'Men',
     path: '/shop/men',
+    hidden: true,
     sections: [
       {
         id: 'head',
@@ -306,6 +332,7 @@ const PAGES: ContentPageDefinition[] = [
     id: 'women',
     label: 'Women',
     path: '/shop/women',
+    hidden: true,
     sections: [
       {
         id: 'head',
@@ -610,12 +637,28 @@ export function defaultContent(key: string): string {
  *  wording, indexed by key. */
 export type SiteContent = Record<string, string>;
 
-async function loadOverrides(): Promise<Map<string, string>> {
+/** One stored row, as the panel and the storefront both need it. */
+type ContentOverride = {
+  value?: string;
+  style?: ContentStyleSet;
+  selector?: string;
+};
+
+async function loadOverrides(): Promise<Map<string, ContentOverride>> {
   await connectToDatabase();
 
-  const rows = await ContentSlot.find({}).select('key value').lean();
+  const rows = await ContentSlot.find({}).select('key value style selector').lean();
 
-  return new Map(rows.map((row) => [row.key, row.value]));
+  return new Map(
+    rows.map((row) => [
+      row.key,
+      {
+        value: row.value ?? undefined,
+        style: (row.style as ContentStyleSet | undefined) ?? undefined,
+        selector: row.selector ?? undefined,
+      },
+    ]),
+  );
 }
 
 /**
@@ -634,7 +677,7 @@ export async function getSiteContent(): Promise<SiteContent> {
   const content: SiteContent = {};
 
   for (const [key, field] of FIELDS) {
-    const stored = overrides.get(key);
+    const stored = overrides.get(key)?.value;
     content[key] = stored ? stored : field.default;
   }
 
@@ -651,6 +694,11 @@ export type ContentFieldView = ContentFieldDefinition & {
   /** False when the field is still showing what the site shipped with. */
   overridden: boolean;
   maxLength: number;
+  /** How the field is currently set, per width. Empty when it is still drawn
+   *  the way the page draws it. */
+  style: ContentStyleSet;
+  /** Where the last save found this field in the page's markup. */
+  selector?: string;
 };
 
 export type ContentSectionView = Omit<ContentSectionDefinition, 'fields'> & {
@@ -668,19 +716,21 @@ export type ContentPageView = Omit<ContentPageDefinition, 'sections'> & {
 export async function listContentPages(): Promise<ContentPageView[]> {
   const overrides = await loadOverrides();
 
-  return PAGES.map((page) => ({
+  return PAGES.filter((page) => !page.hidden).map((page) => ({
     ...page,
     sections: page.sections.map((section) => ({
       ...section,
       fields: section.fields.map((field) => {
         const stored = overrides.get(field.key);
-        const overridden = Boolean(stored);
+        const overridden = Boolean(stored?.value);
 
         return {
           ...field,
-          value: overridden ? (stored as string) : field.default,
+          value: overridden ? (stored?.value as string) : field.default,
           overridden,
           maxLength: maxLengthFor(field.kind),
+          style: stored?.style ?? {},
+          selector: stored?.selector,
         };
       }),
     })),
@@ -693,24 +743,100 @@ export async function listContentPages(): Promise<ContentPageView[]> {
 
 /** Replaces the wording of one field. */
 export async function saveContentField(key: string, value: string): Promise<void> {
-  const field = assertKnown(key);
+  await saveContentFields([{ key, value }]);
+}
 
-  const text = value.trim();
-  if (!text) throw new AdminOperationError('That field cannot be empty.');
+/** One field as the editor hands it back: its wording, how it is set, and
+ *  where the editor found it standing on the page. */
+export type ContentFieldEdit = {
+  key: string;
+  value: string;
+  style?: ContentStyleSet;
+  selector?: string;
+};
 
-  const limit = maxLengthFor(field.kind);
-  if (text.length > limit) {
-    throw new AdminOperationError(`That is longer than this field takes — ${limit} characters.`);
-  }
+/**
+ * Writes a page's worth of edits.
+ *
+ * The whole page goes at once because that is how the editor works — an admin
+ * moves between several lines before deciding, and a save that only carried
+ * the last one would quietly drop the rest. Each row is still keyed by field,
+ * so two pages sharing a field cannot fork it.
+ */
+export async function saveContentFields(edits: ContentFieldEdit[]): Promise<void> {
+  if (!edits.length) return;
+
+  const writes = edits.map((edit) => {
+    const field = assertKnown(edit.key);
+
+    const text = edit.value.trim();
+    if (!text) throw new AdminOperationError('That field cannot be empty.');
+
+    const limit = maxLengthFor(field.kind);
+    if (text.length > limit) {
+      throw new AdminOperationError(`That is longer than this field takes — ${limit} characters.`);
+    }
+
+    const style = cleanStyleSet(edit.style ?? {});
+    const selector = edit.selector && isSafeSelector(edit.selector) ? edit.selector : undefined;
+
+    return {
+      updateOne: {
+        filter: { key: edit.key },
+        update: { $set: { value: text, style, selector: selector ?? null } },
+        upsert: true,
+      },
+    };
+  });
 
   await connectToDatabase();
-
-  await ContentSlot.findOneAndUpdate({ key }, { $set: { value: text } }, { upsert: true });
+  await ContentSlot.bulkWrite(writes);
 }
 
 /** Puts a field back to the wording the site shipped with, by forgetting the
  *  override rather than by writing a second copy of the original that could
  *  drift. */
+/**
+ * Everything one page needs to serve its own overrides: the stylesheet built
+ * from what has been saved for its fields, and the fields themselves so the
+ * editor running inside an iframe knows what it may select.
+ *
+ * Scoped to a page rather than to the site because two pages can set the same
+ * kind of element differently, and a sheet carrying both would have them
+ * fighting over one selector.
+ */
+export async function getContentLayer(pageId: string): Promise<ContentLayer> {
+  const page = PAGES.find((candidate) => candidate.id === pageId);
+  if (!page) return { page: pageId, css: '', fields: [] };
+
+  const overrides = await loadOverrides();
+  const fields: ContentLayerField[] = [];
+  const blocks: string[] = [];
+
+  for (const section of page.sections) {
+    for (const field of section.fields) {
+      const stored = overrides.get(field.key);
+
+      fields.push({
+        key: field.key,
+        label: field.label,
+        value: stored?.value ?? field.default,
+      });
+
+      const selector = stored?.selector;
+      if (!selector || !isSafeSelector(selector) || !stored?.style) continue;
+
+      const desktop = styleDeclarations(stored.style.desktop);
+      const mobile = styleDeclarations(stored.style.mobile);
+
+      if (desktop) blocks.push(`@media (min-width: ${WIDE_MIN}) { ${selector} { ${desktop} } }`);
+      if (mobile) blocks.push(`@media (max-width: ${MOBILE_MAX}) { ${selector} { ${mobile} } }`);
+    }
+  }
+
+  return { page: page.id, css: blocks.join('\n'), fields };
+}
+
 export async function resetContentField(key: string): Promise<void> {
   assertKnown(key);
 

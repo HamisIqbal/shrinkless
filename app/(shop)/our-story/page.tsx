@@ -1,4 +1,5 @@
-import { getSiteContent } from '@/lib/services/site-content';
+import { getContentLayer, getSiteContent } from '@/lib/services/site-content';
+import { ContentLayer } from '@/components/site/ContentLayer';
 
 export const metadata = {
   title: 'Our Story',
@@ -13,29 +14,33 @@ const VIDEO_SRC =
    No <InstagramStrip /> here — app/(shop)/layout.tsx already renders it after
    every page's content, right where the brief wants it. */
 export default async function OurStoryPage() {
-  const copy = await getSiteContent();
+  const [copy, layer] = await Promise.all([getSiteContent(), getContentLayer('our-story')]);
 
   return (
-    <section className="band band--ink storyfilm">
-      <div className="storyfilm__stage">
-        <video
-          className="storyfilm__video"
-          src={VIDEO_SRC}
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="auto"
-          aria-label="Cutting, sewing, dyeing and washing a Shrinkless tee"
-        />
+    <>
+      <ContentLayer {...layer} />
 
-        <div className="storyfilm__copy">
-          <div className="storyfilm__column">
-            <h1 className="storyfilm__title">{copy['story.title']}</h1>
-            <p className="storyfilm__body">{copy['story.body']}</p>
+      <section className="band band--ink storyfilm">
+        <div className="storyfilm__stage">
+          <video
+            className="storyfilm__video"
+            src={VIDEO_SRC}
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+            aria-label="Cutting, sewing, dyeing and washing a Shrinkless tee"
+          />
+
+          <div className="storyfilm__copy">
+            <div className="storyfilm__column">
+              <h1 className="storyfilm__title">{copy['story.title']}</h1>
+              <p className="storyfilm__body">{copy['story.body']}</p>
+            </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 }

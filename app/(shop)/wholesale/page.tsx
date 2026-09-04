@@ -1,5 +1,6 @@
 import { listWholesaleProducts } from '@/lib/services/wholesale';
-import { getSiteContent } from '@/lib/services/site-content';
+import { getContentLayer, getSiteContent } from '@/lib/services/site-content';
+import { ContentLayer } from '@/components/site/ContentLayer';
 import { productFilterSchema } from '@/lib/validation/catalogue';
 import { ShopBrowser } from '@/components/shop/ShopBrowser';
 import { WholesaleGrid } from '@/components/shop/WholesaleGrid';
@@ -87,6 +88,8 @@ export default async function WholesalePage(props: PageProps<'/wholesale'>) {
         <header className="tradesheet__head">
           <h1 className="display tradesheet__title">{copy['wholesale.title']}</h1>
         </header>
+
+        <ContentLayer {...(await getContentLayer('wholesale'))} />
 
         <ShopBrowser
           filter={filter}

@@ -2416,12 +2416,11 @@ body:has(.admin) {
 /* --------------------------------------------------------------------------
    The content builder
 
-   The Content tab is the Media tab's twin: not a form, but the page — laid out
-   the way the storefront lays it out, with the writing in it live enough to
-   click. The furniture is shared where it is genuinely shared (the viewport
-   toggle, the canvas, the contextual panel); what is new here is the type
-   itself, drawn at the weight the storefront gives it so a heading reads as a
-   heading and a paragraph reads as a paragraph.
+   The Content tab is the Media tab's twin, and then some: the middle of it is
+   not a drawing of the page but the page itself, in a frame, served by the
+   same components and the same stylesheets a visitor gets. Everything below is
+   therefore chrome around a window — the frame, the panel of settings beside
+   it, and the bar of actions that decides when any of it becomes real.
    -------------------------------------------------------------------------- */
 
 .admin .contentbuild { display: grid; gap: var(--ad-s-4); }
@@ -2437,213 +2436,198 @@ body:has(.admin) {
 
 .admin .contentbuild__page { margin: 0; min-width: 12rem; }
 
+.admin .contentbuild__acts { display: flex; gap: var(--ad-s-2); align-items: center; }
+
 .admin .contentbuild__hint {
   flex: 1 1 16rem;
   margin: 0;
-  text-align: right;
-  font-size: var(--ad-t-small);
   color: var(--ad-ink-3);
+  font-size: 0.82rem;
   line-height: 1.5;
+  text-align: right;
 }
 
-@media (max-width: 48rem) {
+@media (max-width: 60rem) {
   .admin .contentbuild__hint { text-align: left; }
 }
 
 .admin .contentbuild__stage { display: grid; gap: var(--ad-s-4); align-items: start; }
 
-@media (min-width: 64rem) {
+@media (min-width: 68rem) {
   .admin .contentbuild__stage--open {
-    grid-template-columns: minmax(0, 1fr) 24rem;
+    grid-template-columns: minmax(0, 1fr) 22rem;
   }
 
   .admin .contentbuild__stage--open .inspector {
     position: sticky;
     top: var(--ad-s-4);
-    max-height: calc(100vh - var(--ad-s-5));
-    overflow: auto;
+    max-height: calc(100vh - 2 * var(--ad-s-4));
+    overflow-y: auto;
   }
 }
 
-/* One section of the page. The dark ones are the bands the storefront runs
-   dark — the hero, the story tiles, the promise, the trade sheet — so the
-   admin is judging the wording against roughly the ground it will sit on. */
-.admin .contentrow { display: grid; gap: var(--ad-s-3); }
+/* The window on the storefront -------------------------------------------- */
 
-.admin .contentrow__page {
+.admin .stage {
+  border: 1px solid var(--ad-line);
+  border-radius: var(--ad-r-card);
+  background: var(--ad-white);
+  overflow: hidden;
   display: grid;
-  gap: var(--ad-s-3);
-  padding: var(--ad-s-4);
+  justify-items: center;
+}
+
+.admin .stage__frame {
+  width: 100%;
+  height: min(78vh, 54rem);
+  border: 0;
+  display: block;
+  background: #fff;
+}
+
+/* A phone is a width, not a skin: the frame is narrowed to one and the
+   storefront's own breakpoints do the rest, which is the only way the preview
+   can be trusted to match what a visitor on a phone gets. */
+.admin .stage--mobile .stage__frame {
+  width: 24.375rem;
+  max-width: 100%;
+  border-inline: 1px solid var(--ad-line);
+}
+
+/* The settings ------------------------------------------------------------ */
+
+.admin .ctabs { margin-bottom: var(--ad-s-3); }
+
+.admin .ctls { display: grid; gap: var(--ad-s-3); }
+
+.admin .ctls__scope {
+  margin: 0;
+  padding: var(--ad-s-2);
+  border-radius: var(--ad-r-field);
+  background: var(--ad-white);
+  color: var(--ad-ink-2);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.admin .ctls__head {
+  margin: var(--ad-s-2) 0 0;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ad-ink-3);
+}
+
+.admin .ctl { display: grid; gap: 0.35rem; }
+
+.admin .ctl__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--ad-s-2);
+}
+
+.admin .ctl__label { font-size: 0.8rem; color: var(--ad-ink-2); }
+
+.admin .ctl__auto,
+.admin .ctl__clear {
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ad-ink-3);
+}
+
+.admin .ctl__clear {
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: var(--ad-r-field);
+}
+
+.admin .ctl__clear:hover { color: var(--ad-ink); }
+
+.admin .ctl--set .ctl__label { color: var(--ad-ink); font-weight: 600; }
+
+.admin .ctl__slide { display: flex; align-items: center; gap: var(--ad-s-2); }
+
+.admin .ctl__slide input[type='range'] { flex: 1 1 auto; min-width: 0; accent-color: var(--ad-ink); }
+
+.admin .ctl__num { width: 5rem; }
+
+.admin .ctl__unit { font-size: 0.75rem; color: var(--ad-ink-3); }
+
+.admin .ctl__colour {
+  width: 2.75rem;
+  height: 2rem;
+  padding: 0;
   border: 1px solid var(--ad-line);
   border-radius: var(--ad-r-field);
+  background: none;
+  cursor: pointer;
+}
+
+.admin .ctl__choices { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+
+.admin .ctl__choice {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--ad-line);
+  border-radius: 999px;
   background: var(--ad-paper);
+  color: var(--ad-ink-2);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
 }
 
-.admin .contentrow--ink .contentrow__page {
-  border-color: transparent;
+.admin .ctl__choice:hover { border-color: var(--ad-ink-3); color: var(--ad-ink); }
+
+.admin .ctl__choice--on {
   background: var(--ad-ink);
-  color: var(--ad-onink);
+  border-color: var(--ad-ink);
+  color: var(--ad-paper);
 }
 
-.admin .contentrow__lead { display: grid; gap: var(--ad-s-2); justify-items: start; }
+/* Every line, including the ones the page did not render ------------------- */
 
-.admin .contentrow__groups { display: grid; gap: var(--ad-s-3); }
-
-.admin .contentrow__group {
+.admin .contentbuild__index {
+  padding-top: var(--ad-s-3);
+  border-top: 1px solid var(--ad-line);
   display: grid;
   gap: var(--ad-s-2);
-  justify-items: start;
-  align-content: start;
-  padding: var(--ad-s-3);
-  border-radius: var(--ad-r-field);
-  background: color-mix(in oklab, var(--ad-white) 55%, transparent);
 }
 
-.admin .contentrow--ink .contentrow__group {
-  background: color-mix(in oklab, var(--ad-onink) 8%, transparent);
-}
-
-/* One line of type. The whole line is the hit area, and its own label sits
-   under it in the panel's voice rather than the page's — so the admin can tell
-   at a glance what the field is called without the preview turning into a
-   list of captions. */
-.admin .ctext {
-  position: relative;
-  display: block;
-  max-width: 100%;
+.admin .contentbuild__indexhead {
   margin: 0;
-  padding: 0.25rem 0.4rem;
-  border: 1px dashed transparent;
-  border-radius: var(--ad-r-field);
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  text-align: left;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ad-ink-3);
+}
+
+.admin .contentbuild__chips { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+
+.admin .ckchip {
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--ad-line);
+  border-radius: 999px;
+  background: var(--ad-paper);
+  color: var(--ad-ink-2);
+  font-size: 0.78rem;
   cursor: pointer;
-  transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+  transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
 }
 
-.admin .ctext__value { display: block; }
+.admin .ckchip:hover { border-color: var(--ad-ink-3); color: var(--ad-ink); }
 
-.admin .ctext:hover {
-  border-color: color-mix(in oklab, currentcolor 35%, transparent);
-  background: color-mix(in oklab, var(--ad-acid) 18%, transparent);
-}
-
-.admin .ctext:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ad-acid) 70%, transparent);
-}
-
-/* The chosen line. Unmistakable across a page of them. */
-.admin .ctext--on {
-  border-style: solid;
-  border-color: var(--ad-acid);
-  background: color-mix(in oklab, var(--ad-acid) 26%, transparent);
-}
-
-/* What this line is called, and whether it is carrying an unsaved edit.
-   Held back until the line is hovered or chosen, so the preview reads as the
-   page first and as an editor second. */
-.admin .ctext__tag {
-  position: absolute;
-  left: 0.4rem;
-  top: -0.55rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  max-width: calc(100% - 0.8rem);
-  padding: 0.1rem 0.4rem;
-  border-radius: var(--ad-r-pill);
+.admin .ckchip--on {
   background: var(--ad-ink);
-  color: var(--ad-onink);
-  font-family: inherit;
-  font-size: 0.625rem;
-  font-weight: 600;
-  font-style: normal;
-  letter-spacing: var(--ad-track-label);
-  text-transform: uppercase;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  opacity: 0;
-  transition: opacity 160ms ease;
+  border-color: var(--ad-ink);
+  color: var(--ad-paper);
 }
 
-.admin .ctext:hover .ctext__tag,
-.admin .ctext:focus-visible .ctext__tag,
-.admin .ctext--on .ctext__tag { opacity: 1; }
-
-.admin .ctext__dot {
-  flex: none;
-  width: 0.35rem;
-  height: 0.35rem;
-  border-radius: 50%;
-  background: var(--ad-acid);
-}
-
-/* The storefront's own hierarchy, borrowed. Not the shop's typefaces — this is
-   the admin panel — but its proportions, so a heading that is really a
-   paragraph is obvious here rather than on the live site. */
-.admin .ctext--eyebrow .ctext__value,
-.admin .ctext--label .ctext__value {
-  font-size: var(--ad-t-micro);
-  font-weight: 600;
-  letter-spacing: var(--ad-track-label);
-  text-transform: uppercase;
-  opacity: 0.75;
-}
-
-.admin .ctext--heading .ctext__value {
-  font-size: 1.35rem;
-  font-weight: 600;
-  line-height: 1.15;
-  letter-spacing: -0.015em;
-}
-
-.admin .ctext--lede .ctext__value {
-  font-size: var(--ad-t-body);
-  line-height: 1.5;
-  opacity: 0.85;
-}
-
-.admin .ctext--body .ctext__value,
-.admin .ctext--answer .ctext__value {
-  font-size: var(--ad-t-small);
-  line-height: 1.6;
-  opacity: 0.85;
-}
-
-.admin .ctext--question .ctext__value {
-  font-size: var(--ad-t-body);
-  font-weight: 600;
-  line-height: 1.35;
-}
-
-/* A button label is drawn as the button, because that is the shape a person is
-   judging the words against. */
-.admin .ctext--button {
-  padding: 0;
-  border: 0;
-}
-
-.admin .ctext--button .ctext__value {
-  padding: 0.45rem 1rem;
-  border: 1px solid currentcolor;
-  border-radius: var(--ad-r-pill);
-  font-size: var(--ad-t-micro);
-  font-weight: 600;
-  letter-spacing: var(--ad-track-label);
-  text-transform: uppercase;
-  transition: background 160ms ease;
-}
-
-.admin .ctext--button:hover .ctext__value,
-.admin .ctext--button.ctext--on .ctext__value {
-  background: color-mix(in oklab, var(--ad-acid) 30%, transparent);
-}
-
-.admin .ctext--button .ctext__tag { top: -0.7rem; }
+/* A line with unsaved work on it, so the admin can see what Save will carry. */
+.admin .ckchip--edited { border-color: var(--ad-acid); box-shadow: inset 0 -2px 0 var(--ad-acid); }
 
 /* Room for the panel's textarea to be worth typing into. */
 .admin .contentbuild .inspector__body textarea {
