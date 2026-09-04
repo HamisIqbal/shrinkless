@@ -26,6 +26,11 @@ type Props = {
   crop: Crop;
   /** The two shapes this photograph is actually seen in — one stage each. */
   ratios: ViewRatios;
+  /** Which viewport to hand over. The media builder shows one at a time,
+   *  because the canvas behind it is already showing that one; everywhere
+   *  else both stages stand together. Either way the two placements stay
+   *  independent — a stage that is not on screen is not written to. */
+  only?: 'desktop' | 'mobile';
   onChange: (crop: Crop) => void;
 };
 
@@ -228,7 +233,7 @@ function CropStage({
  * `storefront.css` picks between the pair at the same breakpoint the layouts
  * turn at. See `lib/media/crop.ts`.
  */
-export function ImageCropField({ url, alt, crop, ratios, onChange }: Props) {
+export function ImageCropField({ url, alt, crop, ratios, only, onChange }: Props) {
   const separate = hasMobileCrop(crop);
   const untouched =
     !separate && (!crop.focus || crop.focus === CENTRE) && (crop.zoom ?? ZOOM_MIN) === ZOOM_MIN;
@@ -236,7 +241,10 @@ export function ImageCropField({ url, alt, crop, ratios, onChange }: Props) {
   if (!url) {
     return (
       <div className="cropfield cropfield--empty">
-        <div className="cropframe" style={{ aspectRatio: ratioValue(ratios.desktop) }}>
+        <div
+          className="cropframe"
+          style={{ aspectRatio: ratioValue(only ? ratios[only] : ratios.desktop) }}
+        >
           <span className="cropframe__empty">No image yet</span>
         </div>
         <p className="cropfield__note">
@@ -252,7 +260,7 @@ export function ImageCropField({ url, alt, crop, ratios, onChange }: Props) {
       <div className="cropfield__head">
         <span className="cropfield__label">Crop</span>
         <span className="cropfield__hint">
-          Drag either frame. Arrow keys nudge.{' '}
+          {only ? 'Drag the photograph. Arrow keys nudge.' : 'Drag either frame. Arrow keys nudge.'}{' '}
           {separate
             ? 'The phone has a crop of its own.'
             : 'The phone follows the desktop until you move it.'}
@@ -260,6 +268,7 @@ export function ImageCropField({ url, alt, crop, ratios, onChange }: Props) {
       </div>
 
       <div className="cropviews">
+        {only === 'mobile' ? null : (
         <CropStage
           url={url}
           label="Desktop"
@@ -267,7 +276,9 @@ export function ImageCropField({ url, alt, crop, ratios, onChange }: Props) {
           view={desktopView(crop)}
           onChange={(view) => onChange({ ...crop, focus: view.focus, zoom: view.zoom })}
         />
+        )}
 
+        {only === 'desktop' ? null : (
         <CropStage
           url={url}
           label="Mobile"
@@ -280,6 +291,7 @@ export function ImageCropField({ url, alt, crop, ratios, onChange }: Props) {
             onChange({ ...crop, mobileFocus: view.focus, mobileZoom: view.zoom })
           }
         />
+        )}
       </div>
 
       <div className="cropfield__controls">

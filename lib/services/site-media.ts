@@ -430,3 +430,174 @@ export async function resetMediaSlot(slotId: string): Promise<void> {
   await connectToDatabase();
   await MediaSlot.deleteOne({ slotId });
 }
+
+/* --------------------------------------------------------------------------
+   The pages
+
+   The admin edits photography where it lives, so the panel needs to know
+   which slots each page is actually built from. That is a property of the
+   layouts — the same thing the registry above already owns — so it is
+   declared here beside them rather than guessed at in the browser. A slot
+   named on two pages is the one slot: editing it from either changes both,
+   which is what the storefront already does.
+   -------------------------------------------------------------------------- */
+
+/** The shape a section is drawn in, so the preview reads as the page rather
+ *  than as a row of thumbnails. */
+export type MediaSectionKind = 'hero' | 'doors' | 'rail' | 'tiles' | 'band' | 'fixed';
+
+export type MediaSectionView = {
+  id: string;
+  label: string;
+  note: string;
+  kind: MediaSectionKind;
+  slots: MediaSlotView[];
+};
+
+export type MediaPageView = {
+  id: string;
+  label: string;
+  /** Where this page is on the storefront, so the admin can go and look. */
+  path: string;
+  sections: MediaSectionView[];
+};
+
+type SectionDefinition = Omit<MediaSectionView, 'slots'> & { slots: string[] };
+
+/**
+ * The lookbook rail's running order — `components/site/LookbookRail.tsx`.
+ * Several of these frames are also elsewhere on the page; the rail is where
+ * all of them appear at once.
+ */
+const LOOKBOOK_ORDER: EditorialSlot[] = [
+  'torso',
+  'fabric',
+  'folded',
+  'craft',
+  'lookbookOrganic',
+  'hanging',
+  'heather',
+];
+
+/** `app/(shop)/why-shrinkless/page.tsx` — the four points, in order. */
+const WHY_ORDER: EditorialSlot[] = ['fabric', 'folded', 'hanging', 'craft'];
+
+/** `app/(shop)/page.tsx` — the two statement tiles. */
+const STORY_ORDER: EditorialSlot[] = ['torso', 'heather'];
+
+/**
+ * Every page and section, resolved against the slots that exist right now.
+ *
+ * Category pages are generated from the catalogue for the same reason the
+ * category slots are: a category added last week gets its tile without a
+ * deploy. Pages with no editable photography are not listed — the Our Story
+ * film is fixed in the layout and the FAQ and wholesale pages carry none, so
+ * offering them would be offering an empty room.
+ */
+export async function listMediaPages(): Promise<MediaPageView[]> {
+  const library = await listMediaSlots();
+
+  const known = new Map<string, MediaSlotView>();
+  known.set(library.hero.slotId, library.hero);
+  for (const slot of [...library.categories, ...library.editorial]) {
+    known.set(slot.slotId, slot);
+  }
+
+  const home: SectionDefinition[] = [
+    {
+      id: 'hero',
+      label: 'Campaign carousel',
+      note: `The frames behind the headline. They cycle on their own, so the order is the running order — ${HERO_MIN} to ${HERO_MAX} of them.`,
+      kind: 'hero',
+      slots: [HERO_SLOT],
+    },
+    {
+      id: 'doors',
+      label: 'Category doors',
+      note: 'The shopping doors under the carousel. The same frames run in the desktop menu.',
+      kind: 'doors',
+      slots: library.categories.map((slot) => slot.slotId),
+    },
+    {
+      id: 'lookbook',
+      label: 'Lookbook rail',
+      note: 'The reel that runs between the two product grids.',
+      kind: 'rail',
+      slots: LOOKBOOK_ORDER.map(editorialSlotId),
+    },
+    {
+      id: 'story',
+      label: 'Story tiles',
+      note: 'The pair of overlay tiles under the rail.',
+      kind: 'tiles',
+      slots: STORY_ORDER.map(editorialSlotId),
+    },
+    {
+      id: 'promise',
+      label: 'Promise band',
+      note: 'The full-bleed “Wash it. Dry it.” photograph.',
+      kind: 'band',
+      slots: [editorialSlotId('promise')],
+    },
+  ];
+
+  const pages: { id: string; label: string; path: string; sections: SectionDefinition[] }[] = [
+    { id: 'home', label: 'Home', path: '/', sections: home },
+
+    // One page per category, carrying the tile that is that category's door.
+    ...library.categories.map((slot) => ({
+      id: slot.slotId,
+      label: slot.label,
+      path: `/shop/${slot.slotId.slice('category:'.length)}`,
+      sections: [
+        {
+          id: 'door',
+          label: 'Category tile',
+          note: slot.where,
+          kind: 'doors' as const,
+          slots: [slot.slotId],
+        },
+      ],
+    })),
+
+    {
+      id: 'our-story',
+      label: 'Our Story',
+      path: '/our-story',
+      sections: [
+        {
+          id: 'film',
+          label: 'The story film',
+          note: 'This page is one film, set in the page itself rather than in a media slot — there is no photography here to change.',
+          kind: 'fixed',
+          slots: [],
+        },
+      ],
+    },
+
+    {
+      id: 'why-shrinkless',
+      label: 'Why Shrinkless',
+      path: '/why-shrinkless',
+      sections: [
+        {
+          id: 'points',
+          label: 'The four points',
+          note: 'One photograph behind each point.',
+          kind: 'tiles',
+          slots: WHY_ORDER.map(editorialSlotId),
+        },
+      ],
+    },
+  ];
+
+  return pages.map((page) => ({
+    ...page,
+    sections: page.sections.map((section) => ({
+      ...section,
+      slots: section.slots
+        .map((slotId) => known.get(slotId))
+        .filter((slot): slot is MediaSlotView => Boolean(slot)),
+    })),
+  }));
+}

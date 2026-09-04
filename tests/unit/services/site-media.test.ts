@@ -10,6 +10,7 @@ import {
   editorialSlotId,
   getSiteMedia,
   isKnownSlot,
+  listMediaPages,
   listMediaSlots,
   resetMediaSlot,
   saveHeroFrames,
@@ -284,5 +285,60 @@ describe('listMediaSlots', () => {
       categorySlotId('men'),
       categorySlotId('women'),
     ]);
+  });
+});
+
+describe('listMediaPages', () => {
+  it('offers the pages the storefront actually has photography on', async () => {
+    const pages = await listMediaPages();
+    const ids = pages.map((page) => page.id);
+
+    expect(ids[0]).toBe('home');
+    expect(ids).toContain(categorySlotId('men'));
+    expect(ids).toContain(categorySlotId('women'));
+    expect(ids).toContain('why-shrinkless');
+
+    for (const page of pages) {
+      expect(page.label).toBeTruthy();
+      expect(page.path.startsWith('/')).toBe(true);
+    }
+  });
+
+  /* The point of the tab: a frame is edited where it stands, so every slot the
+     library holds has to be reachable from some page. A slot nobody can get to
+     is a photograph nobody can change. */
+  it('places every slot on a page', async () => {
+    const [pages, library] = await Promise.all([listMediaPages(), listMediaSlots()]);
+
+    const placed = new Set(
+      pages.flatMap((page) => page.sections.flatMap((section) => section.slots.map((slot) => slot.slotId))),
+    );
+
+    for (const slot of [library.hero, ...library.categories, ...library.editorial]) {
+      expect(placed.has(slot.slotId)).toBe(true);
+    }
+  });
+
+  it('carries the saved frame, not a second copy of it', async () => {
+    await saveMediaSlot(editorialSlotId('promise'), frame('https://example.com/band.jpg'));
+
+    const pages = await listMediaPages();
+    const home = pages.find((page) => page.id === 'home');
+
+    const appearances = home?.sections.flatMap((section) =>
+      section.slots.filter((slot) => slot.slotId === editorialSlotId('promise')),
+    );
+
+    expect(appearances?.length).toBe(1);
+    expect(appearances?.[0].frames[0].url).toBe('https://example.com/band.jpg');
+    expect(appearances?.[0].overridden).toBe(true);
+  });
+
+  it('says the Our Story film is not editable rather than pretending it is', async () => {
+    const pages = await listMediaPages();
+    const story = pages.find((page) => page.id === 'our-story');
+
+    expect(story?.sections[0].kind).toBe('fixed');
+    expect(story?.sections[0].slots).toEqual([]);
   });
 });

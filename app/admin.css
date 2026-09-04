@@ -2061,3 +2061,362 @@ body:has(.admin) {
   font-size: var(--ad-t-small);
   color: var(--ad-ink-3);
 }
+
+/* --------------------------------------------------------------------------
+   The media builder
+
+   The Media tab is not a form. It is the page, laid out the way the storefront
+   lays it out, with the photography in it live enough to click. So the canvas
+   takes the room and the controls only appear once a photograph has been
+   chosen — the same furniture as the rest of the panel (paper cards, the acid
+   accent, the field boxes), arranged as a builder rather than as a list.
+   -------------------------------------------------------------------------- */
+
+.admin .mediabuild { display: grid; gap: var(--ad-s-4); }
+
+/* The bar. Page on the left, viewport beside it, and the one line of
+   instruction the screen needs pushed to the end. */
+.admin .mediabuild__bar {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--ad-s-4);
+  flex-wrap: wrap;
+  padding-bottom: var(--ad-s-3);
+  border-bottom: 1px solid var(--ad-line);
+}
+
+.admin .mediabuild__page { margin: 0; min-width: 12rem; }
+
+.admin .mediabuild__hint {
+  flex: 1 1 16rem;
+  margin: 0;
+  text-align: right;
+  font-size: var(--ad-t-small);
+  color: var(--ad-ink-3);
+  line-height: 1.5;
+}
+
+@media (max-width: 48rem) {
+  .admin .mediabuild__hint { text-align: left; }
+}
+
+/* Desktop | Mobile. A pair of pills in one field-coloured trough, so it reads
+   as one control with two states rather than as two buttons. */
+.admin .viewtoggle {
+  display: inline-flex;
+  gap: 0.2rem;
+  padding: 0.2rem;
+  border: 1px solid var(--ad-field-line);
+  border-radius: var(--ad-r-pill);
+  background: var(--ad-white);
+}
+
+.admin .viewtoggle__btn {
+  appearance: none;
+  border: 0;
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--ad-r-pill);
+  background: transparent;
+  color: var(--ad-ink-2);
+  font: inherit;
+  font-size: var(--ad-t-micro);
+  font-weight: 600;
+  letter-spacing: var(--ad-track-label);
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.admin .viewtoggle__btn:hover { color: var(--ad-ink); }
+
+.admin .viewtoggle__btn--on {
+  background: var(--ad-ink);
+  color: var(--ad-onink);
+}
+
+/* Canvas beside the contextual panel, and only once there is one. The panel
+   stands still while the canvas scrolls, because the crop is judged against
+   the page behind it. */
+.admin .mediabuild__stage { display: grid; gap: var(--ad-s-4); align-items: start; }
+
+@media (min-width: 64rem) {
+  .admin .mediabuild__stage--open {
+    grid-template-columns: minmax(0, 1fr) 24rem;
+  }
+
+  .admin .mediabuild__stage--open .inspector {
+    position: sticky;
+    top: var(--ad-s-4);
+    max-height: calc(100vh - var(--ad-s-5));
+    overflow: auto;
+  }
+}
+
+/* The page itself. On mobile the canvas narrows to a handset's column, which
+   is the whole point of the toggle: the frames change shape with it. */
+.admin .canvas { min-width: 0; }
+
+.admin .canvas__device {
+  display: grid;
+  gap: var(--ad-s-5);
+  padding: var(--ad-s-4);
+  border: 1px solid var(--ad-line);
+  border-radius: var(--ad-r-card);
+  background: var(--ad-white);
+}
+
+.admin .canvas--mobile .canvas__device {
+  max-width: 26rem;
+  margin-inline: auto;
+}
+
+.admin .canvasrow { display: grid; gap: var(--ad-s-3); }
+
+.admin .canvasrow__head { display: grid; gap: 0.2rem; }
+
+.admin .canvasrow__title {
+  margin: 0;
+  font-size: var(--ad-t-micro);
+  font-weight: 600;
+  letter-spacing: var(--ad-track-label);
+  text-transform: uppercase;
+  color: var(--ad-ink-3);
+}
+
+.admin .canvasrow__note,
+.admin .canvasrow__fixed {
+  margin: 0;
+  font-size: var(--ad-t-small);
+  line-height: 1.5;
+  color: var(--ad-ink-2);
+}
+
+.admin .canvasrow__fixed {
+  padding: var(--ad-s-4);
+  border: 1px dashed var(--ad-line);
+  border-radius: var(--ad-r-field);
+  color: var(--ad-ink-3);
+}
+
+/* Each section is drawn in the shape the storefront draws it: the carousel and
+   the band run the full width, the doors and the tiles sit in a grid, the
+   lookbook runs off the side the way the real rail does. */
+.admin .canvasrow__frames { display: grid; gap: var(--ad-s-3); }
+
+.admin .canvasrow--doors .canvasrow__frames,
+.admin .canvasrow--tiles .canvasrow__frames {
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+}
+
+.admin .canvasrow--hero .canvasrow__frames,
+.admin .canvasrow--rail .canvasrow__frames {
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(12rem, 1fr);
+  overflow-x: auto;
+  padding-bottom: var(--ad-s-2);
+}
+
+.admin .canvas--mobile .canvasrow--hero .canvasrow__frames,
+.admin .canvas--mobile .canvasrow--rail .canvasrow__frames {
+  grid-auto-columns: minmax(8rem, 1fr);
+}
+
+.admin .canvas--mobile .canvasrow--doors .canvasrow__frames,
+.admin .canvas--mobile .canvasrow--tiles .canvasrow__frames {
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+}
+
+/* One photograph, in its frame. The whole thing is the hit area — a small
+   pencil button in a corner would be a smaller target than the picture it
+   edits, and the picture is the thing being talked about. */
+.admin .canvasframe {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--ad-line);
+  border-radius: var(--ad-r-field);
+  background: var(--ad-paper);
+  cursor: pointer;
+  transition: box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.admin .canvasframe img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(var(--crop-zoom, 1));
+}
+
+.admin .canvasframe__empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: var(--ad-t-small);
+  color: var(--ad-ink-3);
+}
+
+/* The editable state, said on hover and on the keyboard alike. */
+.admin .canvasframe__veil {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: color-mix(in oklab, var(--ad-ink) 42%, transparent);
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.admin .canvasframe__action {
+  padding: 0.3rem 0.75rem;
+  border-radius: var(--ad-r-pill);
+  background: var(--ad-white);
+  color: var(--ad-ink);
+  font-size: var(--ad-t-micro);
+  font-weight: 600;
+  letter-spacing: var(--ad-track-label);
+  text-transform: uppercase;
+}
+
+.admin .canvasframe:hover .canvasframe__veil,
+.admin .canvasframe:focus-visible .canvasframe__veil,
+.admin .canvasframe--on .canvasframe__veil { opacity: 1; }
+
+.admin .canvasframe:hover { border-color: color-mix(in oklab, var(--ad-ink) 30%, transparent); }
+
+.admin .canvasframe:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ad-acid) 70%, transparent);
+}
+
+/* The chosen photograph. Unmistakable at a glance across a page of frames. */
+.admin .canvasframe--on {
+  border-color: var(--ad-ink);
+  box-shadow: 0 0 0 2px var(--ad-acid);
+}
+
+.admin .canvasframe--on .canvasframe__veil {
+  background: color-mix(in oklab, var(--ad-ink) 25%, transparent);
+}
+
+/* Which slot this is, and whether it is carrying an unsaved edit. */
+.admin .canvasframe__name {
+  position: absolute;
+  left: 0.4rem;
+  bottom: 0.4rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  max-width: calc(100% - 0.8rem);
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--ad-r-pill);
+  background: color-mix(in oklab, var(--ad-white) 88%, transparent);
+  color: var(--ad-ink);
+  font-size: var(--ad-t-micro);
+  letter-spacing: var(--ad-track-label);
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin .canvasframe__dot {
+  flex: none;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: var(--ad-acid);
+}
+
+/* --------------------------------------------------------------------------
+   The contextual panel
+
+   Only the controls that belong to the photograph in hand: what it is, how it
+   sits in its frame, and the two ways back out.
+   -------------------------------------------------------------------------- */
+
+.admin .inspector { display: grid; gap: var(--ad-s-3); align-content: start; }
+
+.admin .inspector__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ad-s-2);
+}
+
+.admin .inspector__title {
+  margin: 0;
+  font-size: var(--ad-t-body);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.admin .inspector__where {
+  margin: 0.2rem 0 0;
+  font-size: var(--ad-t-small);
+  line-height: 1.5;
+  color: var(--ad-ink-3);
+}
+
+.admin .inspector__close { flex: none; }
+
+.admin .inspector__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--ad-s-2);
+  margin: 0;
+  flex-wrap: wrap;
+}
+
+.admin .inspector__ratio {
+  font-size: var(--ad-t-micro);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--ad-track-label);
+  text-transform: uppercase;
+  color: var(--ad-ink-3);
+}
+
+/* The carousel's running order, where the carousel is what is selected. */
+.admin .inspector__frames {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ad-s-2);
+  flex-wrap: wrap;
+  padding: var(--ad-s-2) 0;
+  border-block: 1px solid var(--ad-line);
+}
+
+.admin .inspector__framelabel {
+  font-size: var(--ad-t-micro);
+  font-weight: 600;
+  letter-spacing: var(--ad-track-label);
+  text-transform: uppercase;
+  color: var(--ad-ink-3);
+}
+
+.admin .inspector__framebuttons { display: flex; gap: 0.25rem; flex-wrap: wrap; }
+
+.admin .inspector__body { display: grid; gap: var(--ad-s-3); }
+.admin .inspector__body .adfield { margin: 0; }
+
+/* One stage here, not two, so the holder can have the whole column. */
+.admin .inspector .cropfield { --crop-max-h: 16rem; }
+.admin .inspector .cropview { max-width: 100%; }
+
+.admin .inspector__foot {
+  display: flex;
+  align-items: center;
+  gap: var(--ad-s-2);
+  flex-wrap: wrap;
+  padding-top: var(--ad-s-3);
+  border-top: 1px solid var(--ad-line);
+}
+
+.admin .inspector__foot .anotice { flex: 1 1 100%; margin: 0; }
