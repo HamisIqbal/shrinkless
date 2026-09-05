@@ -324,15 +324,30 @@
 
 .iglane__note { color: var(--color-muted-text); }
 
-.iglane__rail {
-  display: flex;
-  width: max-content;
-  animation: iglane-roll 60s linear infinite;
+/* The rail is scrolled, not transformed — components/site/InstagramRail.tsx
+   drives `scrollLeft` and explains why. Everything the browser gives a scroll
+   container for free (touch swipe, trackpad, scrolling a focused tile into
+   view) comes with it; the drift on top is a frame loop. */
+.iglane__port {
+  overflow-x: auto;
+  /* A horizontal flick on a trackpad is a browser back-gesture unless the
+     scroller says otherwise. It is a footer band, not an exit. */
+  overscroll-behavior-x: contain;
+  cursor: grab;
+  /* A drag across photographs otherwise selects the whole band. */
+  user-select: none;
+  /* No bar under an editorial band. The tiles cut off at the edge say it
+     scrolls, and `grab` says it more loudly. */
+  scrollbar-width: none;
 }
 
-.iglane__rail:hover { animation-play-state: paused; }
+.iglane__port::-webkit-scrollbar { display: none; }
 
-.iglane__half { display: flex; flex: none; gap: var(--space-2); padding-right: var(--space-2); }
+.iglane__port.is-dragging { cursor: grabbing; }
+
+.iglane__track { display: flex; width: max-content; }
+
+.iglane__set { display: flex; flex: none; gap: var(--space-2); padding-right: var(--space-2); }
 
 .iglane__tile {
   position: relative;
@@ -362,6 +377,9 @@
   height: 100%;
   object-fit: cover;
   transition: transform var(--dur-4) var(--ease-out);
+  /* Without this a mouse drag picks the photograph up and carries a ghost of
+     it around instead of scrolling the rail. */
+  -webkit-user-drag: none;
 }
 
 .iglane__tile:hover .iglane__image { transform: scale(1.05); }
@@ -382,16 +400,10 @@
 .iglane__tile:hover .iglane__mark,
 .iglane__tile:focus-visible .iglane__mark { opacity: 1; }
 
-@keyframes iglane-roll {
-  from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(-50%, 0, 0); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .iglane__rail { animation: none; }
-  .iglane__half:nth-child(2) { display: none; }
-  .iglane__rail { overflow-x: auto; width: 100%; }
-}
+/* Reduced motion needs no rule here. The drift is a frame loop, not an
+   animation, so `InstagramRail` simply declines to run it — and the rail
+   stays scrollable by hand either way, which is the point: suppressing
+   unrequested movement should not also take the posts away. */
 
 /* --------------------------------------------------------------------------
    Footer reveal
