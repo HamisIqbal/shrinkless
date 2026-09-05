@@ -1,7 +1,8 @@
 # Instagram strip
 
-The band above the footer shows real posts from
-[@shrinkless](https://www.instagram.com/shrinkless/). It needs one environment
+The band shows real posts from
+[@shrinkless](https://www.instagram.com/shrinkless/) — high on the homepage,
+above New arrivals; last before the footer on every other page. It needs one environment
 variable. Without it the band renders as a plain invitation to follow, which is
 the deliberate fallback — it never shows stock photography dressed up as posts.
 

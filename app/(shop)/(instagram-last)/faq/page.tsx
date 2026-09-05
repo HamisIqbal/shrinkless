@@ -22,8 +22,8 @@ const items = (copy: SiteContent): FaqItem[] =>
     a: copy[`faq.${n}.a`],
   }));
 
-/* No <InstagramStrip /> here — app/(shop)/layout.tsx already renders it
-   after every page's content, right where the brief wants it. */
+/* No <InstagramStrip /> here — app/(shop)/(instagram-last)/layout.tsx already
+   renders it after every page's content, right where the brief wants it. */
 export default async function FaqPage() {
   const [copy, layer, mediaLayer] = await Promise.all([
     getSiteContent(),

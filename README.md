@@ -37,7 +37,7 @@ required to boot:
 | `RESEND_API_KEY`, `EMAIL_FROM` | for admin sign-in | The admin's second factor is emailed. Without it no admin can sign in. |
 | `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET` | for checkout | Without them the checkout page says payments are unavailable rather than failing at the moment someone tries to pay. |
 | `CLOUDINARY_*` | for image upload | Product and site photography. Reading existing images needs only the public cloud name. |
-| `INSTAGRAM_ACCESS_TOKEN` | optional | The strip above the footer. Without it that band is a plain invitation to follow — see [`docs/instagram.md`](docs/instagram.md). |
+| `INSTAGRAM_ACCESS_TOKEN` | optional | The community band — above New arrivals on the homepage, above the footer elsewhere. Without it that band is a plain invitation to follow — see [`docs/instagram.md`](docs/instagram.md). |
 
 Nothing here fails at import time. A missing optional key degrades one feature
 and says so, rather than taking the site down.

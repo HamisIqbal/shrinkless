@@ -39,8 +39,8 @@ const points = ({ editorial }: SiteMedia, copy: SiteContent): Tile[] => [
   },
 ];
 
-/* No <InstagramStrip /> here — app/(shop)/layout.tsx already renders it
-   after every page's content, right where the brief wants it. */
+/* No <InstagramStrip /> here — app/(shop)/(instagram-last)/layout.tsx already
+   renders it after every page's content, right where the brief wants it. */
 export default async function WhyShrinklessPage() {
   const [media, copy, layer, mediaLayer] = await Promise.all([
     getSiteMedia(),

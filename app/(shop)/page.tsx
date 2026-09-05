@@ -21,6 +21,7 @@ import { OverlayTiles, type Tile } from '@/components/editorial/OverlayTiles';
 import { ImageBand } from '@/components/editorial/ImageBand';
 import { QuoteRow, type Quote } from '@/components/editorial/QuoteRow';
 import { LookbookRail } from '@/components/site/LookbookRail';
+import { InstagramStrip } from '@/components/site/InstagramStrip';
 import { Reveal } from '@/components/ui/Reveal';
 
 /* The old statement band said this in type over an empty ground. The words and
@@ -86,6 +87,12 @@ export default async function HomePage() {
 
       {/* Shopping direction, immediately after the hero — before any story. */}
       <CategoryGateway gateways={gateways} />
+
+      {/* On the homepage the community band is not a footer ornament: the real
+          account, high up, before the first grid of product cards. Every other
+          shop page still gets it last, from
+          app/(shop)/(instagram-last)/layout.tsx. */}
+      <InstagramStrip />
 
       <section className="band band--white rail" aria-labelledby="new-heading">
         <div className="wrap">

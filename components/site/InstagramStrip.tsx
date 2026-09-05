@@ -7,7 +7,9 @@ import {
 } from '@/lib/brand/instagram';
 
 /**
- * The real Instagram grid, above the footer, in a large horizontal band.
+ * The real Instagram grid, in a large horizontal band. Where it sits is the
+ * caller's business: app/(shop)/page.tsx places it above New arrivals, and
+ * app/(shop)/(instagram-last)/layout.tsx puts it last on every other page.
  *
  * The tiles used to be brand photography of tees — the same pictures already
  * on the product cards — dressed up as posts. They are gone: that rail now

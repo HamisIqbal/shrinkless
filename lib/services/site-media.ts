@@ -497,13 +497,13 @@ export type HomeSectionDefinition = {
 export const HOME_SECTIONS: HomeSectionDefinition[] = [
   { id: 'hero', label: 'Hero', selector: '.hero', fixed: true },
   { id: 'doors', label: 'Category doors', selector: '.gateway' },
+  { id: 'instagram', label: 'Instagram', selector: '.iglane' },
   { id: 'new', label: 'New arrivals', selector: 'section[aria-labelledby="new-heading"]' },
   { id: 'lookbook', label: 'Lookbook rail', selector: '.lookbook' },
   { id: 'story', label: 'Story tiles', selector: '.tiles' },
   { id: 'promise', label: 'Promise band', selector: '.imageband', fixed: true },
   { id: 'featured', label: 'Featured', selector: 'section[aria-labelledby="featured-heading"]' },
   { id: 'reviews', label: 'Reviews', selector: '.quotes' },
-  { id: 'instagram', label: 'Instagram', selector: '.iglane' },
   { id: 'footer', label: 'Footer', selector: '.colophon' },
 ];
 

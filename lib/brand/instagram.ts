@@ -1,5 +1,6 @@
 /**
- * The Instagram strip above the footer.
+ * The Instagram strip: above New arrivals on the homepage, above the footer
+ * on every other page.
  *
  * The account is real: instagram.com/shrinkless — "Organic Tees That Don't
  * Shrink". The posts are read live from Meta's Graph API, cached for an hour.

@@ -10,7 +10,6 @@ import { AnnounceBar } from '@/components/site/AnnounceBar';
 import { Header } from '@/components/site/Header';
 import { Footer } from '@/components/site/Footer';
 import { FooterReveal } from '@/components/site/FooterReveal';
-import { InstagramStrip } from '@/components/site/InstagramStrip';
 
 export default async function ShopLayout({ children }: LayoutProps<'/'>) {
   const [settings, cart, session, menu] = await Promise.all([
@@ -39,9 +38,10 @@ export default async function ShopLayout({ children }: LayoutProps<'/'>) {
         storeEmail={settings.storeEmail}
       />
 
+      {/* The Instagram band is no longer bolted on here. Every route but the
+          homepage gets it from app/(shop)/(instagram-last)/layout.tsx; the
+          homepage places it itself, above New arrivals. */}
       <main id="main">{children}</main>
-
-        <InstagramStrip />
       </div>
 
       <FooterReveal>

@@ -13,8 +13,8 @@ const VIDEO_SRC =
 
 /* A hero, so no `.wrap` — the film runs edge to edge and the copy carries its
    own gutters. Over the video on desktop, under it on a tablet or phone.
-   No <InstagramStrip /> here — app/(shop)/layout.tsx already renders it after
-   every page's content, right where the brief wants it. */
+   No <InstagramStrip /> here — app/(shop)/(instagram-last)/layout.tsx already
+   renders it after every page's content, right where the brief wants it. */
 export default async function OurStoryPage() {
   const [copy, layer, mediaLayer] = await Promise.all([
     getSiteContent(),
