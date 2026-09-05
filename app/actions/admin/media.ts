@@ -10,7 +10,7 @@ import {
   resetMediaSlot,
   saveHeroFrames,
   saveMediaSlot,
-  saveSectionHeights,
+  saveSectionSettings,
 } from '@/lib/services/site-media';
 import {
   heroFramesInputSchema,
@@ -96,7 +96,7 @@ export const publishMediaAction = adminAction(
       }
     }
 
-    await saveSectionHeights(sections);
+    await saveSectionSettings(sections);
 
     revalidateStorefront();
 

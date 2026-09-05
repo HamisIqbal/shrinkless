@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { sectionRules, type SectionSetting } from '@/lib/media/colours';
 import type { MediaLayerFrame, MediaLayerSection } from '@/lib/services/site-media';
 
 /** What the admin's editor sends in, and what goes back. Same-origin messages,
@@ -10,7 +11,8 @@ const CHANNEL = 'shrinkless-media';
 export type MediaLayerProps = {
   /** Which page this is, so the editor knows what it opened. */
   page: string;
-  /** The section heights saved for this page, already built by the server. */
+  /** The section heights and grounds saved for this page, already built by
+   *  the server. */
   css: string;
   frames: MediaLayerFrame[];
   sections: MediaLayerSection[];
@@ -42,9 +44,9 @@ function sourceOf(image: HTMLImageElement): string {
  * The storefront's side of the Media tab.
  *
  * Two jobs, and the first one runs everywhere: it serves the section heights
- * the admin has published, as a stylesheet the browser applies like any other.
- * Nothing about it is client-side — the rules are rendered by the server and
- * are in the first paint.
+ * and grounds the admin has published, as a stylesheet the browser applies
+ * like any other. Nothing about it is client-side — the rules are rendered by
+ * the server and are in the first paint.
  *
  * The second only wakes up inside the editor: with `?mdedit=1` and a parent
  * frame, the page starts answering — it says which photographs and sections it
@@ -238,7 +240,7 @@ export function MediaLayer({ page, css, frames, sections }: MediaLayerProps) {
      */
     function apply(
       media: Record<string, FrameDraft>,
-      heights: Record<string, number>,
+      settings: Record<string, SectionSetting>,
     ) {
       for (const [key, draft] of Object.entries(media)) {
         for (const node of byKey.get(key) ?? []) {
@@ -265,17 +267,14 @@ export function MediaLayer({ page, css, frames, sections }: MediaLayerProps) {
         }
       }
 
+      /* Built by the same function the published stylesheet is built by, so a
+         height or a ground being tried here is drawn exactly as it will be
+         served — see `sectionRules`. */
       const blocks: string[] = [];
 
       for (const section of sections) {
-        const height = heights[section.id];
-        if (!height || height <= 0) continue;
-
-        blocks.push(
-          section.fixed
-            ? `${section.selector} { height: ${height}px; min-height: ${height}px; }`
-            : `${section.selector} { min-height: ${height}px; }`,
-        );
+        const rules = sectionRules(section.selector, settings[section.id] ?? {}, section.fixed);
+        if (rules) blocks.push(rules);
       }
 
       preview.textContent = blocks.join('\n');
@@ -290,7 +289,7 @@ export function MediaLayer({ page, css, frames, sections }: MediaLayerProps) {
       if (data.type === 'apply') {
         apply(
           (data.media ?? {}) as Record<string, FrameDraft>,
-          (data.sections ?? {}) as Record<string, number>,
+          (data.sections ?? {}) as Record<string, SectionSetting>,
         );
       }
 

@@ -2334,6 +2334,64 @@ body:has(.admin) {
 
 .admin .mediaedit__unit { font-size: 0.75rem; color: var(--ad-ink-3); }
 
+/* The grounds a band can be set to. A row of the actual colours rather than a
+   select of their names: the choice is a visual one and there are only four of
+   them, so the control is the swatches themselves. */
+.admin .mediaedit__colours { margin-bottom: var(--ad-s-3); }
+
+.admin .swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ad-s-2);
+  margin-bottom: var(--ad-s-2);
+}
+
+.admin .swatch {
+  display: flex;
+  align-items: center;
+  gap: var(--ad-s-1);
+  padding: 0.3rem 0.55rem 0.3rem 0.35rem;
+  border: 1px solid var(--ad-line);
+  border-radius: 999px;
+  background: var(--ad-white);
+  font-size: var(--ad-t-small);
+  color: var(--ad-ink-2);
+  cursor: pointer;
+  transition: border-color 150ms ease, color 150ms ease;
+}
+
+.admin .swatch:hover { border-color: var(--ad-ink-3); color: var(--ad-ink); }
+
+/* The chosen one is marked by the ring rather than by a tick inside the chip,
+   which would have to change colour to stay visible against three grounds. */
+.admin .swatch--on {
+  border-color: var(--ad-ink);
+  color: var(--ad-ink);
+  font-weight: 600;
+}
+
+.admin .swatch__chip {
+  flex: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 999px;
+  /* These are pale grounds on a white panel, so the chip needs an edge of its
+     own to read as a colour rather than as a hole. */
+  border: 1px solid var(--ad-line);
+}
+
+/* "The page's own" has no colour to show — a diagonal rule says empty without
+   pretending to be white, which is one of the three real choices. */
+.admin .swatch--none .swatch__chip {
+  background: linear-gradient(
+    to top right,
+    transparent calc(50% - 1px),
+    var(--ad-ink-3) calc(50% - 1px),
+    var(--ad-ink-3) calc(50% + 1px),
+    transparent calc(50% + 1px)
+  );
+}
+
 /* --------------------------------------------------------------------------
    The content tab
 

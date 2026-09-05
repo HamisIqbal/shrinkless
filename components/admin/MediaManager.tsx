@@ -10,6 +10,11 @@ import { uploadEndpoint } from '@/lib/cloudinary/config';
 import { ImageCropField } from '@/components/admin/ImageCropField';
 import { LaptopIcon, PhoneIcon, TabletIcon } from '@/components/admin/icons';
 import { imageUrl } from '@/lib/images';
+import {
+  SECTION_COLOURS,
+  SECTION_COLOUR_IDS,
+  type SectionSetting,
+} from '@/lib/media/colours';
 import { ZOOM_MIN } from '@/lib/media/crop';
 import type { MediaPageView, MediaSlotView } from '@/lib/services/site-media';
 
@@ -51,6 +56,24 @@ type Selection =
 const AUTO = 0;
 
 const HEIGHT_MAX = 1600;
+
+/** Two settings are the same when neither half differs — an absent colour and
+ *  an absent height being what a section starts as. */
+function sameSetting(a: SectionSetting, b: SectionSetting): boolean {
+  return (a.height ?? AUTO) === (b.height ?? AUTO) && (a.background ?? '') === (b.background ?? '');
+}
+
+/** What the storefront is serving for a section, in words — the line under the
+ *  panel's title, which is the only place the admin sees the published state
+ *  rather than the draft. */
+function describe(setting: SectionSetting): string {
+  const parts: string[] = [];
+
+  if (setting.height) parts.push(`${setting.height}px`);
+  if (setting.background) parts.push(SECTION_COLOURS[setting.background].label);
+
+  return parts.length ? parts.join(' · ') : 'As the page sets it';
+}
 
 function toFrames(slot: MediaSlotView): Frame[] {
   return slot.frames.map((frame) => ({
@@ -268,26 +291,33 @@ function MediaPanel({
 
 function SectionPanel({
   label,
-  height,
-  savedHeight,
+  setting,
+  savedSetting,
   onChange,
   onClose,
 }: {
   label: string;
-  height: number;
-  savedHeight: number;
-  onChange: (height: number) => void;
+  setting: SectionSetting;
+  savedSetting: SectionSetting;
+  onChange: (setting: SectionSetting) => void;
   onClose: () => void;
 }) {
-  const edited = height !== savedHeight;
+  const height = setting.height ?? AUTO;
+  const background = setting.background;
+  const edited = !sameSetting(setting, savedSetting);
+  const set = savedSetting.height || savedSetting.background;
+
+  function patch(change: SectionSetting) {
+    onChange({ ...setting, ...change });
+  }
 
   return (
-    <aside className="panel inspector mediaedit__panel" aria-label={`${label} height`}>
+    <aside className="panel inspector mediaedit__panel" aria-label={`${label} section`}>
       <header className="inspector__head">
         <div>
           <h3 className="inspector__title">{label}</h3>
           <p className="inspector__where">
-            The height of this band. One number, applied at every width.
+            The ground this band stands on, and how tall it is. Both apply at every width.
           </p>
         </div>
 
@@ -302,13 +332,56 @@ function SectionPanel({
       </header>
 
       <p className="inspector__meta">
-        <span className={`mediaslot__state${savedHeight ? ' mediaslot__state--on' : ''}`}>
-          {savedHeight ? `${savedHeight}px` : 'As the page sets it'}
+        <span className={`mediaslot__state${set ? ' mediaslot__state--on' : ''}`}>
+          {describe(savedSetting)}
         </span>
         {edited ? <span className="inspector__ratio">Not published</span> : null}
       </p>
 
       <div className="inspector__body">
+        {/* The three grounds the storefront already stands on, and the page's
+            own. A palette rather than a picker: every band on this site carries
+            ink type, and a colour it could not be read against is a page
+            nobody can fix from in here. */}
+        <fieldset className="adfield mediaedit__colours">
+          <legend>Colour</legend>
+
+          <div className="swatches" role="radiogroup" aria-label="Section colour">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={!background}
+              className={`swatch swatch--none${!background ? ' swatch--on' : ''}`}
+              onClick={() => patch({ background: undefined })}
+              title="As the page sets it"
+            >
+              <span className="swatch__chip" aria-hidden="true" />
+              <span className="swatch__name">Page&rsquo;s own</span>
+            </button>
+
+            {SECTION_COLOUR_IDS.map((id) => (
+              <button
+                key={id}
+                type="button"
+                role="radio"
+                aria-checked={background === id}
+                className={`swatch${background === id ? ' swatch--on' : ''}`}
+                onClick={() => patch({ background: id })}
+                title={SECTION_COLOURS[id].hex}
+              >
+                <span
+                  className="swatch__chip"
+                  style={{ background: SECTION_COLOURS[id].hex }}
+                  aria-hidden="true"
+                />
+                <span className="swatch__name">{SECTION_COLOURS[id].label}</span>
+              </button>
+            ))}
+          </div>
+
+          <small>The three grounds the rest of the site is built on.</small>
+        </fieldset>
+
         <label className="adfield">
           Height
           <div className="mediaedit__height">
@@ -318,7 +391,7 @@ function SectionPanel({
               max={HEIGHT_MAX}
               step={10}
               value={height}
-              onChange={(event) => onChange(Number(event.target.value))}
+              onChange={(event) => patch({ height: Number(event.target.value) })}
               aria-label="Height"
             />
             <input
@@ -328,7 +401,9 @@ function SectionPanel({
               step={10}
               value={height}
               onChange={(event) =>
-                onChange(Math.max(0, Math.min(HEIGHT_MAX, Number(event.target.value) || 0)))
+                patch({
+                  height: Math.max(0, Math.min(HEIGHT_MAX, Number(event.target.value) || 0)),
+                })
               }
               aria-label="Height in pixels"
             />
@@ -345,7 +420,7 @@ function SectionPanel({
         <button
           type="button"
           className="abtn abtn--quiet abtn--sm"
-          onClick={() => onChange(savedHeight)}
+          onClick={() => onChange(savedSetting)}
           disabled={!edited}
         >
           Reset this section
@@ -354,10 +429,10 @@ function SectionPanel({
         <button
           type="button"
           className="abtn abtn--quiet abtn--sm"
-          onClick={() => onChange(AUTO)}
-          disabled={height === AUTO}
+          onClick={() => onChange({})}
+          disabled={!height && !background}
         >
-          Back to the page&rsquo;s height
+          Back to the page&rsquo;s own
         </button>
       </footer>
     </aside>
@@ -382,18 +457,24 @@ function Editor({ pages, onPublished }: { pages: MediaPageView[]; onPublished: (
     [slots],
   );
 
-  const savedHeights = useMemo<Record<string, number>>(
+  const savedSections = useMemo<Record<string, SectionSetting>>(
     () =>
       Object.fromEntries(
         pages.flatMap((page) =>
-          page.sections.map((section) => [section.id, section.height ?? AUTO]),
+          page.sections.map((section) => [
+            section.id,
+            {
+              ...(section.height ? { height: section.height } : {}),
+              ...(section.background ? { background: section.background } : {}),
+            },
+          ]),
         ),
       ),
     [pages],
   );
 
   const [drafts, setDrafts] = useState<Record<string, Frame[]>>(saved);
-  const [heights, setHeights] = useState<Record<string, number>>(savedHeights);
+  const [settings, setSettings] = useState<Record<string, SectionSetting>>(savedSections);
   const [overridden, setOverridden] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(slots.map((slot) => [slot.slotId, slot.overridden])),
   );
@@ -429,7 +510,7 @@ function Editor({ pages, onPublished }: { pages: MediaPageView[]; onPublished: (
   );
 
   const dirtySections = (page?.sections ?? []).filter(
-    (section) => (heights[section.id] ?? AUTO) !== (savedHeights[section.id] ?? AUTO),
+    (section) => !sameSetting(settings[section.id] ?? {}, savedSections[section.id] ?? {}),
   );
 
   const dirty = dirtySlots.length + dirtySections.length;
@@ -468,11 +549,11 @@ function Editor({ pages, onPublished }: { pages: MediaPageView[]; onPublished: (
       });
     }
 
-    const sections: Record<string, number> = {};
-    for (const section of page?.sections ?? []) sections[section.id] = heights[section.id] ?? AUTO;
+    const sections: Record<string, SectionSetting> = {};
+    for (const section of page?.sections ?? []) sections[section.id] = settings[section.id] ?? {};
 
     window_.postMessage({ channel: CHANNEL, type: 'apply', media, sections }, location.origin);
-  }, [drafts, heights, page]);
+  }, [drafts, settings, page]);
 
   useEffect(() => {
     push();
@@ -558,7 +639,8 @@ function Editor({ pages, onPublished }: { pages: MediaPageView[]; onPublished: (
       })),
       sections: dirtySections.map((section) => ({
         sectionId: section.id,
-        height: heights[section.id] ?? AUTO,
+        height: settings[section.id]?.height ?? AUTO,
+        background: settings[section.id]?.background ?? '',
       })),
     };
 
@@ -672,7 +754,7 @@ function Editor({ pages, onPublished }: { pages: MediaPageView[]; onPublished: (
 
           <p className="mediaedit__hint">
             Click a photograph to replace or re-crop it, or anywhere else in a band to set its
-            height. Every change applies at all three widths.
+            colour and height. Every change applies at all three widths.
           </p>
         </div>
 
@@ -696,11 +778,11 @@ function Editor({ pages, onPublished }: { pages: MediaPageView[]; onPublished: (
           <SectionPanel
             key={section.id}
             label={section.label}
-            height={heights[section.id] ?? AUTO}
-            savedHeight={savedHeights[section.id] ?? AUTO}
+            setting={settings[section.id] ?? {}}
+            savedSetting={savedSections[section.id] ?? {}}
             onChange={(next) => {
               setMessage('');
-              setHeights((current) => ({ ...current, [section.id]: next }));
+              setSettings((current) => ({ ...current, [section.id]: next }));
             }}
             onClose={() => setSelection(null)}
           />

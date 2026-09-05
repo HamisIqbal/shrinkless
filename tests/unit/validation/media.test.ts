@@ -4,6 +4,7 @@ import {
   HERO_MIN,
   heroFramesInputSchema,
   mediaFrameSchema,
+  mediaPublishSchema,
 } from '@/lib/validation/media';
 
 const frame = (over: Partial<{ url: string; alt: string; focus: string }> = {}) => ({
@@ -81,5 +82,36 @@ describe('heroFramesInputSchema', () => {
   it('refuses a set where one frame is missing its alt text', () => {
     const input = { frames: [frame(), frame({ alt: '' })] };
     expect(heroFramesInputSchema.safeParse(input).success).toBe(false);
+  });
+});
+
+describe('mediaPublishSchema — a section', () => {
+  const publish = (section: Record<string, unknown>) =>
+    mediaPublishSchema.safeParse({ slots: [], sections: [section] });
+
+  it('accepts a colour the site uses', () => {
+    const result = publish({ sectionId: 'doors', height: 0, background: 'warm' });
+
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.sections[0].background).toBe('warm');
+  });
+
+  /* The palette is the design's, so a hex — even one of the three — is not a
+     value this schema knows. What is stored is the name. */
+  it('refuses a colour it does not have a name for', () => {
+    expect(publish({ sectionId: 'doors', height: 0, background: '#d8d2c7' }).success).toBe(false);
+    expect(publish({ sectionId: 'doors', height: 0, background: 'hotpink' }).success).toBe(false);
+  });
+
+  it('reads a missing colour as the ground the page already gives it', () => {
+    const result = publish({ sectionId: 'doors', height: 400 });
+
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.sections[0].background).toBe('');
+  });
+
+  it('still bounds the height', () => {
+    expect(publish({ sectionId: 'doors', height: 4001 }).success).toBe(false);
+    expect(publish({ sectionId: 'doors', height: -1 }).success).toBe(false);
   });
 });

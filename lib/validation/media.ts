@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { isSectionColour } from '@/lib/media/colours';
 import { ZOOM_MAX, ZOOM_MIN } from '@/lib/media/crop';
 
 /** How many frames the campaign carousel will accept. Two is the fewest that
@@ -105,22 +106,36 @@ export type HeroFramesInput = z.infer<typeof heroFramesInputSchema>;
    Publishing
 
    The visual editor holds everything in the browser until Publish, so what
-   arrives is every photograph and every section height the admin touched
+   arrives is every photograph, and every section the admin touched,
    while they were on that page — one write, and a failed one leaves the
    storefront exactly as it was.
    -------------------------------------------------------------------------- */
 
 /**
- * One section's height, in pixels.
+ * One section as the editor hands it back: a height in pixels, and the ground
+ * it stands on.
  *
- * Zero is meaningful: it is "put this section back to the height the design
- * gives it", which the service stores as a deleted row rather than as a zero.
- * The ceiling is well past any band the page has and is there so a slip on a
- * numeric input cannot write a page nobody can scroll past.
+ * Empty is meaningful in both: a zero height and a blank colour together are
+ * "put this section back to what the design gives it", which the service
+ * stores as a deleted row rather than as a zero and an empty string. The
+ * height's ceiling is well past any band the page has and is there so a slip
+ * on a numeric input cannot write a page nobody can scroll past.
+ *
+ * The colour is checked against the palette here as well as in the service, so
+ * a request naming a ground the site does not have is turned away at the edge
+ * with a message a person can read, rather than reaching the database.
  */
-const sectionHeight = z.object({
+const sectionSetting = z.object({
   sectionId: z.string().trim().min(1).max(80),
   height: z.coerce.number().int().min(0).max(4000),
+  background: z
+    .string()
+    .trim()
+    .refine(
+      (value) => value === '' || isSectionColour(value),
+      'That is not a colour this site uses',
+    )
+    .default(''),
 });
 
 export const mediaPublishSchema = z.object({
@@ -132,7 +147,7 @@ export const mediaPublishSchema = z.object({
       }),
     )
     .max(60),
-  sections: z.array(sectionHeight).max(40),
+  sections: z.array(sectionSetting).max(40),
 });
 
 export type MediaPublishInput = z.infer<typeof mediaPublishSchema>;

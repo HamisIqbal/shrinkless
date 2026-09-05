@@ -10,7 +10,7 @@ import {
   categorySlotId,
   editorialSlotId,
   getMediaLayer,
-  getSectionHeights,
+  getSectionSettings,
   getSiteMedia,
   isKnownSection,
   isKnownSlot,
@@ -19,9 +19,10 @@ import {
   resetMediaSlot,
   saveHeroFrames,
   saveMediaSlot,
-  saveSectionHeights,
-  sectionHeightCss,
+  saveSectionSettings,
+  sectionSettingCss,
 } from '@/lib/services/site-media';
+import { SECTION_COLOURS, isSectionColour } from '@/lib/media/colours';
 import { AdminOperationError } from '@/lib/admin/action';
 
 withTestDatabase();
@@ -371,18 +372,18 @@ describe('listMediaPages', () => {
   });
 });
 
-describe('section heights', () => {
+describe('section settings', () => {
   it('stores nothing until a section has actually been given one', async () => {
-    expect(await getSectionHeights()).toEqual({});
-    expect(sectionHeightCss({})).toBe('');
+    expect(await getSectionSettings()).toEqual({});
+    expect(sectionSettingCss({})).toBe('');
   });
 
   it('keeps one height per section, not one per device', async () => {
-    await saveSectionHeights([{ sectionId: 'hero', height: 600 }]);
+    await saveSectionSettings([{ sectionId: 'hero', height: 600 }]);
 
-    expect(await getSectionHeights()).toEqual({ hero: 600 });
+    expect(await getSectionSettings()).toEqual({ hero: { height: 600 } });
 
-    const css = sectionHeightCss(await getSectionHeights());
+    const css = sectionSettingCss(await getSectionSettings());
 
     expect(css).toContain('height: 600px');
     expect(css).not.toContain('@media');
@@ -393,31 +394,32 @@ describe('section heights', () => {
      because a fixed height there would have the page run out from under
      itself. */
   it('sets a fixed band outright and an open one as a floor', async () => {
-    await saveSectionHeights([
+    await saveSectionSettings([
       { sectionId: 'hero', height: 700 },
       { sectionId: 'new', height: 700 },
     ]);
 
-    const css = sectionHeightCss(await getSectionHeights());
+    const css = sectionSettingCss(await getSectionSettings());
 
     expect(css).toContain('.hero { height: 700px; min-height: 700px; }');
     expect(css).toContain('section[aria-labelledby="new-heading"] { min-height: 700px; }');
   });
 
   it('updates rather than duplicates', async () => {
-    await saveSectionHeights([{ sectionId: 'footer', height: 400 }]);
-    await saveSectionHeights([{ sectionId: 'footer', height: 520 }]);
+    await saveSectionSettings([{ sectionId: 'footer', height: 400 }]);
+    await saveSectionSettings([{ sectionId: 'footer', height: 520 }]);
 
-    expect(await getSectionHeights()).toEqual({ footer: 520 });
+    expect(await getSectionSettings()).toEqual({ footer: { height: 520 } });
   });
 
-  /* Zero is "put it back", and putting it back is forgetting the row rather
-     than storing a zero that would have to be read around everywhere. */
+  /* Zero and blank together are "put it back", and putting it back is
+     forgetting the row rather than storing a zero and an empty string that
+     would have to be read around everywhere. */
   it('forgets the row when a section is cleared', async () => {
-    await saveSectionHeights([{ sectionId: 'promise', height: 500 }]);
-    await saveSectionHeights([{ sectionId: 'promise', height: 0 }]);
+    await saveSectionSettings([{ sectionId: 'promise', height: 500, background: 'warm' }]);
+    await saveSectionSettings([{ sectionId: 'promise', height: 0, background: '' }]);
 
-    expect(await getSectionHeights()).toEqual({});
+    expect(await getSectionSettings()).toEqual({});
   });
 
   it('refuses a section the page does not have', async () => {
@@ -425,8 +427,54 @@ describe('section heights', () => {
     expect(isKnownSection('nonsense')).toBe(false);
 
     await expect(
-      saveSectionHeights([{ sectionId: 'nonsense', height: 300 }]),
+      saveSectionSettings([{ sectionId: 'nonsense', height: 300 }]),
     ).rejects.toBeInstanceOf(AdminOperationError);
+  });
+
+  /* --- The ground a band stands on ------------------------------------- */
+
+  it('serves a ground the palette has, as the hex the site is built on', async () => {
+    await saveSectionSettings([{ sectionId: 'doors', height: 0, background: 'warm' }]);
+
+    expect(await getSectionSettings()).toEqual({ doors: { background: 'warm' } });
+    expect(sectionSettingCss(await getSectionSettings())).toBe(
+      `.gateway { background: ${SECTION_COLOURS.warm.hex}; }`,
+    );
+  });
+
+  it('refuses a colour the site does not use', async () => {
+    expect(isSectionColour('paper-deep')).toBe(true);
+    expect(isSectionColour('#ff0000')).toBe(false);
+
+    await expect(
+      saveSectionSettings([{ sectionId: 'doors', height: 0, background: 'hotpink' }]),
+    ).rejects.toBeInstanceOf(AdminOperationError);
+
+    expect(await getSectionSettings()).toEqual({});
+  });
+
+  /* A band can be recoloured at the height the page already draws it, and
+     retimed without losing the ground — so either half alone keeps the row and
+     neither is written as an empty value the reader would have to interpret. */
+  it('keeps the row on either half alone', async () => {
+    await saveSectionSettings([{ sectionId: 'story', height: 640, background: 'paper-deep' }]);
+    expect(await getSectionSettings()).toEqual({
+      story: { height: 640, background: 'paper-deep' },
+    });
+
+    await saveSectionSettings([{ sectionId: 'story', height: 0, background: 'paper-deep' }]);
+    expect(await getSectionSettings()).toEqual({ story: { background: 'paper-deep' } });
+
+    await saveSectionSettings([{ sectionId: 'story', height: 640, background: '' }]);
+    expect(await getSectionSettings()).toEqual({ story: { height: 640 } });
+  });
+
+  it('writes both halves into the one rule', async () => {
+    await saveSectionSettings([{ sectionId: 'lookbook', height: 500, background: 'paper' }]);
+
+    expect(sectionSettingCss(await getSectionSettings())).toBe(
+      `.lookbook { min-height: 500px; background: ${SECTION_COLOURS.paper.hex}; }`,
+    );
   });
 });
 
@@ -467,11 +515,15 @@ describe('getMediaLayer', () => {
     expect(faq.css).toBe('');
   });
 
-  it('serves the saved heights as the page’s own stylesheet', async () => {
-    await saveSectionHeights([{ sectionId: 'lookbook', height: 480 }]);
+  it('serves the saved heights and grounds as the page’s own stylesheet', async () => {
+    await saveSectionSettings([
+      { sectionId: 'lookbook', height: 480 },
+      { sectionId: 'doors', height: 0, background: 'warm' },
+    ]);
 
     const layer = await getMediaLayer('home');
 
     expect(layer.css).toContain('.lookbook { min-height: 480px; }');
+    expect(layer.css).toContain(`.gateway { background: ${SECTION_COLOURS.warm.hex}; }`);
   });
 });

@@ -12,6 +12,12 @@ import {
 } from '@/lib/brand/images';
 import { HERO_MAX, HERO_MIN, type MediaFrameInput } from '@/lib/validation/media';
 import { normaliseZoom, type ViewRatios } from '@/lib/media/crop';
+import {
+  isSectionColour,
+  sectionRules,
+  type SectionColour,
+  type SectionSetting,
+} from '@/lib/media/colours';
 import { imageUrl } from '@/lib/images';
 import { AdminOperationError } from '@/lib/admin/action';
 
@@ -514,30 +520,44 @@ export function isKnownSection(sectionId: string): boolean {
   return SECTIONS.has(sectionId);
 }
 
-/** Every height that has been set, by section id. A section nobody has
- *  touched is simply absent. */
-export async function getSectionHeights(): Promise<Record<string, number>> {
+/**
+ * Everything that has been set on a section, by section id. A section nobody
+ * has touched is simply absent.
+ *
+ * A background that is not in the palette is dropped rather than served: the
+ * set of grounds is the design's, and a name left behind by a colour that has
+ * since been retired should fall back to the page's own rather than reach a
+ * stylesheet.
+ */
+export async function getSectionSettings(): Promise<Record<string, SectionSetting>> {
   await connectToDatabase();
 
-  const rows = await SectionLayout.find({}).select('sectionId height').lean();
-  const heights: Record<string, number> = {};
+  const rows = await SectionLayout.find({}).select('sectionId height background').lean();
+  const settings: Record<string, SectionSetting> = {};
 
   for (const row of rows) {
-    if (isKnownSection(row.sectionId)) heights[row.sectionId] = row.height;
+    if (!isKnownSection(row.sectionId)) continue;
+
+    settings[row.sectionId] = {
+      ...(row.height && row.height > 0 ? { height: row.height } : {}),
+      ...(isSectionColour(row.background) ? { background: row.background } : {}),
+    };
   }
 
-  return heights;
+  return settings;
 }
 
 /**
- * Writes the heights the admin published.
+ * Writes what the admin published.
  *
- * A section handed back at 0 is one they cleared, so the row goes rather than
- * a zero being stored — the section falls back to the height the design gives
- * it, exactly the way a restored photograph falls back to the shipped frame.
+ * A section handed back with no height and no colour is one they cleared, so
+ * the row goes rather than a zero and an empty string being stored — the
+ * section falls back to what the design gives it, exactly the way a restored
+ * photograph falls back to the shipped frame. Either half alone keeps the row:
+ * a band can be recoloured at the height the page already draws it.
  */
-export async function saveSectionHeights(
-  entries: { sectionId: string; height: number }[],
+export async function saveSectionSettings(
+  entries: { sectionId: string; height: number; background?: string }[],
 ): Promise<void> {
   if (!entries.length) return;
 
@@ -545,45 +565,67 @@ export async function saveSectionHeights(
     if (!isKnownSection(entry.sectionId)) {
       throw new AdminOperationError('That is not a section this page has.');
     }
+
+    if (entry.background && !isSectionColour(entry.background)) {
+      throw new AdminOperationError('That is not a colour this site uses.');
+    }
   }
 
   await connectToDatabase();
 
   await SectionLayout.bulkWrite(
-    entries.map((entry) =>
-      entry.height > 0
-        ? {
-            updateOne: {
-              filter: { sectionId: entry.sectionId },
-              update: { $set: { height: Math.round(entry.height) } },
-              upsert: true,
-            },
-          }
-        : { deleteOne: { filter: { sectionId: entry.sectionId } } },
-    ),
+    entries.map((entry) => {
+      const height = entry.height > 0 ? Math.round(entry.height) : 0;
+      const background = isSectionColour(entry.background) ? entry.background : '';
+
+      if (!height && !background) {
+        return { deleteOne: { filter: { sectionId: entry.sectionId } } };
+      }
+
+      /* The half that was cleared is unset rather than written empty, so a row
+         never carries a zero height or a blank colour that would then have to
+         be read as "not set" everywhere downstream. */
+      const set: Record<string, unknown> = {};
+      const unset: Record<string, ''> = {};
+
+      if (height) set.height = height;
+      else unset.height = '';
+
+      if (background) set.background = background;
+      else unset.background = '';
+
+      return {
+        updateOne: {
+          filter: { sectionId: entry.sectionId },
+          update: {
+            ...(Object.keys(set).length ? { $set: set } : {}),
+            ...(Object.keys(unset).length ? { $unset: unset } : {}),
+          },
+          upsert: true,
+        },
+      };
+    }),
   );
 }
 
 /**
- * The heights as a stylesheet.
+ * The sections as a stylesheet.
  *
  * Built on the server and served in the page's first paint, so a section that
- * has been given a height is that height before anything runs — and unlayered,
- * so it outranks the storefront's own rule for the same element without
- * needing a specificity contest.
+ * has been given a height or a ground is drawn that way before anything runs —
+ * and unlayered, so it outranks the storefront's own rule for the same element
+ * without needing a specificity contest.
+ *
+ * The rules themselves are built by `sectionRules`, which the editor's live
+ * preview also calls: what is on screen while a swatch is being tried is made
+ * by the same code that will serve the page after Publish.
  */
-export function sectionHeightCss(heights: Record<string, number>): string {
+export function sectionSettingCss(settings: Record<string, SectionSetting>): string {
   const blocks: string[] = [];
 
   for (const section of HOME_SECTIONS) {
-    const height = heights[section.id];
-    if (!height || height <= 0) continue;
-
-    blocks.push(
-      section.fixed
-        ? `${section.selector} { height: ${height}px; min-height: ${height}px; }`
-        : `${section.selector} { min-height: ${height}px; }`,
-    );
+    const rules = sectionRules(section.selector, settings[section.id] ?? {}, section.fixed);
+    if (rules) blocks.push(rules);
   }
 
   return blocks.join('\n');
@@ -596,9 +638,10 @@ export function sectionHeightCss(heights: Record<string, number>): string {
 export type MediaSectionView = {
   id: string;
   label: string;
-  /** What the storefront is serving. Absent while the design's own height
-   *  still stands. */
+  /** What the storefront is serving. Each absent while the design's own still
+   *  stands. */
   height?: number;
+  background?: SectionColour;
 };
 
 export type MediaPageView = {
@@ -673,8 +716,8 @@ async function slotsFor(pageId: string): Promise<MediaSlotView[]> {
 
 /** Every page the editor offers, with its slots and — on Home — its sections. */
 export async function listMediaPages(): Promise<MediaPageView[]> {
-  const [heights, ...perPage] = await Promise.all([
-    getSectionHeights(),
+  const [settings, ...perPage] = await Promise.all([
+    getSectionSettings(),
     ...MEDIA_PAGES.map((page) => slotsFor(page.id)),
   ]);
 
@@ -688,7 +731,7 @@ export async function listMediaPages(): Promise<MediaPageView[]> {
         ? HOME_SECTIONS.map((section) => ({
             id: section.id,
             label: section.label,
-            ...(heights[section.id] ? { height: heights[section.id] } : {}),
+            ...(settings[section.id] ?? {}),
           }))
         : [],
   }));
@@ -721,7 +764,8 @@ export type MediaLayerSection = {
 
 export type MediaLayerData = {
   page: string;
-  /** The saved section heights, already built. Served to every visitor. */
+  /** The saved section heights and grounds, already built. Served to every
+   *  visitor. */
   css: string;
   frames: MediaLayerFrame[];
   sections: MediaLayerSection[];
@@ -737,8 +781,10 @@ export type MediaLayerData = {
  * rendered from.
  */
 export async function getMediaLayer(pageId: string): Promise<MediaLayerData> {
-  const [heights, slots] = await Promise.all([
-    pageId === 'home' ? getSectionHeights() : Promise.resolve({}),
+  const [settings, slots] = await Promise.all([
+    pageId === 'home'
+      ? getSectionSettings()
+      : Promise.resolve({} as Record<string, SectionSetting>),
     slotsFor(pageId),
   ]);
 
@@ -760,7 +806,7 @@ export async function getMediaLayer(pageId: string): Promise<MediaLayerData> {
 
   return {
     page: pageId,
-    css: sectionHeightCss(heights),
+    css: sectionSettingCss(settings),
     frames,
     sections:
       pageId === 'home'
