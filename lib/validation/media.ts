@@ -100,3 +100,39 @@ export const mediaSlotIdSchema = z.object({
 export type MediaFrameInput = z.infer<typeof mediaFrameSchema>;
 export type MediaSlotInput = z.infer<typeof mediaSlotInputSchema>;
 export type HeroFramesInput = z.infer<typeof heroFramesInputSchema>;
+
+/* --------------------------------------------------------------------------
+   Publishing
+
+   The visual editor holds everything in the browser until Publish, so what
+   arrives is every photograph and every section height the admin touched
+   while they were on that page — one write, and a failed one leaves the
+   storefront exactly as it was.
+   -------------------------------------------------------------------------- */
+
+/**
+ * One section's height, in pixels.
+ *
+ * Zero is meaningful: it is "put this section back to the height the design
+ * gives it", which the service stores as a deleted row rather than as a zero.
+ * The ceiling is well past any band the page has and is there so a slip on a
+ * numeric input cannot write a page nobody can scroll past.
+ */
+const sectionHeight = z.object({
+  sectionId: z.string().trim().min(1).max(80),
+  height: z.coerce.number().int().min(0).max(4000),
+});
+
+export const mediaPublishSchema = z.object({
+  slots: z
+    .array(
+      z.object({
+        slotId: z.string().trim().min(1),
+        frames: z.array(mediaFrameSchema).min(1).max(HERO_MAX),
+      }),
+    )
+    .max(60),
+  sections: z.array(sectionHeight).max(40),
+});
+
+export type MediaPublishInput = z.infer<typeof mediaPublishSchema>;

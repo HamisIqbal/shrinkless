@@ -2062,44 +2062,6 @@ body:has(.admin) {
   color: var(--ad-ink-3);
 }
 
-/* --------------------------------------------------------------------------
-   The media builder
-
-   The Media tab is not a form. It is the page, laid out the way the storefront
-   lays it out, with the photography in it live enough to click. So the canvas
-   takes the room and the controls only appear once a photograph has been
-   chosen — the same furniture as the rest of the panel (paper cards, the acid
-   accent, the field boxes), arranged as a builder rather than as a list.
-   -------------------------------------------------------------------------- */
-
-.admin .mediabuild { display: grid; gap: var(--ad-s-4); }
-
-/* The bar. Page on the left, viewport beside it, and the one line of
-   instruction the screen needs pushed to the end. */
-.admin .mediabuild__bar {
-  display: flex;
-  align-items: flex-end;
-  gap: var(--ad-s-4);
-  flex-wrap: wrap;
-  padding-bottom: var(--ad-s-3);
-  border-bottom: 1px solid var(--ad-line);
-}
-
-.admin .mediabuild__page { margin: 0; min-width: 12rem; }
-
-.admin .mediabuild__hint {
-  flex: 1 1 16rem;
-  margin: 0;
-  text-align: right;
-  font-size: var(--ad-t-small);
-  color: var(--ad-ink-3);
-  line-height: 1.5;
-}
-
-@media (max-width: 48rem) {
-  .admin .mediabuild__hint { text-align: left; }
-}
-
 /* Desktop | Mobile. A pair of pills in one field-coloured trough, so it reads
    as one control with two states rather than as two buttons. */
 .admin .viewtoggle {
@@ -2132,198 +2094,6 @@ body:has(.admin) {
 .admin .viewtoggle__btn--on {
   background: var(--ad-ink);
   color: var(--ad-onink);
-}
-
-/* Canvas beside the contextual panel, and only once there is one. The panel
-   stands still while the canvas scrolls, because the crop is judged against
-   the page behind it. */
-.admin .mediabuild__stage { display: grid; gap: var(--ad-s-4); align-items: start; }
-
-@media (min-width: 64rem) {
-  .admin .mediabuild__stage--open {
-    grid-template-columns: minmax(0, 1fr) 24rem;
-  }
-
-  .admin .mediabuild__stage--open .inspector {
-    position: sticky;
-    top: var(--ad-s-4);
-    max-height: calc(100vh - var(--ad-s-5));
-    overflow: auto;
-  }
-}
-
-/* The page itself. On mobile the canvas narrows to a handset's column, which
-   is the whole point of the toggle: the frames change shape with it. */
-.admin .canvas { min-width: 0; }
-
-.admin .canvas__device {
-  display: grid;
-  gap: var(--ad-s-5);
-  padding: var(--ad-s-4);
-  border: 1px solid var(--ad-line);
-  border-radius: var(--ad-r-card);
-  background: var(--ad-white);
-}
-
-.admin .canvas--mobile .canvas__device {
-  max-width: 26rem;
-  margin-inline: auto;
-}
-
-.admin .canvasrow { display: grid; gap: var(--ad-s-3); }
-
-.admin .canvasrow__head { display: grid; gap: 0.2rem; }
-
-.admin .canvasrow__title {
-  margin: 0;
-  font-size: var(--ad-t-micro);
-  font-weight: 600;
-  letter-spacing: var(--ad-track-label);
-  text-transform: uppercase;
-  color: var(--ad-ink-3);
-}
-
-.admin .canvasrow__note {
-  margin: 0;
-  font-size: var(--ad-t-small);
-  line-height: 1.5;
-  color: var(--ad-ink-2);
-}
-
-/* Each section is drawn in the shape the storefront draws it: the carousel and
-   the band run the full width, the doors and the tiles sit in a grid, the
-   lookbook runs off the side the way the real rail does. */
-.admin .canvasrow__frames { display: grid; gap: var(--ad-s-3); }
-
-.admin .canvasrow--doors .canvasrow__frames,
-.admin .canvasrow--tiles .canvasrow__frames {
-  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-}
-
-.admin .canvasrow--hero .canvasrow__frames,
-.admin .canvasrow--rail .canvasrow__frames {
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(12rem, 1fr);
-  overflow-x: auto;
-  padding-bottom: var(--ad-s-2);
-}
-
-.admin .canvas--mobile .canvasrow--hero .canvasrow__frames,
-.admin .canvas--mobile .canvasrow--rail .canvasrow__frames {
-  grid-auto-columns: minmax(8rem, 1fr);
-}
-
-.admin .canvas--mobile .canvasrow--doors .canvasrow__frames,
-.admin .canvas--mobile .canvasrow--tiles .canvasrow__frames {
-  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
-}
-
-/* One photograph, in its frame. The whole thing is the hit area — a small
-   pencil button in a corner would be a smaller target than the picture it
-   edits, and the picture is the thing being talked about. */
-.admin .canvasframe {
-  position: relative;
-  display: block;
-  width: 100%;
-  min-width: 0;
-  padding: 0;
-  overflow: hidden;
-  border: 1px solid var(--ad-line);
-  border-radius: var(--ad-r-field);
-  background: var(--ad-paper);
-  cursor: pointer;
-  transition: box-shadow 160ms ease, border-color 160ms ease;
-}
-
-.admin .canvasframe img {
-  position: absolute;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transform: scale(var(--crop-zoom, 1));
-}
-
-.admin .canvasframe__empty {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  font-size: var(--ad-t-small);
-  color: var(--ad-ink-3);
-}
-
-/* The editable state, said on hover and on the keyboard alike. */
-.admin .canvasframe__veil {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  background: color-mix(in oklab, var(--ad-ink) 42%, transparent);
-  opacity: 0;
-  transition: opacity 160ms ease;
-}
-
-.admin .canvasframe__action {
-  padding: 0.3rem 0.75rem;
-  border-radius: var(--ad-r-pill);
-  background: var(--ad-white);
-  color: var(--ad-ink);
-  font-size: var(--ad-t-micro);
-  font-weight: 600;
-  letter-spacing: var(--ad-track-label);
-  text-transform: uppercase;
-}
-
-.admin .canvasframe:hover .canvasframe__veil,
-.admin .canvasframe:focus-visible .canvasframe__veil,
-.admin .canvasframe--on .canvasframe__veil { opacity: 1; }
-
-.admin .canvasframe:hover { border-color: color-mix(in oklab, var(--ad-ink) 30%, transparent); }
-
-.admin .canvasframe:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ad-acid) 70%, transparent);
-}
-
-/* The chosen photograph. Unmistakable at a glance across a page of frames. */
-.admin .canvasframe--on {
-  border-color: var(--ad-ink);
-  box-shadow: 0 0 0 2px var(--ad-acid);
-}
-
-.admin .canvasframe--on .canvasframe__veil {
-  background: color-mix(in oklab, var(--ad-ink) 25%, transparent);
-}
-
-/* Which slot this is, and whether it is carrying an unsaved edit. */
-.admin .canvasframe__name {
-  position: absolute;
-  left: 0.4rem;
-  bottom: 0.4rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  max-width: calc(100% - 0.8rem);
-  padding: 0.2rem 0.5rem;
-  border-radius: var(--ad-r-pill);
-  background: color-mix(in oklab, var(--ad-white) 88%, transparent);
-  color: var(--ad-ink);
-  font-size: var(--ad-t-micro);
-  letter-spacing: var(--ad-track-label);
-  text-transform: uppercase;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.admin .canvasframe__dot {
-  flex: none;
-  width: 0.4rem;
-  height: 0.4rem;
-  border-radius: 50%;
-  background: var(--ad-acid);
 }
 
 /* --------------------------------------------------------------------------
@@ -2414,223 +2184,269 @@ body:has(.admin) {
 .admin .inspector__foot .anotice { flex: 1 1 100%; margin: 0; }
 
 /* --------------------------------------------------------------------------
-   The content builder
+   The visual editor
 
-   The Content tab is the Media tab's twin, and then some: the middle of it is
-   not a drawing of the page but the page itself, in a frame, served by the
-   same components and the same stylesheets a visitor gets. Everything below is
-   therefore chrome around a window — the frame, the panel of settings beside
-   it, and the bar of actions that decides when any of it becomes real.
+   The Media tab is not a page in the panel; it is the shop, full screen, with
+   a bar over the top of it. So this block is chrome around a window and almost
+   nothing else — everything inside the frame is the storefront's own
+   stylesheet, and the only job here is to give it a real viewport, a way out,
+   and somewhere to put the controls once something has been clicked.
+
+   The stage's padding is 24px on purpose rather than a token: the editor
+   measures this box and scales the frame to fit inside it, and the two numbers
+   have to be the same one.
    -------------------------------------------------------------------------- */
 
-.admin .contentbuild { display: grid; gap: var(--ad-s-4); }
+.admin .mediaedit {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  background: var(--ad-paper);
+}
 
-.admin .contentbuild__bar {
-  display: flex;
-  align-items: flex-end;
-  gap: var(--ad-s-4);
-  flex-wrap: wrap;
-  padding-bottom: var(--ad-s-3);
+.admin .mediaedit__bar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--ad-s-3);
+  padding: var(--ad-s-2) var(--ad-s-3);
+  background: var(--ad-white);
   border-bottom: 1px solid var(--ad-line);
 }
 
-.admin .contentbuild__page { margin: 0; min-width: 12rem; }
-
-.admin .contentbuild__acts { display: flex; gap: var(--ad-s-2); align-items: center; }
-
-.admin .contentbuild__hint {
-  flex: 1 1 16rem;
-  margin: 0;
-  color: var(--ad-ink-3);
-  font-size: 0.82rem;
-  line-height: 1.5;
-  text-align: right;
+.admin .mediaedit__mid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ad-s-3);
+  flex-wrap: wrap;
 }
 
-@media (max-width: 60rem) {
-  .admin .contentbuild__hint { text-align: left; }
+.admin .mediaedit__page { margin: 0; min-width: 9rem; }
+
+.admin .mediaedit__devices .viewtoggle__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
-.admin .contentbuild__stage { display: grid; gap: var(--ad-s-4); align-items: start; }
+.admin .mediaedit__icon { width: 1.05rem; height: 1.05rem; flex: none; }
 
-@media (min-width: 68rem) {
-  .admin .contentbuild__stage--open {
-    grid-template-columns: minmax(0, 1fr) 22rem;
-  }
-
-  .admin .contentbuild__stage--open .inspector {
-    position: sticky;
-    top: var(--ad-s-4);
-    max-height: calc(100vh - 2 * var(--ad-s-4));
-    overflow-y: auto;
-  }
+.admin .mediaedit__acts {
+  display: flex;
+  align-items: center;
+  gap: var(--ad-s-2);
+  justify-self: end;
 }
 
-/* The window on the storefront -------------------------------------------- */
+.admin .mediaedit__note { margin: 0; }
 
-.admin .stage {
-  border: 1px solid var(--ad-line);
-  border-radius: var(--ad-r-card);
-  background: var(--ad-white);
-  overflow: hidden;
+@media (max-width: 64rem) {
+  .admin .mediaedit__devicename { display: none; }
+  .admin .mediaedit__note { display: none; }
+}
+
+.admin .mediaedit__body {
   display: grid;
-  justify-items: center;
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 0;
 }
 
-.admin .stage__frame {
-  width: 100%;
-  height: min(78vh, 54rem);
-  border: 0;
-  display: block;
-  background: #fff;
+@media (min-width: 64rem) {
+  .admin .mediaedit__body--open { grid-template-columns: minmax(0, 1fr) 23rem; }
 }
 
-/* A phone is a width, not a skin: the frame is narrowed to one and the
-   storefront's own breakpoints do the rest, which is the only way the preview
-   can be trusted to match what a visitor on a phone gets. */
-.admin .stage--mobile .stage__frame {
-  width: 24.375rem;
-  max-width: 100%;
-  border-inline: 1px solid var(--ad-line);
+/* The stage. A dark-free ground on purpose: the shop is judged against the
+   paper the rest of the panel is on, not against a lightbox. */
+.admin .mediaedit__stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 0;
+  padding: 24px;
+  overflow: hidden;
 }
 
-/* The settings ------------------------------------------------------------ */
-
-.admin .ctabs { margin-bottom: var(--ad-s-3); }
-
-.admin .ctls { display: grid; gap: var(--ad-s-3); }
-
-.admin .ctls__scope {
-  margin: 0;
-  padding: var(--ad-s-2);
-  border-radius: var(--ad-r-field);
+.admin .mediaedit__viewport {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--ad-r-inner);
   background: var(--ad-white);
-  color: var(--ad-ink-2);
-  font-size: 0.78rem;
-  line-height: 1.5;
+  box-shadow: var(--ad-lift);
 }
 
-.admin .ctls__head {
-  margin: var(--ad-s-2) 0 0;
-  font-size: 0.7rem;
-  letter-spacing: 0.14em;
+.admin .mediaedit__frame {
+  display: block;
+  border: 0;
+  background: var(--ad-white);
+}
+
+.admin .mediaedit__hint {
+  position: absolute;
+  left: 50%;
+  bottom: 0.5rem;
+  transform: translateX(-50%);
+  margin: 0;
+  max-width: min(46rem, calc(100% - 2rem));
+  padding: 0.3rem 0.7rem;
+  border-radius: var(--ad-r-pill);
+  background: color-mix(in oklab, var(--ad-white) 88%, transparent);
+  font-size: var(--ad-t-small);
+  text-align: center;
+  color: var(--ad-ink-2);
+  pointer-events: none;
+}
+
+/* The panel stands still against the side of the frame, because a crop is
+   judged against the page behind it. */
+.admin .mediaedit__panel {
+  min-height: 0;
+  overflow: auto;
+  border-left: 1px solid var(--ad-line);
+  border-radius: 0;
+  background: var(--ad-white);
+  padding: var(--ad-s-3);
+}
+
+@media (max-width: 63.999rem) {
+  .admin .mediaedit__panel {
+    position: absolute;
+    inset: auto 0 0 0;
+    max-height: 60%;
+    border-left: 0;
+    border-top: 1px solid var(--ad-line);
+    box-shadow: var(--ad-lift);
+  }
+}
+
+.admin .mediaedit__height { display: flex; align-items: center; gap: var(--ad-s-2); }
+
+.admin .mediaedit__height input[type='range'] {
+  flex: 1 1 auto;
+  min-width: 0;
+  accent-color: var(--ad-ink);
+}
+
+.admin .mediaedit__height input[type='number'] { width: 5.5rem; }
+
+.admin .mediaedit__unit { font-size: 0.75rem; color: var(--ad-ink-3); }
+
+/* --------------------------------------------------------------------------
+   The content tab
+
+   Words, in the order the page says them. No preview and no settings: a column
+   of sections, each one a card, each field a box with its own count and its
+   own way back to what the site shipped with.
+   -------------------------------------------------------------------------- */
+
+.admin .cedit { display: grid; gap: var(--ad-s-4); }
+
+.admin .cedit__bar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ad-s-3);
+  flex-wrap: wrap;
+  padding-block: var(--ad-s-2);
+  background: var(--ad-white);
+  border-bottom: 1px solid var(--ad-line);
+}
+
+.admin .cedit__pages { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+
+.admin .cedit__page {
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--ad-line);
+  border-radius: var(--ad-r-pill);
+  background: transparent;
+  font: inherit;
+  font-size: var(--ad-t-small);
+  color: var(--ad-ink-2);
+  cursor: pointer;
+}
+
+.admin .cedit__page:hover { border-color: var(--ad-ink-3); color: var(--ad-ink); }
+
+.admin .cedit__page--on {
+  border-color: var(--ad-ink);
+  background: var(--ad-ink);
+  color: var(--ad-onink);
+}
+
+.admin .cedit__acts { display: flex; gap: var(--ad-s-2); align-items: center; }
+
+.admin .cedit__note { flex: 1 1 100%; margin: 0; }
+
+.admin .csection { display: grid; gap: var(--ad-s-3); }
+
+.admin .csection__head { display: grid; gap: 0.2rem; }
+
+.admin .csection__title {
+  margin: 0;
+  font-size: var(--ad-t-micro);
+  font-weight: 600;
+  letter-spacing: var(--ad-track-label);
   text-transform: uppercase;
   color: var(--ad-ink-3);
 }
 
-.admin .ctl { display: grid; gap: 0.35rem; }
+.admin .csection__note {
+  margin: 0;
+  font-size: var(--ad-t-small);
+  line-height: 1.5;
+  color: var(--ad-ink-2);
+}
 
-.admin .ctl__head {
+.admin .csection__fields {
+  display: grid;
+  gap: var(--ad-s-3);
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+}
+
+.admin .cfield { display: grid; gap: 0.35rem; min-width: 0; }
+
+.admin .cfield .adfield { margin: 0; }
+
+.admin .cfield__label { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+
+.admin .cfield__state {
+  padding: 0.1rem 0.45rem;
+  border-radius: var(--ad-r-pill);
+  background: color-mix(in oklab, var(--ad-ink) 8%, transparent);
+  font-size: 0.6rem;
+  letter-spacing: var(--ad-track-label);
+  color: var(--ad-ink-2);
+}
+
+/* The acid marks exactly one thing here: a line that has been typed into and
+   not yet saved. */
+.admin .cfield__state--on { background: var(--ad-acid); color: var(--ad-ink); }
+
+.admin .cfield__meta {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: var(--ad-s-2);
 }
 
-.admin .ctl__label { font-size: 0.8rem; color: var(--ad-ink-2); }
-
-.admin .ctl__auto,
-.admin .ctl__clear {
-  font-size: 0.68rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ad-ink-3);
-}
-
-.admin .ctl__clear {
+.admin .cfield__restore {
+  padding: 0;
   border: 0;
   background: none;
-  padding: 0;
-  cursor: pointer;
-  border-radius: var(--ad-r-field);
-}
-
-.admin .ctl__clear:hover { color: var(--ad-ink); }
-
-.admin .ctl--set .ctl__label { color: var(--ad-ink); font-weight: 600; }
-
-.admin .ctl__slide { display: flex; align-items: center; gap: var(--ad-s-2); }
-
-.admin .ctl__slide input[type='range'] { flex: 1 1 auto; min-width: 0; accent-color: var(--ad-ink); }
-
-.admin .ctl__num { width: 5rem; }
-
-.admin .ctl__unit { font-size: 0.75rem; color: var(--ad-ink-3); }
-
-.admin .ctl__colour {
-  width: 2.75rem;
-  height: 2rem;
-  padding: 0;
-  border: 1px solid var(--ad-line);
-  border-radius: var(--ad-r-field);
-  background: none;
-  cursor: pointer;
-}
-
-.admin .ctl__choices { display: flex; flex-wrap: wrap; gap: 0.35rem; }
-
-.admin .ctl__choice {
-  padding: 0.3rem 0.6rem;
-  border: 1px solid var(--ad-line);
-  border-radius: 999px;
-  background: var(--ad-paper);
+  font: inherit;
+  font-size: inherit;
   color: var(--ad-ink-2);
-  font-size: 0.78rem;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
   cursor: pointer;
-  transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
 }
 
-.admin .ctl__choice:hover { border-color: var(--ad-ink-3); color: var(--ad-ink); }
+.admin .cfield__restore:hover { color: var(--ad-ink); }
 
-.admin .ctl__choice--on {
-  background: var(--ad-ink);
-  border-color: var(--ad-ink);
-  color: var(--ad-paper);
-}
-
-/* Every line, including the ones the page did not render ------------------- */
-
-.admin .contentbuild__index {
-  padding-top: var(--ad-s-3);
-  border-top: 1px solid var(--ad-line);
-  display: grid;
-  gap: var(--ad-s-2);
-}
-
-.admin .contentbuild__indexhead {
-  margin: 0;
-  font-size: 0.7rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ad-ink-3);
-}
-
-.admin .contentbuild__chips { display: flex; flex-wrap: wrap; gap: 0.35rem; }
-
-.admin .ckchip {
-  padding: 0.3rem 0.7rem;
-  border: 1px solid var(--ad-line);
-  border-radius: 999px;
-  background: var(--ad-paper);
-  color: var(--ad-ink-2);
-  font-size: 0.78rem;
-  cursor: pointer;
-  transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
-}
-
-.admin .ckchip:hover { border-color: var(--ad-ink-3); color: var(--ad-ink); }
-
-.admin .ckchip--on {
-  background: var(--ad-ink);
-  border-color: var(--ad-ink);
-  color: var(--ad-paper);
-}
-
-/* A line with unsaved work on it, so the admin can see what Save will carry. */
-.admin .ckchip--edited { border-color: var(--ad-acid); box-shadow: inset 0 -2px 0 var(--ad-acid); }
-
-/* Room for the panel's textarea to be worth typing into. */
-.admin .contentbuild .inspector__body textarea {
-  min-height: 9rem;
-  resize: vertical;
-}
+.admin .cfield__restore:disabled { cursor: default; opacity: 0.6; }

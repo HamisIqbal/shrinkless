@@ -8,8 +8,11 @@ import { listContentPages } from '@/lib/services/site-content';
  *
  * Every field here is a piece of type in a layout that was composed by hand,
  * so the set is fixed and what changes is the wording inside it. A field
- * showing "Original" has never been touched and is reading the wording the
- * site shipped with; saving one writes a row, and restoring deletes it.
+ * showing "Changed" has been rewritten; restoring one deletes the row and puts
+ * back the wording the site shipped with.
+ *
+ * Words only. How a line is set — its size, its colour, where it sits — is the
+ * Media tab's business, and nothing here touches it.
  *
  * The pages, their sections and the fields in them all come from
  * `lib/services/site-content.ts` — the same registry the storefront renders
@@ -24,7 +27,7 @@ export default async function AdminContentPage() {
     <>
       <PageHead
         title="Content"
-        sub="The words the storefront is built from. Choose a page, then click a line on it to rewrite it. Photography lives on Media; product copy lives on each product."
+        sub="The words the storefront is built from, section by section. Photography and layout live on Media; product copy lives on each product."
       />
 
       <ContentManager pages={pages} />

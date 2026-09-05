@@ -6,12 +6,15 @@ import { NotAuthorizedError, requirePermission } from '@/lib/auth/guards';
 import { SITE_UPLOAD_FOLDER } from '@/lib/cloudinary/config';
 import { loadCloudinaryEnv, signParams } from '@/lib/cloudinary/signature';
 import {
+  HERO_SLOT,
   resetMediaSlot,
   saveHeroFrames,
   saveMediaSlot,
+  saveSectionHeights,
 } from '@/lib/services/site-media';
 import {
   heroFramesInputSchema,
+  mediaPublishSchema,
   mediaSlotIdSchema,
   mediaSlotInputSchema,
 } from '@/lib/validation/media';
@@ -63,6 +66,38 @@ export const resetMediaSlotAction = adminAction(
   },
   async ({ slotId }) => {
     await resetMediaSlot(slotId);
+    revalidateStorefront();
+
+    return undefined;
+  },
+);
+
+/**
+ * Everything the admin changed in the visual editor, in one action.
+ *
+ * The editor keeps its changes in the browser until Publish is pressed — that
+ * is the whole bargain of it, that a photograph can be tried in four crops
+ * without the shop seeing any of them. So the write is a session at a time,
+ * and each slot still goes through the same service the single-slot save uses,
+ * which is what keeps the carousel's rules and the slot registry in one place.
+ */
+export const publishMediaAction = adminAction(
+  {
+    permission: 'media:write',
+    schema: mediaPublishSchema,
+    genericError: 'Could not publish those changes.',
+  },
+  async ({ slots, sections }) => {
+    for (const slot of slots) {
+      if (slot.slotId === HERO_SLOT) {
+        await saveHeroFrames(slot.frames);
+      } else {
+        await saveMediaSlot(slot.slotId, slot.frames[0]);
+      }
+    }
+
+    await saveSectionHeights(sections);
+
     revalidateStorefront();
 
     return undefined;

@@ -1,43 +1,56 @@
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   createSiteUploadSignatureAction,
-  resetMediaSlotAction,
-  saveHeroFramesAction,
-  saveMediaSlotAction,
+  publishMediaAction,
 } from '@/app/actions/admin/media';
 import { uploadEndpoint } from '@/lib/cloudinary/config';
 import { ImageCropField } from '@/components/admin/ImageCropField';
-import { sizedImageUrl } from '@/lib/images';
-import {
-  ZOOM_MIN,
-  desktopView,
-  mobileView,
-  ratioValue,
-  viewStyle,
-  type Ratio,
-} from '@/lib/media/crop';
-import { HERO_MAX, HERO_MIN } from '@/lib/validation/media';
+import { LaptopIcon, PhoneIcon, TabletIcon } from '@/components/admin/icons';
+import { imageUrl } from '@/lib/images';
+import { ZOOM_MIN } from '@/lib/media/crop';
 import type { MediaPageView, MediaSlotView } from '@/lib/services/site-media';
 
-type Viewport = 'desktop' | 'mobile';
+/** Same stamp the storefront's editor bridge uses. Anything else on the
+ *  message channel is somebody else's business. */
+const CHANNEL = 'shrinkless-media';
 
-type Frame = {
-  url: string;
-  alt: string;
-  focus: string;
-  zoom: number;
-  /** Empty and undefined while the phone follows the desktop crop. */
-  mobileFocus: string;
-  mobileZoom?: number;
-};
+/**
+ * The three widths, and what they actually are.
+ *
+ * Real viewport widths rather than a picture of a device: the frame is set to
+ * this many CSS pixels and then scaled to fit the desk, so the storefront's
+ * own media queries fire exactly as they would on the machine — a phone
+ * preview is the mobile layout, not the desktop layout shrunk.
+ */
+const DEVICES = {
+  laptop: { label: 'Laptop', width: 1280, Icon: LaptopIcon },
+  tablet: { label: 'Tablet', width: 834, Icon: TabletIcon },
+  mobile: { label: 'Mobile', width: 390, Icon: PhoneIcon },
+} as const;
 
-/** Which photograph is being edited. A slot can stand in two places on one
- *  page — the same frame is a story tile and a lookbook tile — so the
- *  selection is the slot and not the place it was clicked. */
-type Selection = { slotId: string; index: number };
+type Device = keyof typeof DEVICES;
+
+/**
+ * One photograph as the editor holds it while nothing has been published.
+ *
+ * One crop, not two. A change made in any device view is meant to land in all
+ * of them, so the editor keeps the single placement the storefront then reads
+ * at every width — see `MediaLayer`, which writes it to both custom properties.
+ */
+type Frame = { url: string; alt: string; focus: string; zoom: number };
+
+/** What is being edited: a photograph, or the height of a band. */
+type Selection =
+  | { kind: 'media'; key: string; slotId: string; index: number }
+  | { kind: 'section'; id: string };
+
+/** The height a section is drawn at, or 0 while the design's own still stands. */
+const AUTO = 0;
+
+const HEIGHT_MAX = 1600;
 
 function toFrames(slot: MediaSlotView): Frame[] {
   return slot.frames.map((frame) => ({
@@ -45,36 +58,50 @@ function toFrames(slot: MediaSlotView): Frame[] {
     alt: frame.alt,
     focus: frame.focus ?? '',
     zoom: frame.zoom ?? ZOOM_MIN,
-    mobileFocus: frame.mobileFocus ?? '',
-    mobileZoom: frame.mobileZoom,
   }));
 }
 
-function sameFrame(a: Frame, b: Frame): boolean {
+function sameFrames(a: Frame[], b: Frame[]): boolean {
   return (
-    a.url === b.url &&
-    a.alt === b.alt &&
-    a.focus === b.focus &&
-    a.zoom === b.zoom &&
-    a.mobileFocus === b.mobileFocus &&
-    a.mobileZoom === b.mobileZoom
+    a.length === b.length &&
+    a.every(
+      (frame, i) =>
+        frame.url === b[i].url &&
+        frame.alt === b[i].alt &&
+        frame.focus === b[i].focus &&
+        frame.zoom === b[i].zoom,
+    )
   );
 }
 
-function sameFrames(a: Frame[], b: Frame[]): boolean {
-  return a.length === b.length && a.every((frame, i) => sameFrame(frame, b[i]));
+/** The key the storefront's layer stamps on the element showing a frame. */
+function frameKey(slot: MediaSlotView, index: number): string {
+  return slot.frames.length > 1 ? `${slot.slotId}#${index}` : slot.slotId;
 }
 
-function blankFrame(): Frame {
-  return { url: '', alt: '', focus: '', zoom: ZOOM_MIN, mobileFocus: '', mobileZoom: undefined };
+/** Every slot on every page, once each — the drafts below are keyed by slot,
+ *  so a frame used twice is one record and editing it from either place moves
+ *  both, exactly as the storefront does. */
+function allSlots(pages: MediaPageView[]): MediaSlotView[] {
+  const seen = new Map<string, MediaSlotView>();
+
+  for (const page of pages) {
+    for (const slot of page.slots) {
+      if (!seen.has(slot.slotId)) seen.set(slot.slotId, slot);
+    }
+  }
+
+  return [...seen.values()];
 }
 
 /**
- * Sends one file to Cloudinary and returns its public id.
+ * Sends one file to Cloudinary and returns its address.
  *
  * The bytes go straight from this browser to Cloudinary; the server only ever
  * hands out a signature, so a large photograph never travels through a
- * serverless function with a timeout on it.
+ * serverless function with a timeout on it. Resolved to a full address on the
+ * way back so the preview can show it immediately — the same thing the service
+ * does when it reads a public id out of the database.
  */
 async function upload(file: File): Promise<string> {
   const signed = await createSiteUploadSignatureAction();
@@ -91,181 +118,37 @@ async function upload(file: File): Promise<string> {
   if (!response.ok) throw new Error('Cloudinary rejected the upload.');
 
   const uploaded = (await response.json()) as { public_id: string };
-  return uploaded.public_id;
-}
-
-/** Every slot on every page, once each — the state below is keyed by slot, so
- *  a frame used twice is one record and editing it from either place moves
- *  both, exactly as the storefront does. */
-function allSlots(pages: MediaPageView[]): MediaSlotView[] {
-  const seen = new Map<string, MediaSlotView>();
-
-  for (const page of pages) {
-    for (const section of page.sections) {
-      for (const slot of section.slots) {
-        if (!seen.has(slot.slotId)) seen.set(slot.slotId, slot);
-      }
-    }
-  }
-
-  return [...seen.values()];
+  return imageUrl(uploaded.public_id);
 }
 
 /* --------------------------------------------------------------------------
-   One photograph on the canvas
+   The panel — one photograph
    -------------------------------------------------------------------------- */
 
-/**
- * A frame as the page renders it, at the shape the chosen viewport gives it
- * and with the crop that viewport actually uses.
- *
- * Not `next/image`: the source changes as the admin replaces it, and this is a
- * rehearsal of a layout rather than a rendered page.
- */
-function CanvasFrame({
-  frame,
-  ratio,
-  viewport,
-  label,
-  selected,
-  edited,
-  onSelect,
-}: {
-  frame: Frame;
-  ratio: Ratio;
-  viewport: Viewport;
-  label: string;
-  selected: boolean;
-  edited: boolean;
-  onSelect: () => void;
-}) {
-  const view = viewport === 'mobile' ? mobileView(frame) : desktopView(frame);
-
-  return (
-    <button
-      type="button"
-      className={`canvasframe${selected ? ' canvasframe--on' : ''}`}
-      style={{ aspectRatio: ratioValue(ratio) }}
-      onClick={onSelect}
-      aria-pressed={selected}
-      aria-label={`Edit the photograph in ${label}`}
-    >
-      {frame.url ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={sizedImageUrl(frame.url, 'w_900,q_auto,f_auto')} alt="" style={viewStyle(view)} />
-      ) : (
-        <span className="canvasframe__empty">No image yet</span>
-      )}
-
-      <span className="canvasframe__veil" aria-hidden="true">
-        <span className="canvasframe__action">{selected ? 'Editing' : 'Edit'}</span>
-      </span>
-
-      <span className="canvasframe__name" aria-hidden="true">
-        {label}
-        {edited ? <em className="canvasframe__dot" /> : null}
-      </span>
-    </button>
-  );
-}
-
-/* --------------------------------------------------------------------------
-   The page canvas
-   -------------------------------------------------------------------------- */
-
-function Canvas({
-  page,
-  viewport,
-  drafts,
-  saved,
-  selection,
-  onSelect,
-}: {
-  page: MediaPageView;
-  viewport: Viewport;
-  drafts: Record<string, Frame[]>;
-  saved: Record<string, Frame[]>;
-  selection: Selection | null;
-  onSelect: (selection: Selection) => void;
-}) {
-  return (
-    <div className={`canvas canvas--${viewport}`}>
-      <div className="canvas__device">
-        {page.sections.map((section) => (
-          <section key={section.id} className={`canvasrow canvasrow--${section.kind}`}>
-            <header className="canvasrow__head">
-              <h3 className="canvasrow__title">{section.label}</h3>
-              <p className="canvasrow__note">{section.note}</p>
-            </header>
-
-            <div className="canvasrow__frames">
-              {section.slots.flatMap((slot) =>
-                (drafts[slot.slotId] ?? []).map((frame, index) => (
-                  <CanvasFrame
-                    key={`${slot.slotId}:${index}`}
-                    frame={frame}
-                    ratio={slot.ratios[viewport]}
-                    viewport={viewport}
-                    label={
-                      (drafts[slot.slotId] ?? []).length > 1
-                        ? `${slot.label} ${index + 1}`
-                        : slot.label
-                    }
-                    selected={selection?.slotId === slot.slotId && selection.index === index}
-                    edited={!sameFrames(drafts[slot.slotId] ?? [], saved[slot.slotId] ?? [])}
-                    onSelect={() => onSelect({ slotId: slot.slotId, index })}
-                  />
-                )),
-              )}
-            </div>
-          </section>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* --------------------------------------------------------------------------
-   The contextual panel
-   -------------------------------------------------------------------------- */
-
-function Inspector({
+function MediaPanel({
   slot,
   frames,
   savedFrames,
-  overridden,
   index,
-  viewport,
-  isHero,
+  overridden,
   onChange,
-  onSelectFrame,
-  onSaved,
-  onRestored,
   onClose,
 }: {
   slot: MediaSlotView;
   frames: Frame[];
   savedFrames: Frame[];
-  overridden: boolean;
   index: number;
-  viewport: Viewport;
-  isHero: boolean;
+  overridden: boolean;
   onChange: (frames: Frame[]) => void;
-  onSelectFrame: (index: number) => void;
-  onSaved: (frames: Frame[]) => void;
-  onRestored: () => void;
   onClose: () => void;
 }) {
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const [pending, startTransition] = useTransition();
 
   const frame = frames[index] ?? frames[0];
   const edited = !sameFrames(frames, savedFrames);
 
   function patch(change: Partial<Frame>) {
-    setMessage('');
     onChange(frames.map((existing, i) => (i === index ? { ...existing, ...change } : existing)));
   }
 
@@ -284,80 +167,14 @@ function Inspector({
     }
   }
 
-  /** Order is the campaign's running order, so moving a frame is how it is set. */
-  function move(by: number) {
-    const target = index + by;
-    if (target < 0 || target >= frames.length) return;
-
-    const next = [...frames];
-    [next[index], next[target]] = [next[target], next[index]];
-    onChange(next);
-    onSelectFrame(target);
-  }
-
-  function add() {
-    if (frames.length >= HERO_MAX) return;
-    onChange([...frames, blankFrame()]);
-    onSelectFrame(frames.length);
-  }
-
-  function remove() {
-    if (frames.length <= HERO_MIN) return;
-    onChange(frames.filter((_, i) => i !== index));
-    onSelectFrame(Math.max(0, index - 1));
-  }
-
-  function save() {
-    setError('');
-    setMessage('');
-
-    startTransition(async () => {
-      const result = isHero
-        ? await saveHeroFramesAction({ frames })
-        : await saveMediaSlotAction({ slotId: slot.slotId, frame: frames[0] });
-
-      if (!result.ok) {
-        setError(result.error);
-        return;
-      }
-
-      onSaved(frames);
-      setMessage('Saved. The storefront is updated.');
-    });
-  }
-
-  /** Undoes the edits on this photograph. Nothing is sent, and nothing already
-   *  saved is touched. */
-  function undo() {
-    setError('');
-    onChange(savedFrames);
-    setMessage('Changes undone. Back to the saved photograph.');
-  }
-
-  /** Forgets the override, so the slot falls back to the frame the site
-   *  shipped with. The server is the only place that knows what that is, so
-   *  the panel reloads rather than guessing. */
-  function restore() {
-    setError('');
-    setMessage('');
-
-    startTransition(async () => {
-      const result = await resetMediaSlotAction({ slotId: slot.slotId });
-
-      if (!result.ok) {
-        setError(result.error);
-        return;
-      }
-
-      onRestored();
-    });
-  }
-
   return (
-    <aside className="panel inspector" aria-label={`${slot.label} media`}>
+    <aside className="panel inspector mediaedit__panel" aria-label={`${slot.label} media`}>
       <header className="inspector__head">
         <div>
-          <h3 className="inspector__title">{slot.label}</h3>
+          <h3 className="inspector__title">
+            {slot.label}
+            {frames.length > 1 ? ` — frame ${index + 1} of ${frames.length}` : ''}
+          </h3>
           <p className="inspector__where">{slot.where}</p>
         </div>
 
@@ -375,56 +192,8 @@ function Inspector({
         <span className={`mediaslot__state${overridden ? ' mediaslot__state--on' : ''}`}>
           {overridden ? 'Changed' : 'Original'}
         </span>
-        <span className="inspector__ratio">
-          {viewport === 'mobile' ? 'Mobile' : 'Desktop'} — {slot.ratios[viewport].w}:
-          {slot.ratios[viewport].h}
-        </span>
+        {edited ? <span className="inspector__ratio">Not published</span> : null}
       </p>
-
-      {isHero ? (
-        <div className="inspector__frames">
-          <span className="inspector__framelabel">
-            Frame {index + 1} of {frames.length}
-          </span>
-
-          <span className="inspector__framebuttons">
-            <button
-              type="button"
-              className="abtn abtn--quiet abtn--sm"
-              onClick={() => move(-1)}
-              disabled={index === 0}
-              aria-label="Move this frame earlier"
-            >
-              ↑
-            </button>
-            <button
-              type="button"
-              className="abtn abtn--quiet abtn--sm"
-              onClick={() => move(1)}
-              disabled={index === frames.length - 1}
-              aria-label="Move this frame later"
-            >
-              ↓
-            </button>
-            <button
-              type="button"
-              className="abtn abtn--quiet abtn--sm"
-              onClick={add}
-              disabled={frames.length >= HERO_MAX}
-            >
-              Add
-            </button>
-            <button
-              type="button"
-              className="abtn abtn--quiet abtn--sm"
-              onClick={remove}
-              disabled={frames.length <= HERO_MIN}
-            >
-              Remove
-            </button>
-          </span>
-        </div>
-      ) : null}
 
       <div className="inspector__body">
         <label className="adfield">
@@ -462,160 +231,477 @@ function Inspector({
           <small>Describe what is in the picture. Screen readers read this.</small>
         </label>
 
-        {/* One stage, the viewport the canvas is showing. The other placement
-            is untouched by anything done here, so desktop and mobile stay the
-            independent pair the storefront renders. */}
+        {/* One stage rather than the desktop-and-phone pair: a crop set here
+            applies at every width, which is the rule this editor publishes
+            under. The shape shown is the frame's widest use. */}
         <ImageCropField
           url={frame.url}
           alt={frame.alt}
           crop={frame}
           ratios={slot.ratios}
-          only={viewport}
+          only="desktop"
           onChange={(crop) =>
-            patch({
-              focus: crop.focus ?? '',
-              zoom: crop.zoom ?? ZOOM_MIN,
-              mobileFocus: crop.mobileFocus ?? '',
-              mobileZoom: crop.mobileZoom,
-            })
+            patch({ focus: crop.focus ?? '', zoom: crop.zoom ?? ZOOM_MIN })
           }
         />
       </div>
 
       <footer className="inspector__foot">
-        <button type="button" className="abtn abtn--sm" onClick={save} disabled={pending}>
-          {pending ? 'Saving…' : isHero ? 'Save carousel' : 'Save'}
+        <button
+          type="button"
+          className="abtn abtn--quiet abtn--sm"
+          onClick={() => onChange(savedFrames)}
+          disabled={!edited}
+        >
+          Reset this photograph
         </button>
 
-        {edited ? (
-          <button
-            type="button"
-            className="abtn abtn--quiet abtn--sm"
-            onClick={undo}
-            disabled={pending}
-          >
-            Reset changes
-          </button>
-        ) : null}
-
-        {overridden ? (
-          <button
-            type="button"
-            className="abtn abtn--quiet abtn--sm"
-            onClick={restore}
-            disabled={pending}
-          >
-            Restore original
-          </button>
-        ) : null}
-
         {error ? <p className="anotice anotice--error">{error}</p> : null}
-        {!error && message ? <p className="anotice">{message}</p> : null}
       </footer>
     </aside>
   );
 }
 
 /* --------------------------------------------------------------------------
-   The tab
+   The panel — one section's height
    -------------------------------------------------------------------------- */
 
-function Builder({ pages, onRestored }: { pages: MediaPageView[]; onRestored: () => void }) {
+function SectionPanel({
+  label,
+  height,
+  savedHeight,
+  onChange,
+  onClose,
+}: {
+  label: string;
+  height: number;
+  savedHeight: number;
+  onChange: (height: number) => void;
+  onClose: () => void;
+}) {
+  const edited = height !== savedHeight;
+
+  return (
+    <aside className="panel inspector mediaedit__panel" aria-label={`${label} height`}>
+      <header className="inspector__head">
+        <div>
+          <h3 className="inspector__title">{label}</h3>
+          <p className="inspector__where">
+            The height of this band. One number, applied at every width.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          className="abtn abtn--quiet abtn--sm inspector__close"
+          onClick={onClose}
+          aria-label="Close"
+        >
+          ✕
+        </button>
+      </header>
+
+      <p className="inspector__meta">
+        <span className={`mediaslot__state${savedHeight ? ' mediaslot__state--on' : ''}`}>
+          {savedHeight ? `${savedHeight}px` : 'As the page sets it'}
+        </span>
+        {edited ? <span className="inspector__ratio">Not published</span> : null}
+      </p>
+
+      <div className="inspector__body">
+        <label className="adfield">
+          Height
+          <div className="mediaedit__height">
+            <input
+              type="range"
+              min={0}
+              max={HEIGHT_MAX}
+              step={10}
+              value={height}
+              onChange={(event) => onChange(Number(event.target.value))}
+              aria-label="Height"
+            />
+            <input
+              type="number"
+              min={0}
+              max={HEIGHT_MAX}
+              step={10}
+              value={height}
+              onChange={(event) =>
+                onChange(Math.max(0, Math.min(HEIGHT_MAX, Number(event.target.value) || 0)))
+              }
+              aria-label="Height in pixels"
+            />
+            <span className="mediaedit__unit">px</span>
+          </div>
+          <small>
+            Zero gives the section back the height the page gives it. The preview follows every
+            change; nothing reaches the shop until Publish.
+          </small>
+        </label>
+      </div>
+
+      <footer className="inspector__foot">
+        <button
+          type="button"
+          className="abtn abtn--quiet abtn--sm"
+          onClick={() => onChange(savedHeight)}
+          disabled={!edited}
+        >
+          Reset this section
+        </button>
+
+        <button
+          type="button"
+          className="abtn abtn--quiet abtn--sm"
+          onClick={() => onChange(AUTO)}
+          disabled={height === AUTO}
+        >
+          Back to the page&rsquo;s height
+        </button>
+      </footer>
+    </aside>
+  );
+}
+
+/* --------------------------------------------------------------------------
+   The editor
+   -------------------------------------------------------------------------- */
+
+function Editor({ pages, onPublished }: { pages: MediaPageView[]; onPublished: () => void }) {
+  const router = useRouter();
+
   const slots = useMemo(() => allSlots(pages), [pages]);
-  const byId = useMemo(
-    () => new Map(slots.map((slot) => [slot.slotId, slot])),
+  const byId = useMemo(() => new Map(slots.map((slot) => [slot.slotId, slot])), [slots]);
+
+  /* What the storefront is serving right now — the last publish, or the frame
+     the site shipped with if there has never been one. Everything the admin
+     does lives in the drafts until Publish. */
+  const saved = useMemo<Record<string, Frame[]>>(
+    () => Object.fromEntries(slots.map((slot) => [slot.slotId, toFrames(slot)])),
     [slots],
   );
 
-  /* What the storefront is serving right now — the last save, or the shipped
-     frame if there has never been one. `Reset changes` returns to this and no
-     further: it undoes the edit in front of you, it does not throw away work
-     that is already live. */
-  const [saved, setSaved] = useState<Record<string, Frame[]>>(() =>
-    Object.fromEntries(slots.map((slot) => [slot.slotId, toFrames(slot)])),
+  const savedHeights = useMemo<Record<string, number>>(
+    () =>
+      Object.fromEntries(
+        pages.flatMap((page) =>
+          page.sections.map((section) => [section.id, section.height ?? AUTO]),
+        ),
+      ),
+    [pages],
   );
+
   const [drafts, setDrafts] = useState<Record<string, Frame[]>>(saved);
+  const [heights, setHeights] = useState<Record<string, number>>(savedHeights);
   const [overridden, setOverridden] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(slots.map((slot) => [slot.slotId, slot.overridden])),
   );
 
   const [pageId, setPageId] = useState(pages[0]?.id ?? '');
-  const [viewport, setViewport] = useState<Viewport>('desktop');
+  const [device, setDevice] = useState<Device>('laptop');
   const [selection, setSelection] = useState<Selection | null>(null);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [pending, startTransition] = useTransition();
+
+  const frame = useRef<HTMLIFrameElement | null>(null);
+  const stage = useRef<HTMLDivElement | null>(null);
+  const [box, setBox] = useState({ width: 0, height: 0 });
 
   const page = pages.find((candidate) => candidate.id === pageId) ?? pages[0];
-  const selected = selection ? byId.get(selection.slotId) : undefined;
+
+  /* Which slot and which frame of it every key on this page belongs to, so a
+     selection coming back from the storefront resolves without the page
+     having to send anything but the key it stamped. */
+  const keys = useMemo(() => {
+    const map = new Map<string, { slotId: string; index: number }>();
+
+    for (const slot of page?.slots ?? []) {
+      slot.frames.forEach((_, index) => map.set(frameKey(slot, index), { slotId: slot.slotId, index }));
+    }
+
+    return map;
+  }, [page]);
+
+  const dirtySlots = (page?.slots ?? []).filter(
+    (slot) => !sameFrames(drafts[slot.slotId] ?? [], saved[slot.slotId] ?? []),
+  );
+
+  const dirtySections = (page?.sections ?? []).filter(
+    (section) => (heights[section.id] ?? AUTO) !== (savedHeights[section.id] ?? AUTO),
+  );
+
+  const dirty = dirtySlots.length + dirtySections.length;
+
+  /* The stage measures itself so the frame can be a real viewport scaled to
+     fit rather than a viewport the desk happens to have room for. */
+  useEffect(() => {
+    const node = stage.current;
+    if (!node) return;
+
+    const measure = () => {
+      const rect = node.getBoundingClientRect();
+      setBox({ width: rect.width, height: rect.height });
+    };
+
+    measure();
+
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+
+    return () => observer.disconnect();
+  }, []);
+
+  /** Hands the frame everything it needs to draw itself as it would be if
+   *  Publish were pressed. Sent on every change, and sent to the page — never
+   *  to the database. */
+  const push = useCallback(() => {
+    const window_ = frame.current?.contentWindow;
+    if (!window_) return;
+
+    const media: Record<string, Frame> = {};
+
+    for (const slot of page?.slots ?? []) {
+      (drafts[slot.slotId] ?? []).forEach((draft, index) => {
+        media[frameKey(slot, index)] = draft;
+      });
+    }
+
+    const sections: Record<string, number> = {};
+    for (const section of page?.sections ?? []) sections[section.id] = heights[section.id] ?? AUTO;
+
+    window_.postMessage({ channel: CHANNEL, type: 'apply', media, sections }, location.origin);
+  }, [drafts, heights, page]);
+
+  useEffect(() => {
+    push();
+  }, [push]);
+
+  useEffect(() => {
+    const id = selection
+      ? selection.kind === 'media'
+        ? `media:${selection.key}`
+        : `section:${selection.id}`
+      : null;
+
+    frame.current?.contentWindow?.postMessage(
+      { channel: CHANNEL, type: 'select', id },
+      location.origin,
+    );
+  }, [selection]);
+
+  useEffect(() => {
+    function onMessage(event: MessageEvent) {
+      if (event.origin !== window.location.origin) return;
+
+      const data = event.data as { channel?: string; type?: string; id?: string };
+      if (data?.channel !== CHANNEL) return;
+
+      if (data.type === 'ready') {
+        push();
+        return;
+      }
+
+      if (data.type !== 'select' || !data.id) return;
+
+      if (data.id.startsWith('section:')) {
+        setSelection({ kind: 'section', id: data.id.slice('section:'.length) });
+        return;
+      }
+
+      const key = data.id.slice('media:'.length);
+      const found = keys.get(key);
+      if (found) setSelection({ kind: 'media', key, ...found });
+    }
+
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, [keys, push]);
+
+  /* The editor is the whole screen while it is open, so the page behind it
+     must not scroll under it. */
+  useEffect(() => {
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, []);
 
   function choosePage(next: string) {
     setPageId(next);
     setSelection(null);
+    setMessage('');
   }
 
-  return (
-    <div className="mediabuild">
-      <header className="mediabuild__bar">
-        <label className="adfield adfield--inline mediabuild__page">
-          Current page
-          <select value={page?.id ?? ''} onChange={(event) => choosePage(event.target.value)}>
-            {pages.map((candidate) => (
-              <option key={candidate.id} value={candidate.id}>
-                {candidate.label}
-              </option>
-            ))}
-          </select>
-        </label>
+  /** Everything changed on this page, in one write. Nothing before now has
+   *  touched the storefront. */
+  function publish() {
+    setError('');
+    setMessage('');
 
-        <div className="viewtoggle" role="group" aria-label="Viewport">
-          {(['desktop', 'mobile'] as Viewport[]).map((value) => (
-            <button
-              key={value}
-              type="button"
-              className={`viewtoggle__btn${viewport === value ? ' viewtoggle__btn--on' : ''}`}
-              onClick={() => setViewport(value)}
-              aria-pressed={viewport === value}
-            >
-              {value === 'desktop' ? 'Desktop' : 'Mobile'}
-            </button>
-          ))}
+    const payload = {
+      slots: dirtySlots.map((slot) => ({
+        slotId: slot.slotId,
+        // The phone's crop is deliberately cleared rather than carried: one
+        // placement is the rule here, so a slot published from this editor
+        // reads the same at every width.
+        frames: (drafts[slot.slotId] ?? []).map((draft) => ({
+          url: draft.url,
+          alt: draft.alt,
+          focus: draft.focus,
+          zoom: draft.zoom,
+          mobileFocus: '',
+        })),
+      })),
+      sections: dirtySections.map((section) => ({
+        sectionId: section.id,
+        height: heights[section.id] ?? AUTO,
+      })),
+    };
+
+    startTransition(async () => {
+      const result = await publishMediaAction(payload);
+
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+
+      setOverridden((current) => {
+        const next = { ...current };
+        for (const slot of payload.slots) next[slot.slotId] = true;
+        return next;
+      });
+
+      setMessage('Published. The storefront is serving this now.');
+      onPublished();
+    });
+  }
+
+  const width = DEVICES[device].width;
+  const pad = 24;
+  const scale = box.width ? Math.min(1, (box.width - pad * 2) / width) : 1;
+  const height = box.height ? Math.max(320, (box.height - pad * 2) / scale) : 0;
+
+  const slot = selection?.kind === 'media' ? byId.get(selection.slotId) : undefined;
+  const section =
+    selection?.kind === 'section'
+      ? page?.sections.find((candidate) => candidate.id === selection.id)
+      : undefined;
+
+  return (
+    <div className="mediaedit">
+      <header className="mediaedit__bar">
+        <button
+          type="button"
+          className="abtn abtn--quiet abtn--sm mediaedit__close"
+          onClick={() => router.push('/admin')}
+        >
+          ✕ Close
+        </button>
+
+        <div className="mediaedit__mid">
+          <label className="adfield adfield--inline mediaedit__page">
+            Page
+            <select value={page?.id ?? ''} onChange={(event) => choosePage(event.target.value)}>
+              {pages.map((candidate) => (
+                <option key={candidate.id} value={candidate.id}>
+                  {candidate.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <div className="viewtoggle mediaedit__devices" role="group" aria-label="Preview width">
+            {(Object.keys(DEVICES) as Device[]).map((value) => {
+              const { label, Icon } = DEVICES[value];
+
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  className={`viewtoggle__btn${device === value ? ' viewtoggle__btn--on' : ''}`}
+                  onClick={() => setDevice(value)}
+                  aria-pressed={device === value}
+                  aria-label={`${label} — ${DEVICES[value].width}px wide`}
+                  title={`${label} — ${DEVICES[value].width}px`}
+                >
+                  <Icon className="mediaedit__icon" />
+                  <span className="mediaedit__devicename">{label}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        <p className="mediabuild__hint">
-          Click a photograph to replace or re-crop it. Desktop and mobile keep
-          their own crops.
-        </p>
+        <div className="mediaedit__acts">
+          {error ? <p className="anotice anotice--error mediaedit__note">{error}</p> : null}
+          {!error && message ? <p className="anotice mediaedit__note">{message}</p> : null}
+
+          <button type="button" className="abtn abtn--sm" onClick={publish} disabled={pending || !dirty}>
+            {pending ? 'Publishing…' : `Publish${dirty ? ` (${dirty})` : ''}`}
+          </button>
+        </div>
       </header>
 
-      <div className={`mediabuild__stage${selected ? ' mediabuild__stage--open' : ''}`}>
-        {page ? (
-          <Canvas
-            page={page}
-            viewport={viewport}
-            drafts={drafts}
-            saved={saved}
-            selection={selection}
-            onSelect={setSelection}
+      <div className={`mediaedit__body${selection ? ' mediaedit__body--open' : ''}`}>
+        <div className="mediaedit__stage" ref={stage}>
+          <div
+            className="mediaedit__viewport"
+            style={{ width: width * scale, height: box.height ? box.height - pad * 2 : undefined }}
+          >
+            {page ? (
+              <iframe
+                key={page.id}
+                ref={frame}
+                className="mediaedit__frame"
+                src={`${page.path}${page.path.includes('?') ? '&' : '?'}mdedit=1`}
+                title="The page as visitors see it"
+                style={{
+                  width,
+                  height: height || undefined,
+                  transform: `scale(${scale})`,
+                  transformOrigin: '0 0',
+                }}
+              />
+            ) : null}
+          </div>
+
+          <p className="mediaedit__hint">
+            Click a photograph to replace or re-crop it, or anywhere else in a band to set its
+            height. Every change applies at all three widths.
+          </p>
+        </div>
+
+        {slot && selection?.kind === 'media' ? (
+          <MediaPanel
+            key={selection.key}
+            slot={slot}
+            frames={drafts[slot.slotId] ?? []}
+            savedFrames={saved[slot.slotId] ?? []}
+            index={Math.min(selection.index, (drafts[slot.slotId] ?? []).length - 1)}
+            overridden={overridden[slot.slotId] ?? false}
+            onChange={(frames) => {
+              setMessage('');
+              setDrafts((current) => ({ ...current, [slot.slotId]: frames }));
+            }}
+            onClose={() => setSelection(null)}
           />
         ) : null}
 
-        {selected && selection ? (
-          <Inspector
-            key={`${selected.slotId}:${viewport}`}
-            slot={selected}
-            frames={drafts[selected.slotId] ?? []}
-            savedFrames={saved[selected.slotId] ?? []}
-            overridden={overridden[selected.slotId] ?? false}
-            index={Math.max(0, Math.min(selection.index, (drafts[selected.slotId] ?? []).length - 1))}
-            viewport={viewport}
-            isHero={selected.slotId === 'hero'}
-            onChange={(frames) =>
-              setDrafts((current) => ({ ...current, [selected.slotId]: frames }))
-            }
-            onSelectFrame={(index) => setSelection({ slotId: selected.slotId, index })}
-            onSaved={(frames) => {
-              setSaved((current) => ({ ...current, [selected.slotId]: frames }));
-              setOverridden((current) => ({ ...current, [selected.slotId]: true }));
+        {section && selection?.kind === 'section' ? (
+          <SectionPanel
+            key={section.id}
+            label={section.label}
+            height={heights[section.id] ?? AUTO}
+            savedHeight={savedHeights[section.id] ?? AUTO}
+            onChange={(next) => {
+              setMessage('');
+              setHeights((current) => ({ ...current, [section.id]: next }));
             }}
-            onRestored={onRestored}
             onClose={() => setSelection(null)}
           />
         ) : null}
@@ -625,23 +711,28 @@ function Builder({ pages, onRestored }: { pages: MediaPageView[]; onRestored: ()
 }
 
 /**
- * The storefront's photography, edited on the page it appears on.
+ * The storefront, edited in place.
  *
- * A restore deletes the override, and only the server knows what the site
- * shipped with — so that one action refreshes and remounts the builder, and
- * the drafts start again from what came back. Saving does not: the panel
- * already knows what it just wrote, and remounting there would close the
- * photograph the admin is still working on.
+ * Not a rehearsal of the page and not a set of forms: the stage is the page
+ * itself, in a frame, rendered by the same components and the same stylesheets
+ * a visitor gets. The editor talks to it over `postMessage` — the page reports
+ * what was clicked, and the editor sends back the drafts it is holding, so a
+ * replaced photograph or a taller band is on screen the moment it changes and
+ * nowhere else until Publish.
+ *
+ * A publish changes what the server would send, so the editor refreshes and
+ * remounts: the drafts start again from what came back, and the admin is left
+ * exactly where they were.
  */
 export function MediaManager({ pages }: { pages: MediaPageView[] }) {
   const router = useRouter();
   const [version, setVersion] = useState(0);
 
   return (
-    <Builder
+    <Editor
       key={version}
       pages={pages}
-      onRestored={() => {
+      onPublished={() => {
         router.refresh();
         setVersion((current) => current + 1);
       }}

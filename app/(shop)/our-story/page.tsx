@@ -1,5 +1,7 @@
 import { getContentLayer, getSiteContent } from '@/lib/services/site-content';
 import { ContentLayer } from '@/components/site/ContentLayer';
+import { getMediaLayer } from '@/lib/services/site-media';
+import { MediaLayer } from '@/components/site/MediaLayer';
 
 export const metadata = {
   title: 'Our Story',
@@ -14,11 +16,17 @@ const VIDEO_SRC =
    No <InstagramStrip /> here — app/(shop)/layout.tsx already renders it after
    every page's content, right where the brief wants it. */
 export default async function OurStoryPage() {
-  const [copy, layer] = await Promise.all([getSiteContent(), getContentLayer('our-story')]);
+  const [copy, layer, mediaLayer] = await Promise.all([
+    getSiteContent(),
+    getContentLayer('our-story'),
+    getMediaLayer('our-story'),
+  ]);
 
   return (
     <>
       <ContentLayer {...layer} />
+
+      <MediaLayer {...mediaLayer} />
 
       <section className="band band--ink storyfilm">
         <div className="storyfilm__stage">

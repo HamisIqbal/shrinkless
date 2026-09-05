@@ -80,11 +80,11 @@ export type ContentPageDefinition = {
   /**
    * Kept out of the editor's page list.
    *
-   * The two shop landings are a catalogue with a word over it — there is a
-   * title and nothing else to compose, and offering them as pages to design
-   * would be offering a grid of products the tab cannot touch. The fields stay
-   * in the registry because the storefront still reads them; only the editor
-   * declines to list the page.
+   * The two shop landings and the line sheet are a catalogue with a word over
+   * it — there is a title and nothing else to compose, and offering them as
+   * pages would be offering a grid of products the tab cannot touch. The
+   * fields stay in the registry because the storefront still reads them; only
+   * the editor declines to list the page.
    */
   hidden?: boolean;
   sections: ContentSectionDefinition[];
@@ -590,6 +590,7 @@ const PAGES: ContentPageDefinition[] = [
     id: 'wholesale',
     label: 'Wholesale',
     path: '/wholesale',
+    hidden: true,
     sections: [
       {
         id: 'head',
@@ -777,13 +778,23 @@ export async function saveContentFields(edits: ContentFieldEdit[]): Promise<void
       throw new AdminOperationError(`That is longer than this field takes — ${limit} characters.`);
     }
 
-    const style = cleanStyleSet(edit.style ?? {});
-    const selector = edit.selector && isSafeSelector(edit.selector) ? edit.selector : undefined;
+    /* How a field is set travels separately from what it says, and only a
+       caller that actually has settings sends them. The Content tab does not:
+       it writes the sentence and leaves whatever the field is already drawn
+       with alone, rather than clearing a size somebody chose because they
+       fixed a typo underneath it. */
+    const update: Record<string, unknown> = { value: text };
+
+    if (edit.style) update.style = cleanStyleSet(edit.style);
+
+    if (edit.selector !== undefined) {
+      update.selector = isSafeSelector(edit.selector) ? edit.selector : null;
+    }
 
     return {
       updateOne: {
         filter: { key: edit.key },
-        update: { $set: { value: text, style, selector: selector ?? null } },
+        update: { $set: update },
         upsert: true,
       },
     };

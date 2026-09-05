@@ -5,16 +5,22 @@ import { BRAND_IMAGES, CATEGORY_IMAGES, HERO_SLIDES } from '@/lib/brand/images';
 import {
   EDITORIAL_SLOTS,
   HERO_SLOT,
+  HOME_SECTIONS,
   categoryImage,
   categorySlotId,
   editorialSlotId,
+  getMediaLayer,
+  getSectionHeights,
   getSiteMedia,
+  isKnownSection,
   isKnownSlot,
   listMediaPages,
   listMediaSlots,
   resetMediaSlot,
   saveHeroFrames,
   saveMediaSlot,
+  saveSectionHeights,
+  sectionHeightCss,
 } from '@/lib/services/site-media';
 import { AdminOperationError } from '@/lib/admin/action';
 
@@ -289,15 +295,19 @@ describe('listMediaSlots', () => {
 });
 
 describe('listMediaPages', () => {
-  it('offers the two pages the storefront has photography on, and no others', async () => {
+  it('offers the four pages the editor edits, and no others', async () => {
     const pages = await listMediaPages();
 
-    expect(pages.map((page) => page.id)).toEqual(['home', 'why-shrinkless']);
+    expect(pages.map((page) => page.id)).toEqual([
+      'home',
+      'our-story',
+      'why-shrinkless',
+      'faq',
+    ]);
 
     for (const page of pages) {
       expect(page.label).toBeTruthy();
       expect(page.path.startsWith('/')).toBe(true);
-      expect(page.sections.length).toBeGreaterThan(0);
     }
   });
 
@@ -307,14 +317,13 @@ describe('listMediaPages', () => {
      this one says where they are. */
   it('keeps the category doors on Home', async () => {
     const pages = await listMediaPages();
-    const doors = pages
-      .find((page) => page.id === 'home')
-      ?.sections.find((section) => section.id === 'doors');
+    const home = pages.find((page) => page.id === 'home');
 
-    expect(doors?.slots.map((slot) => slot.slotId).sort()).toEqual([
-      categorySlotId('men'),
-      categorySlotId('women'),
-    ]);
+    const doors = home?.slots
+      .map((slot) => slot.slotId)
+      .filter((slotId) => slotId.startsWith('category:'));
+
+    expect(doors?.sort()).toEqual([categorySlotId('men'), categorySlotId('women')]);
   });
 
   /* The point of the tab: a frame is edited where it stands, so every slot the
@@ -323,9 +332,7 @@ describe('listMediaPages', () => {
   it('places every slot on a page', async () => {
     const [pages, library] = await Promise.all([listMediaPages(), listMediaSlots()]);
 
-    const placed = new Set(
-      pages.flatMap((page) => page.sections.flatMap((section) => section.slots.map((slot) => slot.slotId))),
-    );
+    const placed = new Set(pages.flatMap((page) => page.slots.map((slot) => slot.slotId)));
 
     for (const slot of [library.hero, ...library.categories, ...library.editorial]) {
       expect(placed.has(slot.slotId)).toBe(true);
@@ -338,8 +345,8 @@ describe('listMediaPages', () => {
     const pages = await listMediaPages();
     const home = pages.find((page) => page.id === 'home');
 
-    const appearances = home?.sections.flatMap((section) =>
-      section.slots.filter((slot) => slot.slotId === editorialSlotId('promise')),
+    const appearances = home?.slots.filter(
+      (slot) => slot.slotId === editorialSlotId('promise'),
     );
 
     expect(appearances?.length).toBe(1);
@@ -347,13 +354,124 @@ describe('listMediaPages', () => {
     expect(appearances?.[0].overridden).toBe(true);
   });
 
-  it('never offers a page with nothing on it to edit', async () => {
+  /* Section height is a home-page control, and the editor draws its panel from
+     this list — so a section offered anywhere else would be a control that
+     could not be published. */
+  it('offers the home page’s sections, and only there', async () => {
     const pages = await listMediaPages();
 
     for (const page of pages) {
-      for (const section of page.sections) {
-        expect(section.slots.length).toBeGreaterThan(0);
+      if (page.id === 'home') {
+        expect(page.sections.map((section) => section.id)).toContain('hero');
+        expect(page.sections.map((section) => section.id)).toContain('footer');
+      } else {
+        expect(page.sections).toEqual([]);
       }
     }
+  });
+});
+
+describe('section heights', () => {
+  it('stores nothing until a section has actually been given one', async () => {
+    expect(await getSectionHeights()).toEqual({});
+    expect(sectionHeightCss({})).toBe('');
+  });
+
+  it('keeps one height per section, not one per device', async () => {
+    await saveSectionHeights([{ sectionId: 'hero', height: 600 }]);
+
+    expect(await getSectionHeights()).toEqual({ hero: 600 });
+
+    const css = sectionHeightCss(await getSectionHeights());
+
+    expect(css).toContain('height: 600px');
+    expect(css).not.toContain('@media');
+  });
+
+  /* A band whose own height is the design takes the number outright, so it can
+     be brought down as well as up; a grid of product cards takes it as a floor,
+     because a fixed height there would have the page run out from under
+     itself. */
+  it('sets a fixed band outright and an open one as a floor', async () => {
+    await saveSectionHeights([
+      { sectionId: 'hero', height: 700 },
+      { sectionId: 'new', height: 700 },
+    ]);
+
+    const css = sectionHeightCss(await getSectionHeights());
+
+    expect(css).toContain('.hero { height: 700px; min-height: 700px; }');
+    expect(css).toContain('section[aria-labelledby="new-heading"] { min-height: 700px; }');
+  });
+
+  it('updates rather than duplicates', async () => {
+    await saveSectionHeights([{ sectionId: 'footer', height: 400 }]);
+    await saveSectionHeights([{ sectionId: 'footer', height: 520 }]);
+
+    expect(await getSectionHeights()).toEqual({ footer: 520 });
+  });
+
+  /* Zero is "put it back", and putting it back is forgetting the row rather
+     than storing a zero that would have to be read around everywhere. */
+  it('forgets the row when a section is cleared', async () => {
+    await saveSectionHeights([{ sectionId: 'promise', height: 500 }]);
+    await saveSectionHeights([{ sectionId: 'promise', height: 0 }]);
+
+    expect(await getSectionHeights()).toEqual({});
+  });
+
+  it('refuses a section the page does not have', async () => {
+    expect(isKnownSection('hero')).toBe(true);
+    expect(isKnownSection('nonsense')).toBe(false);
+
+    await expect(
+      saveSectionHeights([{ sectionId: 'nonsense', height: 300 }]),
+    ).rejects.toBeInstanceOf(AdminOperationError);
+  });
+});
+
+describe('getMediaLayer', () => {
+  it('names every photograph on the page by the address it renders from', async () => {
+    const layer = await getMediaLayer('home');
+
+    expect(layer.page).toBe('home');
+    expect(layer.frames.length).toBeGreaterThan(0);
+
+    for (const frame of layer.frames) {
+      expect(frame.url, frame.key).toBeTruthy();
+      expect(frame.label, frame.key).toBeTruthy();
+    }
+
+    // The carousel is the one slot holding several, so its frames are the ones
+    // that need telling apart.
+    expect(layer.frames.some((entry) => entry.key.startsWith(`${HERO_SLOT}#`))).toBe(true);
+  });
+
+  it('carries a saved frame rather than the one the site shipped with', async () => {
+    await saveMediaSlot(editorialSlotId('promise'), frame('https://example.com/new-band.jpg'));
+
+    const layer = await getMediaLayer('home');
+    const band = layer.frames.find((entry) => entry.slotId === editorialSlotId('promise'));
+
+    expect(band?.url).toBe('https://example.com/new-band.jpg');
+  });
+
+  it('offers the home page’s sections and no other page’s', async () => {
+    const home = await getMediaLayer('home');
+    const faq = await getMediaLayer('faq');
+
+    expect(home.sections.map((section) => section.id)).toEqual(
+      HOME_SECTIONS.map((section) => section.id),
+    );
+    expect(faq.sections).toEqual([]);
+    expect(faq.css).toBe('');
+  });
+
+  it('serves the saved heights as the page’s own stylesheet', async () => {
+    await saveSectionHeights([{ sectionId: 'lookbook', height: 480 }]);
+
+    const layer = await getMediaLayer('home');
+
+    expect(layer.css).toContain('.lookbook { min-height: 480px; }');
   });
 });

@@ -120,7 +120,6 @@ describe('listContentPages', () => {
       'our-story',
       'why-shrinkless',
       'faq',
-      'wholesale',
     ]);
   });
 
@@ -166,7 +165,7 @@ describe('listContentPages', () => {
 
     expect(new Set(keys).size).toBe(keys.length);
 
-    const hidden = ['shop.men.title', 'shop.women.title'];
+    const hidden = ['shop.men.title', 'shop.women.title', 'wholesale.title'];
     expect(keys.sort()).toEqual(CONTENT_KEYS.filter((key) => !hidden.includes(key)).sort());
   });
 

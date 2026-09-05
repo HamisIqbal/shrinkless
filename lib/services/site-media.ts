@@ -1,6 +1,8 @@
 import { connectToDatabase } from '@/lib/db/connection';
 import { MediaSlot } from '@/lib/db/models/media-slot';
+import { SectionLayout } from '@/lib/db/models/section-layout';
 import { listVisibleCategories } from '@/lib/services/categories';
+import { SHOPPABLE } from '@/lib/shop/navigation';
 import {
   BRAND_IMAGES,
   CATEGORY_IMAGES,
@@ -434,35 +436,13 @@ export async function resetMediaSlot(slotId: string): Promise<void> {
 /* --------------------------------------------------------------------------
    The pages
 
-   The admin edits photography where it lives, so the panel needs to know
+   The admin edits photography where it lives, so the editor needs to know
    which slots each page is actually built from. That is a property of the
    layouts — the same thing the registry above already owns — so it is
    declared here beside them rather than guessed at in the browser. A slot
    named on two pages is the one slot: editing it from either changes both,
    which is what the storefront already does.
    -------------------------------------------------------------------------- */
-
-/** The shape a section is drawn in, so the preview reads as the page rather
- *  than as a row of thumbnails. */
-export type MediaSectionKind = 'hero' | 'doors' | 'rail' | 'tiles' | 'band';
-
-export type MediaSectionView = {
-  id: string;
-  label: string;
-  note: string;
-  kind: MediaSectionKind;
-  slots: MediaSlotView[];
-};
-
-export type MediaPageView = {
-  id: string;
-  label: string;
-  /** Where this page is on the storefront, so the admin can go and look. */
-  path: string;
-  sections: MediaSectionView[];
-};
-
-type SectionDefinition = Omit<MediaSectionView, 'slots'> & { slots: string[] };
 
 /**
  * The lookbook rail's running order — `components/site/LookbookRail.tsx`.
@@ -485,19 +465,192 @@ const WHY_ORDER: EditorialSlot[] = ['fabric', 'folded', 'hanging', 'craft'];
 /** `app/(shop)/page.tsx` — the two statement tiles. */
 const STORY_ORDER: EditorialSlot[] = ['torso', 'heather'];
 
+/* --------------------------------------------------------------------------
+   The home page's sections
+
+   A band across the home page, and the element the storefront draws it as.
+   Selectors rather than markers because the storefront's markup is not this
+   tab's to change: every class named here is already in the layout, and the
+   two grids that share a class are told apart by the heading they are already
+   labelled by.
+
+   One height per section and no per-device pair. The admin edits from
+   whichever preview is convenient and the number applies everywhere — a phone
+   and a desk holding different numbers would be two settings pretending to be
+   one.
+   -------------------------------------------------------------------------- */
+
+export type HomeSectionDefinition = {
+  id: string;
+  label: string;
+  selector: string;
+  /**
+   * True where the section's own height *is* the design — a viewport-tall
+   * hero, a full-bleed band. Those take the number as a height, so it can be
+   * brought down as well as up; everything else takes it as a floor, because a
+   * fixed height on a grid of product cards would have the page run out from
+   * under itself.
+   */
+  fixed?: boolean;
+};
+
+export const HOME_SECTIONS: HomeSectionDefinition[] = [
+  { id: 'hero', label: 'Hero', selector: '.hero', fixed: true },
+  { id: 'doors', label: 'Category doors', selector: '.gateway' },
+  { id: 'new', label: 'New arrivals', selector: 'section[aria-labelledby="new-heading"]' },
+  { id: 'lookbook', label: 'Lookbook rail', selector: '.lookbook' },
+  { id: 'story', label: 'Story tiles', selector: '.tiles' },
+  { id: 'promise', label: 'Promise band', selector: '.imageband', fixed: true },
+  { id: 'featured', label: 'Featured', selector: 'section[aria-labelledby="featured-heading"]' },
+  { id: 'reviews', label: 'Reviews', selector: '.quotes' },
+  { id: 'instagram', label: 'Instagram', selector: '.iglane' },
+  { id: 'footer', label: 'Footer', selector: '.colophon' },
+];
+
+const SECTIONS = new Map(HOME_SECTIONS.map((section) => [section.id, section]));
+
+/** Whether an id names a section the home page actually has. */
+export function isKnownSection(sectionId: string): boolean {
+  return SECTIONS.has(sectionId);
+}
+
+/** Every height that has been set, by section id. A section nobody has
+ *  touched is simply absent. */
+export async function getSectionHeights(): Promise<Record<string, number>> {
+  await connectToDatabase();
+
+  const rows = await SectionLayout.find({}).select('sectionId height').lean();
+  const heights: Record<string, number> = {};
+
+  for (const row of rows) {
+    if (isKnownSection(row.sectionId)) heights[row.sectionId] = row.height;
+  }
+
+  return heights;
+}
+
 /**
- * Every page and section, resolved against the slots that exist right now.
+ * Writes the heights the admin published.
  *
- * Two pages, because two pages are where the storefront's photography is:
- * Home carries the carousel, the category doors, the lookbook rail, the story
- * tiles and the promise band, and Why Shrinkless carries the four points.
- * Everything else either has no photography of its own — the Our Story film is
- * set in the page rather than in a slot, the FAQ and wholesale pages carry
- * none — or reads a frame that is already editable on Home: a category tile is
- * one slot whether it is seen as a door or in the menu, so it is edited once,
- * where it is composed.
+ * A section handed back at 0 is one they cleared, so the row goes rather than
+ * a zero being stored — the section falls back to the height the design gives
+ * it, exactly the way a restored photograph falls back to the shipped frame.
  */
-export async function listMediaPages(): Promise<MediaPageView[]> {
+export async function saveSectionHeights(
+  entries: { sectionId: string; height: number }[],
+): Promise<void> {
+  if (!entries.length) return;
+
+  for (const entry of entries) {
+    if (!isKnownSection(entry.sectionId)) {
+      throw new AdminOperationError('That is not a section this page has.');
+    }
+  }
+
+  await connectToDatabase();
+
+  await SectionLayout.bulkWrite(
+    entries.map((entry) =>
+      entry.height > 0
+        ? {
+            updateOne: {
+              filter: { sectionId: entry.sectionId },
+              update: { $set: { height: Math.round(entry.height) } },
+              upsert: true,
+            },
+          }
+        : { deleteOne: { filter: { sectionId: entry.sectionId } } },
+    ),
+  );
+}
+
+/**
+ * The heights as a stylesheet.
+ *
+ * Built on the server and served in the page's first paint, so a section that
+ * has been given a height is that height before anything runs — and unlayered,
+ * so it outranks the storefront's own rule for the same element without
+ * needing a specificity contest.
+ */
+export function sectionHeightCss(heights: Record<string, number>): string {
+  const blocks: string[] = [];
+
+  for (const section of HOME_SECTIONS) {
+    const height = heights[section.id];
+    if (!height || height <= 0) continue;
+
+    blocks.push(
+      section.fixed
+        ? `${section.selector} { height: ${height}px; min-height: ${height}px; }`
+        : `${section.selector} { min-height: ${height}px; }`,
+    );
+  }
+
+  return blocks.join('\n');
+}
+
+/* --------------------------------------------------------------------------
+   The editor's view
+   -------------------------------------------------------------------------- */
+
+export type MediaSectionView = {
+  id: string;
+  label: string;
+  /** What the storefront is serving. Absent while the design's own height
+   *  still stands. */
+  height?: number;
+};
+
+export type MediaPageView = {
+  id: string;
+  label: string;
+  /** Where this page is on the storefront — the editor opens it there. */
+  path: string;
+  slots: MediaSlotView[];
+  /** Empty on every page but Home: section height is a home-page control. */
+  sections: MediaSectionView[];
+};
+
+/** The pages the editor offers, in the order it lists them. */
+const MEDIA_PAGES = [
+  { id: 'home', label: 'Home', path: '/' },
+  { id: 'our-story', label: 'Our Story', path: '/our-story' },
+  { id: 'why-shrinkless', label: 'Why Shrinkless', path: '/why-shrinkless' },
+  { id: 'faq', label: 'FAQ', path: '/faq' },
+] as const;
+
+/**
+ * Which slots stand on a page, in the order the page runs them.
+ *
+ * Home carries the carousel, the category doors, the lookbook rail, the story
+ * tiles and the promise band; Why Shrinkless carries the four points. The
+ * other two have no photography of their own — the Our Story film is set in
+ * the page rather than in a slot, and the FAQ carries none — so they open as
+ * themselves with nothing to select, which is the truth rather than an empty
+ * panel pretending otherwise.
+ */
+function slotIdsFor(pageId: string): string[] {
+  if (pageId === 'home') {
+    return [
+      HERO_SLOT,
+      // The doors the page actually composes, not every category in the
+      // catalogue: a category with no art of its own falls back to the men's
+      // frame, and two slots holding one photograph could not be told apart on
+      // a page where only two of them are drawn.
+      ...SHOPPABLE.map(({ slug }) => categorySlotId(slug)),
+      ...LOOKBOOK_ORDER.map(editorialSlotId),
+      ...STORY_ORDER.map(editorialSlotId),
+      editorialSlotId('promise'),
+    ];
+  }
+
+  if (pageId === 'why-shrinkless') return WHY_ORDER.map(editorialSlotId);
+
+  return [];
+}
+
+/** Every slot on a page, once each, resolved against what exists right now. */
+async function slotsFor(pageId: string): Promise<MediaSlotView[]> {
   const library = await listMediaSlots();
 
   const known = new Map<string, MediaSlotView>();
@@ -506,70 +659,117 @@ export async function listMediaPages(): Promise<MediaPageView[]> {
     known.set(slot.slotId, slot);
   }
 
-  const home: SectionDefinition[] = [
-    {
-      id: 'hero',
-      label: 'Campaign carousel',
-      note: `The frames behind the headline. They cycle on their own, so the order is the running order — ${HERO_MIN} to ${HERO_MAX} of them.`,
-      kind: 'hero',
-      slots: [HERO_SLOT],
-    },
-    {
-      id: 'doors',
-      label: 'Category doors',
-      note: 'The shopping doors under the carousel. The same frames run in the desktop menu.',
-      kind: 'doors',
-      slots: library.categories.map((slot) => slot.slotId),
-    },
-    {
-      id: 'lookbook',
-      label: 'Lookbook rail',
-      note: 'The reel that runs between the two product grids.',
-      kind: 'rail',
-      slots: LOOKBOOK_ORDER.map(editorialSlotId),
-    },
-    {
-      id: 'story',
-      label: 'Story tiles',
-      note: 'The pair of overlay tiles under the rail.',
-      kind: 'tiles',
-      slots: STORY_ORDER.map(editorialSlotId),
-    },
-    {
-      id: 'promise',
-      label: 'Promise band',
-      note: 'The full-bleed “Wash it. Dry it.” photograph.',
-      kind: 'band',
-      slots: [editorialSlotId('promise')],
-    },
-  ];
+  const seen = new Set<string>();
 
-  const pages: { id: string; label: string; path: string; sections: SectionDefinition[] }[] = [
-    { id: 'home', label: 'Home', path: '/', sections: home },
+  return slotIdsFor(pageId)
+    .filter((id) => {
+      if (seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    })
+    .map((id) => known.get(id))
+    .filter((slot): slot is MediaSlotView => Boolean(slot));
+}
 
-    {
-      id: 'why-shrinkless',
-      label: 'Why Shrinkless',
-      path: '/why-shrinkless',
-      sections: [
-        {
-          id: 'points',
-          label: 'The four points',
-          note: 'One photograph behind each point.',
-          kind: 'tiles',
-          slots: WHY_ORDER.map(editorialSlotId),
-        },
-      ],
-    },
-  ];
+/** Every page the editor offers, with its slots and — on Home — its sections. */
+export async function listMediaPages(): Promise<MediaPageView[]> {
+  const [heights, ...perPage] = await Promise.all([
+    getSectionHeights(),
+    ...MEDIA_PAGES.map((page) => slotsFor(page.id)),
+  ]);
 
-  return pages.map((page) => ({
-    ...page,
-    sections: page.sections.map((section) => ({
-      ...section,
-      slots: section.slots
-        .map((slotId) => known.get(slotId))
-        .filter((slot): slot is MediaSlotView => Boolean(slot)),
-    })),
+  return MEDIA_PAGES.map((page, index) => ({
+    id: page.id,
+    label: page.label,
+    path: page.path,
+    slots: perPage[index] ?? [],
+    sections:
+      page.id === 'home'
+        ? HOME_SECTIONS.map((section) => ({
+            id: section.id,
+            label: section.label,
+            ...(heights[section.id] ? { height: heights[section.id] } : {}),
+          }))
+        : [],
   }));
+}
+
+/* --------------------------------------------------------------------------
+   The storefront's side
+   -------------------------------------------------------------------------- */
+
+/** One photograph the editor may select, as the page is rendering it. */
+export type MediaLayerFrame = {
+  /** `hero#0` — the slot, and which frame of it where a slot holds several. */
+  key: string;
+  slotId: string;
+  index: number;
+  label: string;
+  /** The address this frame is being rendered from, so the layer can find the
+   *  element showing it without the storefront carrying editor markup. */
+  url: string;
+};
+
+export type MediaLayerSection = {
+  id: string;
+  label: string;
+  selector: string;
+  /** As `HOME_SECTIONS` means it — so the preview raises the same property the
+   *  published stylesheet will. */
+  fixed?: boolean;
+};
+
+export type MediaLayerData = {
+  page: string;
+  /** The saved section heights, already built. Served to every visitor. */
+  css: string;
+  frames: MediaLayerFrame[];
+  sections: MediaLayerSection[];
+};
+
+/**
+ * Everything one page needs to serve its own layout overrides, and to answer
+ * the editor when it is opened inside one.
+ *
+ * The frames travel as addresses rather than as markers because the
+ * storefront's components are not this tab's to change: the page renders the
+ * photograph it was given, and the layer finds it again by the address it was
+ * rendered from.
+ */
+export async function getMediaLayer(pageId: string): Promise<MediaLayerData> {
+  const [heights, slots] = await Promise.all([
+    pageId === 'home' ? getSectionHeights() : Promise.resolve({}),
+    slotsFor(pageId),
+  ]);
+
+  const frames: MediaLayerFrame[] = [];
+
+  for (const slot of slots) {
+    slot.frames.forEach((frame, index) => {
+      const many = slot.frames.length > 1;
+
+      frames.push({
+        key: many ? `${slot.slotId}#${index}` : slot.slotId,
+        slotId: slot.slotId,
+        index,
+        label: many ? `${slot.label} ${index + 1}` : slot.label,
+        url: frame.url,
+      });
+    });
+  }
+
+  return {
+    page: pageId,
+    css: sectionHeightCss(heights),
+    frames,
+    sections:
+      pageId === 'home'
+        ? HOME_SECTIONS.map(({ id, label, selector, fixed }) => ({
+            id,
+            label,
+            selector,
+            ...(fixed ? { fixed: true } : {}),
+          }))
+        : [],
+  };
 }
