@@ -34,7 +34,7 @@ export const shippingAddressSchema = z.object({
 });
 
 export const checkoutInputSchema = z.object({
-  email: z.string().trim().toLowerCase().pipe(z.email('Enter a valid email address')),
+  email: z.string().trim().toLowerCase().max(254).pipe(z.email('Enter a valid email address')),
   shippingAddress: shippingAddressSchema,
 });
 

@@ -131,6 +131,11 @@ function Lightbox({ images, title, index, onClose, onStep }: BoxProps) {
   const imageRef = useRef<HTMLImageElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const swipe = useRef<{ x: number; y: number } | null>(null);
+  /* A touch that swiped is followed by a synthetic click on the same element.
+     Without this the swipe stepped to the next photograph and then the click
+     magnified it, so every swipe landed on a picture already zoomed into
+     whatever corner the finger happened to lift from. */
+  const swallowClick = useRef(false);
 
   // Magnified, and about which point. Cleared on every change of frame, so a
   // 2.5x view of one photograph is not inherited by the next.
@@ -273,6 +278,11 @@ function Lightbox({ images, title, index, onClose, onStep }: BoxProps) {
         ref={stageRef}
         className={`lightbox__stage${zoomed ? ' lightbox__stage--zoomed' : ''}`}
         onClick={(event) => {
+          if (swallowClick.current) {
+            swallowClick.current = false;
+            return;
+          }
+
           setOrigin(point(event));
           setZoomed((on) => !on);
         }}
@@ -291,6 +301,7 @@ function Lightbox({ images, title, index, onClose, onStep }: BoxProps) {
           const touch = event.changedTouches[0];
           const dx = touch.clientX - start.x;
           if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(touch.clientY - start.y)) {
+            swallowClick.current = true;
             go(dx < 0 ? 1 : -1);
           }
         }}

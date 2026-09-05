@@ -26,6 +26,12 @@ export default async function ShopPage(props: PageProps<'/shop/[[...category]]'>
 
   const categorySlug = category?.[0];
 
+  // One segment or none. A catch-all takes whatever is after /shop, so
+  // /shop/men/anything/at/all rendered the men's collection at a URL that
+  // says something else — a page that lies to a shopper, and a duplicate of a
+  // real one to anything crawling the store.
+  if (category && category.length > 1) notFound();
+
   // An unknown category used to return an empty grid, which reads as "we sold
   // out" rather than "that page does not exist". The set of real categories is
   // now a database question, so a new one is navigable the moment it is

@@ -13,6 +13,24 @@ export class QuantityRuleError extends Error {
   }
 }
 
+/**
+ * The shelf cannot cover the line.
+ *
+ * Named, like `QuantityRuleError`, because the message is written for a
+ * shopper and the action is allowed to repeat it verbatim. Everything else
+ * this module throws names an id and belongs in a log, not in a toast.
+ */
+export class StockError extends Error {
+  constructor(readonly available: number) {
+    super(
+      available === 0
+        ? 'That sold out while you were looking at it.'
+        : `Only ${available} left. Adjust the quantity and try again.`,
+    );
+    this.name = 'StockError';
+  }
+}
+
 /** Says what is wrong in the shop's own terms — "sold in pairs", not
  *  "quantity must satisfy (q - min) % step === 0". */
 function describeRule(rule: QuantityRuleDTO, wanted: number): string {
@@ -50,6 +68,14 @@ export async function createCart(userId: string | null = null): Promise<string> 
 
 export async function getCartView(cartId: string): Promise<CartViewDTO | null> {
   await connectToDatabase();
+
+  // A cart id that is not an id is a cart that does not exist, not a fault.
+  // This is read straight from a cookie on every storefront render, and a
+  // cookie is a value a browser can be carrying for any number of reasons —
+  // a truncated write, something else on the domain, a hand edit. Throwing
+  // here took every page down with it, and because a Server Component cannot
+  // clear a cookie, the shopper could not get back.
+  if (!Types.ObjectId.isValid(cartId)) return null;
 
   const cart = await Cart.findById(toObjectId(cartId)).lean();
   if (!cart) return null;
@@ -131,9 +157,7 @@ export async function addItemToCart(
 
   await assertQuantityAllowed(variant.productId, desired);
 
-  if (desired > variant.stock) {
-    throw new Error(`Insufficient stock: only ${variant.stock} available`);
-  }
+  if (desired > variant.stock) throw new StockError(variant.stock);
 
   if (existing) {
     existing.quantity = desired;
@@ -165,9 +189,7 @@ export async function updateCartItemQuantity(
 
     await assertQuantityAllowed(variant.productId, quantity);
 
-    if (quantity > variant.stock) {
-      throw new Error(`Insufficient stock: only ${variant.stock} available`);
-    }
+    if (quantity > variant.stock) throw new StockError(variant.stock);
 
     const existing = cart.items.find((item) => String(item.variantId) === variantId);
     if (existing) existing.quantity = quantity;

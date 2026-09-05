@@ -139,6 +139,32 @@ export function snapQuantity(
   return rule.max !== null ? Math.min(snapped, rule.max) : snapped;
 }
 
+/**
+ * The lowest and highest legal quantity a stepper may offer.
+ *
+ * Three ceilings meet here: what the shelf holds, what the product's own rule
+ * allows, and where the last whole step lands below both. `available` is null
+ * before a variant is chosen, when there is no stock figure to cap against —
+ * the stepper opens on ten steps' worth so it is not stuck on its minimum.
+ *
+ * Shared, because the product page and the quick view are the same control in
+ * two frames and had drifted: one honoured the rule and the other stepped by
+ * one, so a tee sold in twelves could be added as a single from the grid and
+ * refused by the server for it.
+ */
+export function quantityBounds(
+  rule: { min: number; step: number; max: number | null },
+  available: number | null,
+): { lowest: number; highest: number } {
+  const stockCeiling = available ?? rule.min + rule.step * 9;
+  const ruleCeiling = rule.max ?? Number.POSITIVE_INFINITY;
+  const ceiling = Math.max(Math.min(stockCeiling, ruleCeiling), rule.min);
+
+  const highest = rule.min + Math.floor((ceiling - rule.min) / rule.step) * rule.step;
+
+  return { lowest: rule.min, highest: Math.max(highest, rule.min) };
+}
+
 /** The legal quantities, for a picker to render. Capped so an unbounded rule
  *  cannot produce an unbounded list. */
 export function quantityOptions(

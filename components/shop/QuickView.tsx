@@ -9,6 +9,7 @@ import { formatCents } from '@/lib/money';
 import { imageUrl } from '@/lib/images';
 import { sizeOrder, toColorways } from '@/lib/shop/colorways';
 import { addToCartAction } from '@/app/actions/cart';
+import { quantityBounds, snapQuantity } from '@/lib/validation/product';
 import { useToast } from '@/components/ui/Toast';
 import type { ProductDTO } from '@/types/dto';
 
@@ -35,9 +36,11 @@ export function QuickView({ product, onClose }: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
   const toast = useToast();
 
+  const rule = product.quantityRule;
+
   const [color, setColor] = useState(product.colors[0] ?? '');
   const [size, setSize] = useState('');
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState(rule.min);
   const [pending, startTransition] = useTransition();
 
   const colorways = useMemo(() => toColorways(product), [product]);
@@ -105,6 +108,13 @@ export function QuickView({ product, onClose }: Props) {
   const selected = size ? variantFor(size, color) : undefined;
   const priced = selected ?? variantFor(ordered[0] ?? '', color);
 
+  /* The quick view sells the same products the product page does, under the
+     same rules. It used to step by one from one regardless — so a style sold
+     in twelves opened here on a quantity the shop does not sell, and its Add
+     to cart was refused by the server every time it was pressed. */
+  const { highest } = quantityBounds(rule, selected?.stock ?? null);
+  const capped = Math.min(Math.max(quantity, rule.min), highest);
+
   function add(then?: () => void) {
     if (!selected) {
       toast('Choose a size first', 'error');
@@ -112,7 +122,7 @@ export function QuickView({ product, onClose }: Props) {
     }
 
     startTransition(async () => {
-      const result = await addToCartAction(selected.id, quantity);
+      const result = await addToCartAction(selected.id, capped);
       toast(result.ok ? 'Added to cart' : result.error, result.ok ? 'ok' : 'error');
 
       if (result.ok) {
@@ -242,25 +252,29 @@ export function QuickView({ product, onClose }: Props) {
           </fieldset>
 
           <div className="quick__group">
-            <p className="meta quick__legend" id="quick-qty">Quantity</p>
+            <p className="meta quick__legend" id="quick-qty">
+              Quantity
+              {rule.step > 1 ? ` — sold in ${rule.step}s` : ''}
+              {rule.step === 1 && rule.min > 1 ? ` — minimum ${rule.min}` : ''}
+            </p>
             <div className="stepper" role="group" aria-labelledby="quick-qty">
               <button
                 type="button"
                 className="stepper__button"
-                onClick={() => setQuantity((n) => Math.max(1, n - 1))}
-                disabled={quantity <= 1}
+                onClick={() => setQuantity(Math.max(capped - rule.step, rule.min))}
+                disabled={capped <= rule.min}
               >
                 <span aria-hidden="true">&minus;</span>
                 <span className="visually-hidden">Decrease quantity</span>
               </button>
-              <output className="stepper__value tnum">{quantity}</output>
+              <output className="stepper__value tnum">{capped}</output>
               <button
                 type="button"
                 className="stepper__button"
                 onClick={() =>
-                  setQuantity((n) => Math.min(selected?.stock ?? 10, n + 1))
+                  setQuantity(snapQuantity(Math.min(capped + rule.step, highest), rule))
                 }
-                disabled={quantity >= (selected?.stock ?? 10)}
+                disabled={capped >= highest}
               >
                 <span aria-hidden="true">+</span>
                 <span className="visually-hidden">Increase quantity</span>
@@ -278,8 +292,8 @@ export function QuickView({ product, onClose }: Props) {
               {pending ? 'Adding' : 'Add to cart'}
             </button>
 
-            {/* /checkout does not exist yet, so Buy now adds and moves to the
-                cart rather than pretending to be an express checkout. */}
+            {/* Buy now adds and moves to the cart, the same as on a product
+                page — one purchase path, not two. */}
             <button
               type="button"
               className="btn btn--outline btn--lg btn--block"

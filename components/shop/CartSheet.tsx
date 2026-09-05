@@ -15,7 +15,7 @@ import { updateQuantityAction } from '@/app/actions/cart';
 import { imageUrl } from '@/lib/images';
 import { formatCents } from '@/lib/money';
 import { useToast } from '@/components/ui/Toast';
-import type { CartViewDTO } from '@/types/dto';
+import type { CartLineDTO, CartViewDTO } from '@/types/dto';
 
 /**
  * "Are we on the client yet?", without an effect.
@@ -35,6 +35,33 @@ type Props = {
   open: boolean;
   onClose: () => void;
 };
+
+/* --------------------------------------------------------------------------
+   The quantity rule, in the sheet
+
+   The sheet used to step by one in both directions, which is fine for the
+   common product and wrong for every other kind: a tee sold in twelves has no
+   "thirteen", so the plus button asked the server for a quantity it is built
+   to refuse and the shopper got an error for pressing the only control in
+   front of them. `/cart` already stepped by the rule. These two are that same
+   arithmetic, so the two lists cannot drift apart again.
+   -------------------------------------------------------------------------- */
+
+/** Below the minimum there is no smaller legal quantity, so the line goes. */
+function stepDown(line: CartLineDTO): number {
+  const next = line.quantity - line.quantityRule.step;
+  return next < line.quantityRule.min ? 0 : next;
+}
+
+/** Room on the shelf, and room under the product's own ceiling. */
+function canStepUp(line: CartLineDTO): boolean {
+  const next = line.quantity + line.quantityRule.step;
+
+  return (
+    next <= line.availableStock &&
+    (line.quantityRule.max === null || next <= line.quantityRule.max)
+  );
+}
 
 /**
  * The cart, as a sheet that rises from the foot of the window.
@@ -236,7 +263,7 @@ export function CartSheet({ cart, open, onClose }: Props) {
                         type="button"
                         disabled={pending}
                         aria-label="Decrease quantity"
-                        onClick={() => change(line.variantId, line.quantity - 1)}
+                        onClick={() => change(line.variantId, stepDown(line))}
                       >
                         &minus;
                       </button>
@@ -245,9 +272,11 @@ export function CartSheet({ cart, open, onClose }: Props) {
 
                       <button
                         type="button"
-                        disabled={pending || line.quantity >= line.availableStock}
+                        disabled={pending || !canStepUp(line)}
                         aria-label="Increase quantity"
-                        onClick={() => change(line.variantId, line.quantity + 1)}
+                        onClick={() =>
+                          change(line.variantId, line.quantity + line.quantityRule.step)
+                        }
                       >
                         +
                       </button>

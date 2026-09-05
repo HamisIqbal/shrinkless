@@ -9,7 +9,7 @@ import { StickyBuyBar } from '@/components/shop/StickyBuyBar';
 import { useToast } from '@/components/ui/Toast';
 import { formatCents } from '@/lib/money';
 import { sizeOrder } from '@/lib/shop/colorways';
-import { snapQuantity } from '@/lib/validation/product';
+import { quantityBounds, snapQuantity } from '@/lib/validation/product';
 import type { QuantityRuleDTO, VariantDTO } from '@/types/dto';
 
 type Props = {
@@ -72,22 +72,20 @@ export function VariantPicker({
   });
 
   // The stepper cannot offer more than the shelf holds, and cannot offer a
-  // quantity the product is not sold in. Before a size is picked there is no
-  // stock figure to cap against, so it opens at ten steps' worth.
-  const stockCeiling = selected?.stock ?? quantityRule.min + quantityRule.step * 9;
-  const ruleCeiling = quantityRule.max ?? Number.POSITIVE_INFINITY;
-  const ceiling = Math.max(Math.min(stockCeiling, ruleCeiling), quantityRule.min);
+  // quantity the product is not sold in. Shared with the quick view, which is
+  // this same control in a smaller frame.
+  const { highest } = quantityBounds(quantityRule, selected?.stock ?? null);
 
-  // The largest legal quantity at or below the ceiling. With a step of one and
-  // a minimum of one this is just the ceiling, which is the common case.
-  const highest =
-    quantityRule.min +
-    Math.floor((ceiling - quantityRule.min) / quantityRule.step) * quantityRule.step;
-
-  const capped = Math.min(Math.max(quantity, quantityRule.min), Math.max(highest, quantityRule.min));
+  const capped = Math.min(Math.max(quantity, quantityRule.min), highest);
 
   /** True when the shelf cannot even cover one legal purchase. */
-  const belowMinimum = Boolean(selected) && stockCeiling < quantityRule.min;
+  const belowMinimum = Boolean(selected) && (selected?.stock ?? 0) < quantityRule.min;
+
+  /* Nothing here can be bought right now. The stepper is already pinned to the
+     minimum with no smaller rung to drop to, so leaving the buttons live meant
+     the only thing pressing them could produce was the same refusal every
+     time. */
+  const unbuyable = pending || belowMinimum;
 
   function add(then?: () => void) {
     if (!selected) {
@@ -233,18 +231,20 @@ export function VariantPicker({
           type="button"
           className="btn btn--lg btn--block"
           onClick={() => add()}
-          disabled={pending}
+          disabled={unbuyable}
         >
-          {pending ? 'Adding' : 'Add to cart'}
+          {pending ? 'Adding' : belowMinimum ? 'Not enough left' : 'Add to cart'}
         </button>
 
-        {/* /checkout does not exist until Phase 5, so Buy now adds and goes to
-            the cart rather than pretending to be an express checkout. */}
+        {/* Buy now adds and goes to the cart rather than jumping the shopper
+            straight into payment: the cart is where a second thought, a
+            quantity change and the running total all live, and skipping it
+            for one tap saved is not a trade this shop makes. */}
         <button
           type="button"
           className="btn btn--accent btn--lg btn--block"
           onClick={() => add(() => router.push('/cart'))}
-          disabled={pending}
+          disabled={unbuyable}
         >
           Buy now
         </button>
@@ -256,15 +256,15 @@ export function VariantPicker({
           type="button"
           className="btn"
           onClick={() => add()}
-          disabled={pending}
+          disabled={unbuyable}
         >
-          {pending ? 'Adding' : 'Add to cart'}
+          {pending ? 'Adding' : belowMinimum ? 'Not enough left' : 'Add to cart'}
         </button>
         <button
           type="button"
           className="btn btn--accent"
           onClick={() => add(() => router.push('/cart'))}
-          disabled={pending}
+          disabled={unbuyable}
         >
           Buy now
         </button>

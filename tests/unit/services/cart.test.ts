@@ -80,6 +80,18 @@ describe('getCartView', () => {
   it('returns null for an unknown cart', async () => {
     expect(await getCartView(String(new Types.ObjectId()))).toBeNull();
   });
+
+  /* The cart id is read straight off a cookie on every storefront render, so
+     it is the one input to the shop that never passed through a form. This
+     used to throw, which took down every page of the store — and since a
+     Server Component cannot clear a cookie, a browser carrying a bad one
+     could not get back in. A cart id that is not an id is simply no cart. */
+  it.each(['', ' ', 'not-an-objectid', 'zzz', '../../etc/passwd', 'null'])(
+    'treats %j in the cart cookie as no cart rather than throwing',
+    async (value) => {
+      await expect(getCartView(value)).resolves.toBeNull();
+    },
+  );
 });
 
 describe('mergeGuestCartIntoUserCart', () => {

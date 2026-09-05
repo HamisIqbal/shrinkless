@@ -2,6 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 import {
+  QuantityRuleError,
+  StockError,
   addItemToCart,
   createCart,
   getCartView,
@@ -14,9 +16,23 @@ export type ActionResult =
   | { ok: true; cart: CartViewDTO }
   | { ok: false; error: string };
 
+/**
+ * Two kinds of failure reach here and only one of them is the shopper's
+ * business.
+ *
+ * `QuantityRuleError` and `StockError` carry sentences written for a person —
+ * "sold in multiples of 12", "only 3 left" — and are repeated as they are.
+ * Everything else names a variant or a cart by its database id, which is no
+ * use to anybody reading a toast; it goes to the log and the shopper gets a
+ * sentence instead.
+ */
 function failure(error: unknown): ActionResult {
-  const message = error instanceof Error ? error.message : 'Something went wrong';
-  return { ok: false, error: message };
+  if (error instanceof QuantityRuleError || error instanceof StockError) {
+    return { ok: false, error: error.message };
+  }
+
+  console.error('cart action failed', error);
+  return { ok: false, error: 'We could not update your cart. Try again.' };
 }
 
 function revalidateCartSurfaces(): void {
@@ -53,7 +69,7 @@ export async function updateQuantityAction(
 ): Promise<ActionResult> {
   try {
     const cartId = await readCartId();
-    if (!cartId) return { ok: false, error: 'No cart' };
+    if (!cartId) return { ok: false, error: 'Your cart has expired. Reload the page.' };
 
     const cart = await updateCartItemQuantity(cartId, variantId, quantity);
     revalidateCartSurfaces();

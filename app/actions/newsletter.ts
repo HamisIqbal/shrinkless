@@ -26,7 +26,7 @@ async function withinLimit(): Promise<boolean> {
 const THROTTLED = 'That is a lot of sign-ups from one place. Try again later.';
 
 const schema = z.object({
-  email: z.string().trim().toLowerCase().pipe(z.email('Enter a valid email address')),
+  email: z.string().trim().toLowerCase().max(254).pipe(z.email('Enter a valid email address')),
 });
 
 export type NewsletterState =
@@ -55,9 +55,12 @@ export async function subscribeAction(
 }
 
 const restockSchema = z.object({
-  email: z.string().trim().toLowerCase().pipe(z.email('Enter a valid email address')),
-  slug: z.string().trim().min(1),
-  color: z.string().trim().min(1),
+  email: z.string().trim().toLowerCase().max(254).pipe(z.email('Enter a valid email address')),
+  /* Both come from hidden inputs, so both are a browser's word for what it
+     was looking at. Bounded rather than trusted: they end up in a record the
+     store reads back when the colourway returns. */
+  slug: z.string().trim().min(1).max(200),
+  color: z.string().trim().min(1).max(80),
 });
 
 /**

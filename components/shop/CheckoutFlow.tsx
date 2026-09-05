@@ -88,6 +88,13 @@ export function CheckoutFlow({
   );
 }
 
+/** Said when Stripe.js is not there to talk to — an ad blocker, an offline
+ *  moment, a corporate proxy. It is the shopper's only clue, so it says what
+ *  to try rather than only that something is wrong. */
+const NO_STRIPE =
+  'The payment form could not load. Check your connection or any blocker on ' +
+  'stripe.com, then reload the page.';
+
 function DetailsStep({ onReady }: { onReady: (clientSecret: string) => void }) {
   const elements = useElements();
 
@@ -99,10 +106,19 @@ function DetailsStep({ onReady }: { onReady: (clientSecret: string) => void }) {
     event.preventDefault();
     setError('');
 
-    if (!elements) return;
+    // Both of these mean Stripe.js never arrived. Returning quietly, as this
+    // did, leaves a shopper pressing a button that does nothing at all and no
+    // reason on the page for why.
+    if (!elements) {
+      setError(NO_STRIPE);
+      return;
+    }
 
     const addressElement = elements.getElement(AddressElement);
-    if (!addressElement) return;
+    if (!addressElement) {
+      setError(NO_STRIPE);
+      return;
+    }
 
     const { complete, value } = await addressElement.getValue();
     if (!complete) {
@@ -235,7 +251,15 @@ function PaymentStep({
       });
 
       router.push(`/checkout/complete?${query.toString()}`);
+      return;
     }
+
+    // Neither an error nor an intent. Stripe normally navigates away instead
+    // of resolving like this, so reaching here means the hand-off did not
+    // happen — and the button must not be left saying "Paying…" for ever over
+    // a payment that is not running.
+    setPending(false);
+    setError('The payment did not start. Try again.');
   }
 
   return (

@@ -33,7 +33,7 @@ export function parseEnquiryLines(values: readonly string[]): unknown[] {
 }
 
 const lineSchema = z.object({
-  slug: z.string().trim().min(1),
+  slug: z.string().trim().min(1).max(200),
   tier: z
     .number()
     .refine(
@@ -46,7 +46,7 @@ const lineSchema = z.object({
 export const wholesaleEnquirySchema = z.object({
   company: z.string().trim().min(2, 'Tell us the company name').max(120),
   contactName: z.string().trim().min(2, 'Tell us who to reply to').max(120),
-  email: z.string().trim().toLowerCase().pipe(z.email('Enter a valid email address')),
+  email: z.string().trim().toLowerCase().max(254).pipe(z.email('Enter a valid email address')),
   phone: z.string().trim().max(40).default(''),
   country: z.string().trim().min(2, 'Tell us where the order is shipping').max(80),
   message: z.string().trim().max(2000).default(''),
