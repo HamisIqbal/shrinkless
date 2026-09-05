@@ -21,7 +21,11 @@ import {
  * JavaScript.
  */
 export async function InstagramStrip() {
-  const posts = await fetchInstagramPosts(12);
+  /* Two dozen, out of a grid a hundred deep. The number is a compromise the
+     rail forces: every post is rendered three times for the endless loop, so
+     this is already 72 tiles of markup. Meta will hand over a hundred in one
+     request — ask for them and the band becomes a page of its own. */
+  const posts = await fetchInstagramPosts(24);
 
   return (
     <section className="iglane" aria-labelledby="ig-heading">
