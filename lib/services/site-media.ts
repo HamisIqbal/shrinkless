@@ -14,6 +14,7 @@ import { HERO_MAX, HERO_MIN, type MediaFrameInput } from '@/lib/validation/media
 import { normaliseZoom, type ViewRatios } from '@/lib/media/crop';
 import {
   isSectionColour,
+  normaliseSectionColour,
   sectionRules,
   type SectionColour,
   type SectionSetting,
@@ -524,10 +525,9 @@ export function isKnownSection(sectionId: string): boolean {
  * Everything that has been set on a section, by section id. A section nobody
  * has touched is simply absent.
  *
- * A background that is not in the palette is dropped rather than served: the
- * set of grounds is the design's, and a name left behind by a colour that has
- * since been retired should fall back to the page's own rather than reach a
- * stylesheet.
+ * A background that is not a colour is dropped rather than served: a name left
+ * behind by a palette entry that has since been retired should fall back to the
+ * page's own rather than reach a stylesheet.
  */
 export async function getSectionSettings(): Promise<Record<string, SectionSetting>> {
   await connectToDatabase();
@@ -538,9 +538,11 @@ export async function getSectionSettings(): Promise<Record<string, SectionSettin
   for (const row of rows) {
     if (!isKnownSection(row.sectionId)) continue;
 
+    const background = normaliseSectionColour(row.background);
+
     settings[row.sectionId] = {
       ...(row.height && row.height > 0 ? { height: row.height } : {}),
-      ...(isSectionColour(row.background) ? { background: row.background } : {}),
+      ...(background ? { background } : {}),
     };
   }
 
@@ -567,7 +569,7 @@ export async function saveSectionSettings(
     }
 
     if (entry.background && !isSectionColour(entry.background)) {
-      throw new AdminOperationError('That is not a colour this site uses.');
+      throw new AdminOperationError('That is not a colour.');
     }
   }
 
@@ -576,7 +578,7 @@ export async function saveSectionSettings(
   await SectionLayout.bulkWrite(
     entries.map((entry) => {
       const height = entry.height > 0 ? Math.round(entry.height) : 0;
-      const background = isSectionColour(entry.background) ? entry.background : '';
+      const background = normaliseSectionColour(entry.background);
 
       if (!height && !background) {
         return { deleteOne: { filter: { sectionId: entry.sectionId } } };

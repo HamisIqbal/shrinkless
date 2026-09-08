@@ -28,11 +28,13 @@ const sectionLayoutSchema = new Schema(
      */
     height: { type: Number, min: 0 },
     /**
-     * A name from the palette in `lib/media/colours.ts` — never a hex.
+     * A name from the palette in `lib/media/colours.ts`, or a colour of the
+     * section's own as `#rrggbb`.
      *
-     * So the set of grounds stays the design's to decide and re-tinting the
-     * brand moves every section that was set to one of them. Absent is the
-     * ground the page already gives the band.
+     * A name so that re-tinting the brand moves every section set to one of
+     * the site's own grounds without a migration; a hex for the ones dressed
+     * to something the palette does not have. Absent is the ground the page
+     * already gives the band.
      */
     background: { type: String, trim: true },
   },

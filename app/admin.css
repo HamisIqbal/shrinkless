@@ -2335,8 +2335,9 @@ body:has(.admin) {
 .admin .mediaedit__unit { font-size: 0.75rem; color: var(--ad-ink-3); }
 
 /* The grounds a band can be set to. A row of the actual colours rather than a
-   select of their names: the choice is a visual one and there are only four of
-   them, so the control is the swatches themselves. */
+   select of their names: the choice is a visual one, so the control is the
+   swatches themselves — the site's own three, and then a wheel and a hex box
+   for any other colour. */
 .admin .mediaedit__colours { margin-bottom: var(--ad-s-3); }
 
 .admin .swatches {
@@ -2379,6 +2380,53 @@ body:has(.admin) {
      own to read as a colour rather than as a hole. */
   border: 1px solid var(--ad-line);
 }
+
+/* Any other colour: the same pill as a swatch, but holding two ways into one
+   setting rather than being a choice itself — so it is a div, not a radio. */
+.admin .swatch--any {
+  cursor: default;
+  padding-right: 0.35rem;
+}
+
+.admin .swatch--any:hover { border-color: var(--ad-line); color: var(--ad-ink-2); }
+.admin .swatch--any.swatch--on { border-color: var(--ad-ink); color: var(--ad-ink); }
+
+/* The native wheel, cut down to the same chip the named grounds show: the
+   browser draws its own frame and padding around the colour, and both are
+   stripped so what is left is the colour and the edge the chips all carry. */
+.admin .swatch__wheel {
+  flex: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  padding: 0;
+  border: 1px solid var(--ad-line);
+  border-radius: 999px;
+  background: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.admin .swatch__wheel::-webkit-color-swatch-wrapper { padding: 0; }
+.admin .swatch__wheel::-webkit-color-swatch { border: none; border-radius: 999px; }
+.admin .swatch__wheel::-moz-color-swatch { border: none; border-radius: 999px; }
+
+/* Room for `#ffffff` and no more. Monospace because it is a value being read
+   back and checked against another one, not a word. */
+.admin .swatch__hex {
+  width: 7.25rem;
+  padding: 0.15rem 0.35rem;
+  border: none;
+  background: none;
+  font: inherit;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: inherit;
+}
+
+.admin .swatch__hex:focus-visible { outline: 2px solid var(--ad-ink-3); outline-offset: 2px; }
 
 /* "The page's own" has no colour to show — a diagonal rule says empty without
    pretending to be white, which is one of the three real choices. */

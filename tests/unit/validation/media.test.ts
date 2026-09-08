@@ -96,11 +96,25 @@ describe('mediaPublishSchema — a section', () => {
     expect(result.success && result.data.sections[0].background).toBe('warm');
   });
 
-  /* The palette is the design's, so a hex — even one of the three — is not a
-     value this schema knows. What is stored is the name. */
-  it('refuses a colour it does not have a name for', () => {
-    expect(publish({ sectionId: 'doors', height: 0, background: '#d8d2c7' }).success).toBe(false);
+  /* A colour the palette has no name for is kept as a hex — in the one form,
+     so the same colour written two ways is one stored value. */
+  it('accepts any colour as a hex, in one form', () => {
+    const result = publish({ sectionId: 'doors', height: 0, background: '#A1B2C3' });
+
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.sections[0].background).toBe('#a1b2c3');
+
+    const short = publish({ sectionId: 'doors', height: 0, background: '#abc' });
+
+    expect(short.success && short.data.sections[0].background).toBe('#aabbcc');
+  });
+
+  /* What must never reach a stylesheet: anything that is not a colour. */
+  it('refuses what is not a colour at all', () => {
     expect(publish({ sectionId: 'doors', height: 0, background: 'hotpink' }).success).toBe(false);
+    expect(
+      publish({ sectionId: 'doors', height: 0, background: 'red; background: url(x)' }).success,
+    ).toBe(false);
   });
 
   it('reads a missing colour as the ground the page already gives it', () => {

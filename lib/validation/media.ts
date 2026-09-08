@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { isSectionColour } from '@/lib/media/colours';
+import { isSectionColour, normaliseSectionColour } from '@/lib/media/colours';
 import { ZOOM_MAX, ZOOM_MIN } from '@/lib/media/crop';
 
 /** How many frames the campaign carousel will accept. Two is the fewest that
@@ -121,9 +121,11 @@ export type HeroFramesInput = z.infer<typeof heroFramesInputSchema>;
  * height's ceiling is well past any band the page has and is there so a slip
  * on a numeric input cannot write a page nobody can scroll past.
  *
- * The colour is checked against the palette here as well as in the service, so
- * a request naming a ground the site does not have is turned away at the edge
- * with a message a person can read, rather than reaching the database.
+ * The colour is checked here as well as in the service, so a request carrying
+ * something that is not a colour at all is turned away at the edge with a
+ * message a person can read, rather than reaching the database — and it is put
+ * into its one stored form on the way through, so `#FFF` and `#ffffff` are the
+ * same ground rather than two.
  */
 const sectionSetting = z.object({
   sectionId: z.string().trim().min(1).max(80),
@@ -131,10 +133,8 @@ const sectionSetting = z.object({
   background: z
     .string()
     .trim()
-    .refine(
-      (value) => value === '' || isSectionColour(value),
-      'That is not a colour this site uses',
-    )
+    .refine((value) => value === '' || isSectionColour(value), 'That is not a colour')
+    .transform(normaliseSectionColour)
     .default(''),
 });
 

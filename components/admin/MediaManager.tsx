@@ -13,6 +13,10 @@ import { imageUrl } from '@/lib/images';
 import {
   SECTION_COLOURS,
   SECTION_COLOUR_IDS,
+  isSectionColourName,
+  normaliseSectionColour,
+  sectionColourHex,
+  sectionColourLabel,
   type SectionSetting,
 } from '@/lib/media/colours';
 import { ZOOM_MIN } from '@/lib/media/crop';
@@ -70,7 +74,7 @@ function describe(setting: SectionSetting): string {
   const parts: string[] = [];
 
   if (setting.height) parts.push(`${setting.height}px`);
-  if (setting.background) parts.push(SECTION_COLOURS[setting.background].label);
+  if (setting.background) parts.push(sectionColourLabel(setting.background));
 
   return parts.length ? parts.join(' · ') : 'As the page sets it';
 }
@@ -307,9 +311,38 @@ function SectionPanel({
   const edited = !sameSetting(setting, savedSetting);
   const set = savedSetting.height || savedSetting.background;
 
+  /* The colour of its own this section is set to, if it is set to one at all —
+     a named ground is not a custom colour, and neither is nothing. */
+  const custom = isSectionColourName(background) ? '' : normaliseSectionColour(background);
+
+  /* The hex box shows what is being typed rather than what is stored, so a
+     half-written `#ab` is not thrown away on the way to becoming `#abcdef`.
+     Every other way of setting the colour drops what was typed and the box
+     goes back to showing the setting. */
+  const [typed, setTyped] = useState<string | null>(null);
+  const hex = typed ?? custom;
+
   function patch(change: SectionSetting) {
     onChange({ ...setting, ...change });
   }
+
+  /** A colour chosen rather than typed — a swatch, the wheel, or the way back
+   *  to the page's own. */
+  function choose(background: SectionSetting['background']) {
+    setTyped(null);
+    patch({ background });
+  }
+
+  /** The whole section put back, to what was published or to the design's
+   *  own. */
+  function restore(next: SectionSetting) {
+    setTyped(null);
+    onChange(next);
+  }
+
+  /* The wheel needs a colour to open on even when the section has none: the
+     ground it is standing on now, so the picker starts where the eye is. */
+  const wheel = custom || sectionColourHex(background) || SECTION_COLOURS.paper.hex;
 
   return (
     <aside className="panel inspector mediaedit__panel" aria-label={`${label} section`}>
@@ -339,10 +372,10 @@ function SectionPanel({
       </p>
 
       <div className="inspector__body">
-        {/* The three grounds the storefront already stands on, and the page's
-            own. A palette rather than a picker: every band on this site carries
-            ink type, and a colour it could not be read against is a page
-            nobody can fix from in here. */}
+        {/* The site's own three first, because a band that matches one of
+            them is the usual answer, and then the whole spectrum for the ones
+            that are dressed for a season. Named grounds are stored by name and
+            follow a re-tint; a colour picked here is stored as it stands. */}
         <fieldset className="adfield mediaedit__colours">
           <legend>Colour</legend>
 
@@ -352,7 +385,7 @@ function SectionPanel({
               role="radio"
               aria-checked={!background}
               className={`swatch swatch--none${!background ? ' swatch--on' : ''}`}
-              onClick={() => patch({ background: undefined })}
+              onClick={() => choose(undefined)}
               title="As the page sets it"
             >
               <span className="swatch__chip" aria-hidden="true" />
@@ -366,7 +399,7 @@ function SectionPanel({
                 role="radio"
                 aria-checked={background === id}
                 className={`swatch${background === id ? ' swatch--on' : ''}`}
-                onClick={() => patch({ background: id })}
+                onClick={() => choose(id)}
                 title={SECTION_COLOURS[id].hex}
               >
                 <span
@@ -379,7 +412,41 @@ function SectionPanel({
             ))}
           </div>
 
-          <small>The three grounds the rest of the site is built on.</small>
+          {/* The wheel and the hex are the same setting twice: one for picking
+              a colour by eye, one for a value carried in from a brand sheet. */}
+          <div className={`swatch swatch--any${custom ? ' swatch--on' : ''}`}>
+            <input
+              type="color"
+              className="swatch__wheel"
+              value={wheel}
+              onChange={(event) => choose(normaliseSectionColour(event.target.value))}
+              aria-label="Any colour"
+            />
+
+            <input
+              type="text"
+              className="swatch__hex"
+              value={hex}
+              placeholder="#000000"
+              spellCheck={false}
+              maxLength={7}
+              onChange={(event) => {
+                const next = event.target.value;
+                setTyped(next);
+
+                const colour = normaliseSectionColour(next);
+                if (colour) patch({ background: colour });
+                else if (custom && !next.trim()) patch({ background: undefined });
+              }}
+              aria-label="Colour as hex"
+            />
+          </div>
+
+          <small>
+            The first three are the grounds the rest of the site is built on, and move with it if
+            the brand is ever re-tinted. Any other colour is kept exactly as picked — the type on
+            this band is dark, so leave it something dark ink can be read against.
+          </small>
         </fieldset>
 
         <label className="adfield">
@@ -420,7 +487,7 @@ function SectionPanel({
         <button
           type="button"
           className="abtn abtn--quiet abtn--sm"
-          onClick={() => onChange(savedSetting)}
+          onClick={() => restore(savedSetting)}
           disabled={!edited}
         >
           Reset this section
@@ -429,7 +496,7 @@ function SectionPanel({
         <button
           type="button"
           className="abtn abtn--quiet abtn--sm"
-          onClick={() => onChange({})}
+          onClick={() => restore({})}
           disabled={!height && !background}
         >
           Back to the page&rsquo;s own

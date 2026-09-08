@@ -442,15 +442,27 @@ describe('section settings', () => {
     );
   });
 
-  it('refuses a colour the site does not use', async () => {
+  it('refuses a value that is not a colour', async () => {
     expect(isSectionColour('paper-deep')).toBe(true);
-    expect(isSectionColour('#ff0000')).toBe(false);
+    expect(isSectionColour('#ff0000')).toBe(true);
+    expect(isSectionColour('hotpink')).toBe(false);
 
     await expect(
       saveSectionSettings([{ sectionId: 'doors', height: 0, background: 'hotpink' }]),
     ).rejects.toBeInstanceOf(AdminOperationError);
 
     expect(await getSectionSettings()).toEqual({});
+  });
+
+  /* A colour the palette does not have is kept exactly as picked — and in one
+     form, so the same colour typed two ways is one row. */
+  it("keeps a colour of the section's own", async () => {
+    await saveSectionSettings([{ sectionId: 'doors', height: 0, background: '#A1B2C3' }]);
+
+    expect(await getSectionSettings()).toEqual({ doors: { background: '#a1b2c3' } });
+    expect(sectionSettingCss(await getSectionSettings())).toBe(
+      '.gateway { background: #a1b2c3; }',
+    );
   });
 
   /* A band can be recoloured at the height the page already draws it, and
