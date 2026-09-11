@@ -10,6 +10,10 @@ import { AnnounceBar } from '@/components/site/AnnounceBar';
 import { Header } from '@/components/site/Header';
 import { Footer } from '@/components/site/Footer';
 import { FooterReveal } from '@/components/site/FooterReveal';
+import { HomeSwitch } from '@/components/home/HomeSwitch';
+import { HomeAnnounce } from '@/components/home/HomeAnnounce';
+import { HomeHeader } from '@/components/home/HomeHeader';
+import { HomeFooter } from '@/components/home/HomeFooter';
 
 export default async function ShopLayout({ children }: LayoutProps<'/'>) {
   const [settings, cart, session, menu] = await Promise.all([
@@ -28,14 +32,32 @@ export default async function ShopLayout({ children }: LayoutProps<'/'>) {
 
       <a href="#main" className="skiplink">Skip to content</a>
 
-      <AnnounceBar message={settings.announcement} />
+      {/* The homepage draws its own announcement bar, header and footer; every
+          other shop route keeps the standard ones. See HomeSwitch. */}
+      <HomeSwitch
+        home={<HomeAnnounce message={settings.announcement} />}
+        rest={<AnnounceBar message={settings.announcement} />}
+      />
 
-      <Header
-        menu={menu}
-        cart={cart}
-        signedIn={Boolean(session?.user)}
-        isAdmin={isAdminSession(session)}
-        storeEmail={settings.storeEmail}
+      <HomeSwitch
+        home={
+          <HomeHeader
+            menu={menu}
+            cart={cart}
+            signedIn={Boolean(session?.user)}
+            isAdmin={isAdminSession(session)}
+            storeEmail={settings.storeEmail}
+          />
+        }
+        rest={
+          <Header
+            menu={menu}
+            cart={cart}
+            signedIn={Boolean(session?.user)}
+            isAdmin={isAdminSession(session)}
+            storeEmail={settings.storeEmail}
+          />
+        }
       />
 
       {/* The Instagram band is no longer bolted on here. Every route but the
@@ -45,7 +67,10 @@ export default async function ShopLayout({ children }: LayoutProps<'/'>) {
       </div>
 
       <FooterReveal>
-        <Footer storeEmail={settings.storeEmail} />
+        <HomeSwitch
+          home={<HomeFooter storeEmail={settings.storeEmail} />}
+          rest={<Footer storeEmail={settings.storeEmail} />}
+        />
       </FooterReveal>
     </div>
     </ToastProvider>

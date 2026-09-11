@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import {
   listFeaturedProducts,
   listNewArrivals,
@@ -14,30 +13,35 @@ import { MediaLayer } from '@/components/site/MediaLayer';
 import { getContentLayer, getSiteContent, type SiteContent } from '@/lib/services/site-content';
 import { ContentLayer } from '@/components/site/ContentLayer';
 import { SHOPPABLE } from '@/lib/shop/navigation';
-import { HeroSlider, type HeroSlide } from '@/components/site/HeroSlider';
-import { CategoryGateway, type Gateway } from '@/components/shop/CategoryGateway';
-import { ProductGrid } from '@/components/shop/ProductGrid';
-import { OverlayTiles, type Tile } from '@/components/editorial/OverlayTiles';
-import { ImageBand } from '@/components/editorial/ImageBand';
-import { QuoteRow, type Quote } from '@/components/editorial/QuoteRow';
-import { LookbookRail } from '@/components/site/LookbookRail';
-import { InstagramStrip } from '@/components/site/InstagramStrip';
-import { Reveal } from '@/components/ui/Reveal';
+import type { HeroSlide } from '@/components/site/HeroSlider';
+import type { Gateway } from '@/components/shop/CategoryGateway';
+import type { Quote } from '@/components/editorial/QuoteRow';
+import { HomeHero } from '@/components/home/HomeHero';
+import { HomeGateway } from '@/components/home/HomeGateway';
+import { HomeInstagram } from '@/components/home/HomeInstagram';
+import { HomeShelf } from '@/components/home/HomeShelf';
+import { HomeLookbook } from '@/components/home/HomeLookbook';
+import { HomeStory, type Chapter } from '@/components/home/HomeStory';
+import { HomePromise } from '@/components/home/HomePromise';
+import { HomeReviews } from '@/components/home/HomeReviews';
+import { HomeScrollSync } from '@/components/home/HomeScene';
 
 /* The old statement band said this in type over an empty ground. The words and
    the photographs are both the admin's to change, so both are data here. */
-const statement = ({ editorial }: SiteMedia, copy: SiteContent): Tile[] => [
+const statement = ({ editorial }: SiteMedia, copy: SiteContent): Chapter[] => [
   {
     title: copy['home.story.1.title'],
     body: copy['home.story.1.body'],
     image: editorial.torso,
     href: '/why-shrinkless',
+    label: 'Why Shrinkless',
   },
   {
     title: copy['home.story.2.title'],
     body: copy['home.story.2.body'],
     image: editorial.heather,
     href: '/our-story',
+    label: 'Our story',
   },
 ];
 
@@ -76,7 +80,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <HeroSlider
+      <HomeHero
         slides={slides}
         eyebrow={copy['home.hero.eyebrow']}
         headline={[copy['home.hero.headline1'], copy['home.hero.headline2']]}
@@ -86,71 +90,54 @@ export default async function HomePage() {
       />
 
       {/* Shopping direction, immediately after the hero — before any story. */}
-      <CategoryGateway gateways={gateways} />
+      <HomeGateway gateways={gateways} />
 
       {/* On the homepage the community band is not a footer ornament: the real
           account, high up, before the first grid of product cards. Every other
           shop page still gets it last, from
           app/(shop)/(instagram-last)/layout.tsx. */}
-      <InstagramStrip />
+      <HomeInstagram />
 
-      <section className="band band--white rail" aria-labelledby="new-heading">
-        <div className="wrap">
-          <Reveal>
-            <div className="rail__head">
-              <div>
-                <p className="eyebrow">{copy['home.new.eyebrow']}</p>
-                <h2 id="new-heading" className="head">{copy['home.new.heading']}</h2>
-              </div>
-              <Link href="/shop?sort=newest" className="ulink rail__more">{copy['home.new.link']}</Link>
-            </div>
-          </Reveal>
+      <HomeShelf
+        headingId="new-heading"
+        eyebrow={copy['home.new.eyebrow']}
+        heading={copy['home.new.heading']}
+        link={{ href: '/shop?sort=newest', label: copy['home.new.link'] }}
+        products={newArrivals}
+        layout="index"
+        empty={
+          <p className="hm-shelf__empty">
+            The catalogue is empty. Seed it with <code>npm run seed:shrinkless</code>.
+          </p>
+        }
+      />
 
-          {newArrivals.length ? (
-            <ProductGrid products={newArrivals} columns={3} />
-          ) : (
-            <p className="lede">The catalogue is empty. Seed it with <code>npm run seed:shrinkless</code>.</p>
-          )}
-        </div>
-      </section>
+      {/* Photography between two shelves of product cards, so the page does
+          not read as three shops in a row: the reel, the two chapters and the
+          promise run back to back. */}
+      <HomeLookbook />
 
-      {/* Photography between two grids of product cards, so the page does not
-          read as three shops in a row. The three bands below run back to
-          back with no paper gap between them — one continuous run of
-          imagery from the rail through to the promise photograph. */}
-      <div className="home-visual-stack">
-        <LookbookRail />
+      <HomeStory chapters={statement(media, copy)} />
 
-        <OverlayTiles tiles={statement(media, copy)} columns={2} tall />
-
-        <ImageBand
-          image={media.editorial.promise}
-          eyebrow={copy['home.promise.eyebrow']}
-          headline={copy['home.promise.headline']}
-          compact
-          body={copy['home.promise.body']}
-        />
-      </div>
+      <HomePromise
+        image={media.editorial.promise}
+        eyebrow={copy['home.promise.eyebrow']}
+        headline={copy['home.promise.headline']}
+        body={copy['home.promise.body']}
+      />
 
       {featured.length ? (
-        <section className="band band--white rail" aria-labelledby="featured-heading">
-          <div className="wrap">
-            <Reveal>
-              <div className="rail__head">
-                <div>
-                  <p className="eyebrow">{copy['home.featured.eyebrow']}</p>
-                  <h2 id="featured-heading" className="head">{copy['home.featured.heading']}</h2>
-                </div>
-                <Link href="/shop" className="ulink rail__more">{copy['home.featured.link']}</Link>
-              </div>
-            </Reveal>
-
-            <ProductGrid products={featured} columns={3} />
-          </div>
-        </section>
+        <HomeShelf
+          headingId="featured-heading"
+          eyebrow={copy['home.featured.eyebrow']}
+          heading={copy['home.featured.heading']}
+          link={{ href: '/shop', label: copy['home.featured.link'] }}
+          products={featured}
+          layout="spread"
+        />
       ) : null}
 
-      <QuoteRow
+      <HomeReviews
         eyebrow={copy['home.reviews.eyebrow']}
         heading={copy['home.reviews.heading']}
         quotes={quotes(copy)}
@@ -160,6 +147,7 @@ export default async function HomePage() {
 
       <MediaLayer {...mediaLayer} />
 
+      <HomeScrollSync />
     </>
   );
 }

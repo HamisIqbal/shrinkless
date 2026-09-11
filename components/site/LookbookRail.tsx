@@ -38,7 +38,7 @@ type Frame = {
  * the picture. Only the Organic Tee frame, which appears nowhere else, still
  * has a slot to itself.
  */
-const frames = ({ editorial }: SiteMedia): Frame[] => [
+export const frames = ({ editorial }: SiteMedia): Frame[] => [
   {
     href: '/product/mens-heavyweight-tee',
     label: 'Heavyweight Tee',
